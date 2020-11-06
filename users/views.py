@@ -19,7 +19,7 @@ def register_request(request):
             user = form.save()
             login(request, user)
             messages.success(request, "Registration successful.")
-            return redirect("users:homepage")
+            return redirect("homepage")
         messages.error(
             request, "Unsuccessful registration. Invalid information.")
     form = NewUserForm
@@ -36,7 +36,7 @@ def login_request(request):
             if user is not None:
                 login(request, user)
                 messages.info(request, f"You are now logged in as {username}.")
-                return redirect("users:homepage")
+                return redirect("homepage")
             else:
                 messages.error(request, "Invalid username or password.")
         else:
@@ -48,4 +48,4 @@ def login_request(request):
 def logout_request(request):
     logout(request)
     messages.info(request, "You have successfully logged out.")
-    return redirect("users:homepage")
+    return redirect("homepage")
