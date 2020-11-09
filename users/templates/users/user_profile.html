@@ -1,0 +1,18 @@
+{% extends "users/header.html" %}
+
+{% block content %}
+
+{% load crispy_forms_tags %}
+
+<!--Profile-->
+<div class="container py-5">
+
+    {% if user.is_authenticated %}
+    <h1>User Profile</h1>
+    Username: {{ user.username }}<br>
+    Email: {{ user.email }}<br>
+    {% endif %}
+
+</div>
+
+{% endblock %}
