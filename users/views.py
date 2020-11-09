@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
+from django.contrib.auth.forms import (AuthenticationForm, PasswordResetForm,
+                                       UserCreationForm)
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import BadHeaderError, send_mail
@@ -33,6 +34,21 @@ def register_request(request):
     form = NewUserForm
     return render(request=request, template_name="users/register.html", context={"register_form": form})
 
+def register(request):
+	if request.method == "POST":
+		form = UserCreationForm(request.POST)
+		if form.is_valid():
+			user = form.save()
+			username = form.cleaned_data.get('username')
+			messages.success(request, f"New account created: {username}")
+			login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+		else:
+			messages.error(request,"Account creation failed")
+
+		return redirect("homepage")
+
+	form = UserCreationForm()
+	return render(request,"users/register.html", {"form": form})
 
 def login_request(request):
     if request.method == "POST":
