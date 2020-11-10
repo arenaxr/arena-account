@@ -11,12 +11,16 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
         integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static 'users/css/style.css' %}" type="text/css">
+
+    {% block extrahead %}
+    <link rel="shortcut icon" type="image/png" href="{% static 'users/img/conix-x.png' %}" />
+    {% endblock extrahead %}
 </head>
 
 <body>
-
     {% if user.is_authenticated %}
-    <a class="nav-link navaour" href="{% url 'user_profile' username=user.get_username %}"><i class="fa fa-user"></i>&nbsp; Profile {{ user.get_username }}</a>
+    <a class="nav-link navaour" href="{% url 'user_profile' username=user.get_username %}"><i
+            class="fa fa-user"></i>&nbsp; Profile {{ user.get_username }}</a>
     {% else %}
     <a class="nav-link navaour" href="{% url 'login' %}"><i class="fa fa-user"></i>&nbsp; Login</a>
     {% endif %}
