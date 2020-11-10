@@ -16,19 +16,15 @@ from .forms import NewUserForm
 from .models import Scene
 
 
-def homepage(request):
-    scenes = Scene.objects.all()  # queryset containing all scenes we just created
-    return render(request=request, template_name="users/home.html", context={'scenes': scenes})
-
-
 def register_request(request):
     if request.method == "POST":
         form = NewUserForm(request.POST)
         if form.is_valid():
             user = form.save()
+            username = form.cleaned_data.get('username')
             login(request, user)
             messages.success(request, "Registration successful.")
-            return redirect("homepage")
+            return redirect(f"profile/{username}")
         messages.error(
             request, "Unsuccessful registration. Invalid information.")
     form = NewUserForm
@@ -43,10 +39,9 @@ def register(request):
             username = form.cleaned_data.get('username')
             messages.success(request, f"New account created: {username}")
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            return redirect(f"profile/{username}")
         else:
             messages.error(request, "Account creation failed")
-
-        return redirect("homepage")
 
     form = UserCreationForm()
     return render(request, "users/register.html", {"form": form})
@@ -62,7 +57,7 @@ def login_request(request):
             if user is not None:
                 login(request, user)
                 messages.info(request, f"You are now logged in as {username}.")
-                return redirect("homepage")
+                return redirect(f"profile/{username}")
             else:
                 messages.error(request, "Invalid username or password.")
         else:
@@ -74,7 +69,7 @@ def login_request(request):
 def logout_request(request):
     logout(request)
     messages.info(request, "You have successfully logged out.")
-    return redirect("homepage")
+    return redirect("/")
 
 
 def password_reset_request(request):
@@ -103,10 +98,10 @@ def password_reset_request(request):
                                   [user.email], fail_silently=False)
                     except BadHeaderError:
                         return HttpResponse('Invalid header found.')
-                    # return redirect("/password_reset/done/")
-                    messages.success(
-                        request, 'A message with reset password instructions has been sent to your inbox.')
-                    return redirect("homepage")
+                    return redirect("/password_reset/done/")
+                    # messages.success(
+                    #     request, 'A message with reset password instructions has been sent to your inbox.')
+                    # return redirect("/")
     password_reset_form = PasswordResetForm()
     return render(request=request, template_name="users/password/password_reset.html", context={"password_reset_form": password_reset_form})
 

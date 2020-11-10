@@ -6,9 +6,8 @@
 {% load socialaccount %}
 {% load static %}
 
-<div class="container mx-5">
-
-
+<div class="container p-5">
+    {% include 'users/includes/messages.html' %}
     <div class=" signin text-center">
 
         <a href="{% provider_login_url 'google' %}" class="text-dark"><img
@@ -34,7 +33,6 @@
         {% csrf_token %}
         {{ form|crispy }}
         <button type="submit" class="btn btn-primary">Register</button>
-
     </form>
 
 </div>

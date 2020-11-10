@@ -41,6 +41,9 @@
                 <li class="nav-item">
                     <a class="nav-link" href="https://atlas.conix.io">ATLAS</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="https://arena.conix.io">Documentation</a>
+                </li>
             </ul>
             <ul class="navbar-nav ml-auto">
                 {% if user.is_authenticated %}
@@ -61,8 +64,6 @@
             </ul>
         </div>
     </nav>
-
-    {% include 'users/includes/messages.html' %}
 
     {% block content %}
 
