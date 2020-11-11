@@ -56,7 +56,7 @@ AUTHENTICATION_BACKENDS = (
 
 SITE_ID = 2
 
-LOGIN_REDIRECT_URL = '/tutorials'
+LOGIN_REDIRECT_URL = '/login_callback'
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {

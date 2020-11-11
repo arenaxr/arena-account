@@ -10,4 +10,5 @@ urlpatterns = [
     path("logout", views.logout_request, name="logout"),
     path("password_reset", views.password_reset_request, name="password_reset"),
     path("profile/<username>", views.user_profile, name="user_profile"),
+    path("login_callback", views.login_callback, name="login_callback"),
 ]

@@ -21,10 +21,9 @@ def register_request(request):
         form = NewUserForm(request.POST)
         if form.is_valid():
             user = form.save()
-            username = form.cleaned_data.get('username')
             login(request, user)
             messages.success(request, "Registration successful.")
-            return redirect(f"profile/{username}")
+            return redirect("login_callback")
         messages.error(
             request, "Unsuccessful registration. Invalid information.")
     form = NewUserForm
@@ -39,7 +38,7 @@ def register(request):
             username = form.cleaned_data.get('username')
             messages.success(request, f"New account created: {username}")
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            return redirect(f"profile/{username}")
+            return redirect("login_callback")
         else:
             messages.error(request, "Account creation failed")
 
@@ -57,7 +56,7 @@ def login_request(request):
             if user is not None:
                 login(request, user)
                 messages.info(request, f"You are now logged in as {username}.")
-                return redirect(f"profile/{username}")
+                return redirect("login_callback")
             else:
                 messages.error(request, "Invalid username or password.")
         else:
@@ -69,7 +68,7 @@ def login_request(request):
 def logout_request(request):
     logout(request)
     messages.info(request, "You have successfully logged out.")
-    return redirect("/")
+    return redirect("login")
 
 
 def password_reset_request(request):
@@ -109,3 +108,7 @@ def password_reset_request(request):
 def user_profile(request, username):
     user = User.objects.get(username=username)
     return render(request=request, template_name="users/user_profile.html", context={"user": user})
+
+
+def login_callback(request):
+    return render(request=request, template_name="users/login_callback.html")
