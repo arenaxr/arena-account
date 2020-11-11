@@ -10,7 +10,12 @@
     {% if user.is_authenticated %}
     <h1>User Profile</h1>
     Username: {{ user.get_username }}<br>
+    Name: {{ user.first_name }} {{ user.last_name }}<br>
     Email: {{ user.email }}<br>
+    Groups: {{ user.groups }}<br>
+    Permissions: {{ user.user_permissions }}<br>
+    Staff Role: {{ user.is_staff }}<br>
+    Superuser Role: {{ user.is_superuser }}<br>
     {% endif %}
 </div>
 
