@@ -301,8 +301,11 @@ span.icon {
     height: 42px;
 }
 #customBtnGoogle span.icon {
-    background: url('./google/g-normal.png') transparent 5px 50% no-repeat;
+    background: url('../img/g-normal.png') transparent 5px 50% no-repeat;
 }
+.fa-at,
+.fa-github,
+.fa-google,
 .fa-user-secret {
     font-size: 22px !important;
     display: block !important;

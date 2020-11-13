@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
         integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static 'users/css/style.css' %}" type="text/css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
 
     {% block extrahead %}
     <link rel="shortcut icon" type="image/png" href="{% static 'users/img/conix-x.png' %}" />
@@ -18,13 +19,13 @@
 </head>
 
 <body>
+    {% if user.is_authenticated %}
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-dark">
         <div class="container-fluid">
             <div class="navbar-header">
                 <a class="navbar-brand" href="..">ARENA</a>
             </div>
             <ul class="nav navbar-nav">
-                {% if user.is_authenticated %}
                 <li class="nav-item">
                     <a class="nav-link" href="../build">Builder</a>
                 </li>
@@ -34,7 +35,6 @@
                 <li class="nav-item">
                     <a class="nav-link" href="../network">Network</a>
                 </li>
-                {% endif %}
                 <li class="nav-item">
                     <a class="nav-link" href="../storemng">File Store</a>
                 </li>
@@ -64,6 +64,7 @@
             </ul>
         </div>
     </nav>
+    {% endif %}
 
     {% block content %}
 
@@ -78,6 +79,17 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
         integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
         crossorigin="anonymous"></script>
+
+    <script>
+        function returnToRequestedPage() {
+            if (localStorage.getItem("request_uri")) {
+                //redirect user to originally requested page
+                location.href = localStorage.getItem("request_uri");
+            } else {
+                location.href = ".."; // back to main ARENA
+            }
+        }
+    </script>
 </body>
 
 </html>

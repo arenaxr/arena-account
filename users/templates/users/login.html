@@ -1,3 +1,4 @@
+<title>Sign In to the ARENA</title>
 {% extends "users/header.html" %}
 
 {% block content %}
@@ -5,44 +6,59 @@
 {% load crispy_forms_tags %}
 {% load socialaccount %}
 {% load static %}
+<script type="text/javascript" src="{% static 'users/js/login.js' %}"></script>
 
 <!--Login-->
 <div class="bg-img">
-    <div class="container p-5">
-        {% include 'users/includes/messages.html' %}
-        <h1>Login</h1>
+    {% include 'users/includes/messages.html' %}
+    <form action="" class="login login-form" id="login-form" method="post">
+        <h1>Sign In to the ARENA</h1>
 
-        <div class=" signin text-center">
-            <!-- <a href="{% provider_login_url 'google' %}" class="text-dark"><img
-                src="{% static 'btn_google_signin_light_normal_web@2x.png' %}" style="width:14rem; height:auto"></a> -->
-            <!-- <a href="{% provider_login_url 'google' %}" class="text-dark"><img src="{% static 'img/g-normal.png' %}"
-                style="width:14rem; height:auto"></a> -->
-            <a href="{% provider_login_url 'google' %}">Google Sign In</a>
-            </p>
-            <a href="{% provider_login_url 'github' %}">GitHub Sign In</a>
-        </div>
-
-        <br><br>
-
-        <div style="width: 100%; height: 15px; border-bottom: 1px solid lightgray; text-align: center">
-            <span class="text-muted"
-                style="margin-top:-15% !important; font-size: 11px; background-color: white; padding: 0px 10px;">
-                OR
-            </span>
-        </div>
-
-        <br><br>
-
-        <form method="POST">
+        <div hidden id="emailLoginWrapper">
             {% csrf_token %}
             {{ login_form|crispy }}
             <button class="btn btn-primary" type="submit">Login</button>
-        </form>
+            </p><a href="/password_reset">Forgot password?</a>
+            <p class="text-center">Don't have an account? <a href="/register">Create an account</a>.</p>
+        </div>
+        <div hidden id="anonNameWrapper">Great! Your preferred name is...
+            <input id="usernameInput" placeholder="Hi! My name is..." type="text"
+                pattern="^(?=[^A-Za-z]*[A-Za-z]{2,})[ -~]*$" />
+            <button id="btnAnonName" type="button">Enter</button>
+        </div>
 
-        </p><a href="/password_reset">Forgot password?</a>
+        <div id="emailSignInWrapper">
+            <div class="customBtn" id="customBtnEmail">
+                <span class="icon">
+                    <i class="fa fa-at"></i>
+                </span>
+                <span class="buttonText">Email</span>
+            </div>
+        </div>
+        <div id="gSignInWrapper" onclick="location.href='{% provider_login_url 'google' %}';">
+            <div class="customBtn" id="customBtnGoogle">
+                <span class="icon"></span>
+                <span class="buttonText">Google</span>
+            </div>
+        </div>
+        <div id="githubSignInWrapper" onclick="location.href='{% provider_login_url 'github' %}';">
+            <div class="customBtn" id="customBtnGitHub">
+                <span class="icon">
+                    <i class="fa fa-github"></i>
+                </span>
+                <span class="buttonText">GitHub</span>
+            </div>
+        </div>
+        <div id="anonSignInWrapper">
+            <div class="customBtn" id="customBtnAnon">
+                <span class="icon">
+                    <i class="fa fa-user-secret"></i>
+                </span>
+                <span class="buttonText">Anonymously</span>
+            </div>
+        </div>
 
-        <p class="text-center">Don't have an account? <a href="/register">Create an account</a>.</p>
-    </div>
+    </form>
 </div>
 
 {% endblock content %}
