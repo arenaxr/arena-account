@@ -16,6 +16,11 @@ from .forms import NewUserForm
 from .models import Scene
 
 
+def index(request):
+    # index is treated as login
+    return redirect("login")
+
+
 def register_request(request):
     if request.method == "POST":
         form = NewUserForm(request.POST)
@@ -97,10 +102,10 @@ def password_reset_request(request):
                                   [user.email], fail_silently=False)
                     except BadHeaderError:
                         return HttpResponse('Invalid header found.')
-                    return redirect("/password_reset/done/")
+                    return redirect("/user/password_reset/done/")
                     # messages.success(
                     #     request, 'A message with reset password instructions has been sent to your inbox.')
-                    # return redirect("/")
+                    # return redirect("/user/")
     password_reset_form = PasswordResetForm()
     return render(request=request, template_name="users/password/password_reset.html", context={"password_reset_form": password_reset_form})
 

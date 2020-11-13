@@ -11,21 +11,8 @@
 <!--Login-->
 <div class="bg-img">
     {% include 'users/includes/messages.html' %}
-    <form action="" class="login login-form" id="login-form" method="post">
+    <form class="login login-form" id="login-form" method="post">
         <h1>Sign In to the ARENA</h1>
-
-        <div hidden id="emailLoginWrapper">
-            {% csrf_token %}
-            {{ login_form|crispy }}
-            <button class="btn btn-primary" type="submit">Login</button>
-            </p><a href="/password_reset">Forgot password?</a>
-            <p class="text-center">Don't have an account? <a href="/register">Create an account</a>.</p>
-        </div>
-        <div hidden id="anonNameWrapper">Great! Your preferred name is...
-            <input id="usernameInput" placeholder="Hi! My name is..." type="text"
-                pattern="^(?=[^A-Za-z]*[A-Za-z]{2,})[ -~]*$" />
-            <button id="btnAnonName" type="button">Enter</button>
-        </div>
 
         <div id="emailSignInWrapper">
             <div class="customBtn" id="customBtnEmail">
@@ -56,6 +43,20 @@
                 </span>
                 <span class="buttonText">Anonymously</span>
             </div>
+        </div>
+
+        <div hidden id="emailLoginWrapper">
+            {% csrf_token %}
+            {{ login_form|crispy }}
+            <button class="btn btn-primary" type="submit">Login</button>
+            <!-- <label class="remember-me"><input type="checkbox" name="remember" />Remember me</label> -->
+            <p class="text-center"><a href="/user/register">Create</a> an account.</p>
+            <p class="forget-psw">Forgot <a href="user/password_reset">password</a>?</p>
+        </div>
+        <div hidden id="anonNameWrapper">Great! Your preferred name is...
+            <input id="usernameInput" placeholder="Hi! My name is..." type="text"
+                pattern="^(?=[^A-Za-z]*[A-Za-z]{2,})[ -~]*$" />
+            <button id="btnAnonName" type="button">Enter</button>
         </div>
 
     </form>

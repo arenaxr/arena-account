@@ -56,7 +56,7 @@ AUTHENTICATION_BACKENDS = (
 
 SITE_ID = 2
 
-LOGIN_REDIRECT_URL = '/login_callback'
+LOGIN_REDIRECT_URL = '/user/login_callback'
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
@@ -161,8 +161,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = '/user/static/'
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
+    os.path.join(BASE_DIR, "/user/static"),
 ]

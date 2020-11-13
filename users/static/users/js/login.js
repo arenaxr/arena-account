@@ -1,4 +1,4 @@
-document.onload = function() {
+window.onload = function() {
     initEmailAuth();
     initAnonAuth();
 };
@@ -7,19 +7,11 @@ var initEmailAuth = function() {
     var emailBtn = document.getElementById('customBtnEmail');
     if (typeof emailBtn != 'undefined') {
         emailBtn.addEventListener('click', function(event) {
-            var namePanel = document.getElementById('emailNameWrapper');
-            namePanel.hidden = false;
+            var emailLoginPanel = document.getElementById('emailLoginWrapper');
+            emailLoginPanel.hidden = false;
+            localStorage.setItem("auth_choice", "email");
         });
     }
-    const formHandler = (e) => {
-        e.preventDefault();
-        localStorage.setItem("auth_choice", "email");
-        // TODO: returnToRequestedPage();
-    }
-    var usernameInput = document.getElementById('usernameInput');
-    var nameBtn = document.getElementById('btnEmailName');
-    nameBtn.addEventListener('click', formHandler);
-    document.getElementById('login-form').addEventListener('submit', formHandler);
 }
 
 var initAnonAuth = function() {
@@ -30,7 +22,7 @@ var initAnonAuth = function() {
             var savedName = localStorage.getItem("display_name");
             if (savedName !== null) {
                 localStorage.setItem("auth_choice", "anonymous");
-                // TODO: returnToRequestedPage();
+                location.href = "./login_callback";
             } else { // if no passable name, ask for one
                 var namePanel = document.getElementById('anonNameWrapper');
                 namePanel.hidden = false;
@@ -43,10 +35,10 @@ var initAnonAuth = function() {
         var displayName = usernameInput.value.replace(/\s+/g, " ").trim();
         localStorage.setItem("display_name", displayName);  // save for next use
         localStorage.setItem("auth_choice", "anonymous");
-        // TODO: returnToRequestedPage();
+        location.href = "./login_callback";
     }
     var usernameInput = document.getElementById('usernameInput');
     var nameBtn = document.getElementById('btnAnonName');
     nameBtn.addEventListener('click', formHandler);
-    document.getElementById('login-form').addEventListener('submit', formHandler);
+    //TODO: might interfere with document.getElementById('login-form').addEventListener('submit', formHandler);
 }
