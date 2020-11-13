@@ -20,31 +20,35 @@
 
 <body>
     {% if user.is_authenticated %}
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-dark">
-        <div class="container-fluid">
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
             <div class="navbar-header">
                 <a class="navbar-brand" href="..">ARENA</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
             </div>
-            <ul class="nav navbar-nav">
-                <li class="nav-item">
-                    <a class="nav-link" href="../build">Builder</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="../arts">Runtime</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="../network">Network</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="../storemng">File Store</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="https://atlas.conix.io">ATLAS</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="https://arena.conix.io">Documentation</a>
-                </li>
-            </ul>
+            <div class="collapse navbar-collapse" id="collapsibleNavbar">
+                <ul class="nav navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../build">Builder</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../arts">Runtime</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../network">Network</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../storemng">File Store</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://atlas.conix.io">ATLAS</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://arena.conix.io">Documentation</a>
+                    </li>
+                </ul>
+            </div>
             <ul class="navbar-nav ml-auto">
                 {% if user.is_authenticated %}
                 <li class="nav-item dropdown">
@@ -62,7 +66,6 @@
                 </li>
                 {% endif %}
             </ul>
-        </div>
     </nav>
     {% endif %}
 
