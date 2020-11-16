@@ -1,3 +1,6 @@
+import datetime
+
+import jwt
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import (AuthenticationForm, PasswordResetForm,
@@ -6,7 +9,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import BadHeaderError, send_mail
 from django.db.models.query_utils import Q
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
@@ -117,3 +120,19 @@ def user_profile(request, username):
 
 def login_callback(request):
     return render(request=request, template_name="users/login_callback.html")
+
+
+def mqtt_token_scene(request):
+    if request.user.is_authenticated and request.method == 'POST':
+        scene = request.POST.get("scene", None)
+        secret = 'secret' # TODO: load secret from elsewhere
+        payload = {
+            'sub': request.user.username,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
+            'subs': ["#"],
+            'publ': ["#"],
+        }
+        token = jwt.encode(payload, secret, algorithm='HS256')
+        return JsonResponse({"username": request.user.username, "token": token}, status=200)
+    # default 'bad request'
+    return JsonResponse({"username": None, "token": None}, status=400)
