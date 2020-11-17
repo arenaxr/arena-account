@@ -4,7 +4,10 @@ WORKDIR /usr/src/app
 
 COPY . .
 
+RUN mkdir static
+
 COPY ./docker-entrypoint.sh /
+RUN chmod +x /docker-entrypoint.sh
 
 RUN pip install --no-cache-dir -r requirements.txt
 
