@@ -1,4 +1,5 @@
 import datetime
+import os
 
 import jwt
 from django.contrib import messages
@@ -125,7 +126,7 @@ def login_callback(request):
 def mqtt_token_scene(request):
     if request.user.is_authenticated and request.method == 'POST':
         scene = request.POST.get("scene", None)
-        secret = 'secret' # TODO: load secret from elsewhere
+        secret = os.environ['SECRET_KEY_BASE64']
         payload = {
             'sub': request.user.username,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
