@@ -11,5 +11,5 @@ urlpatterns = [
     path("password_reset", views.password_reset_request, name="password_reset"),
     path("profile/<username>", views.user_profile, name="user_profile"),
     path("login_callback", views.login_callback, name="login_callback"),
-    path('api/token/mqtt/scene', views.mqtt_token_scene, name = "mqtt_token_scene"),
+    path('mqtt_auth', views.mqtt_token, name = "mqtt_token"),
 ]

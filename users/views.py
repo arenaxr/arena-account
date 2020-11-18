@@ -123,17 +123,40 @@ def login_callback(request):
     return render(request=request, template_name="users/login_callback.html")
 
 
-def mqtt_token_scene(request):
-    if request.user.is_authenticated and request.method == 'POST':
-        scene = request.POST.get("scene", None)
-        secret = os.environ['SECRET_KEY_BASE64']
-        payload = {
-            'sub': request.user.username,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
-            'subs': ["#"],
-            'publ': ["#"],
-        }
-        token = jwt.encode(payload, secret, algorithm='HS256')
-        return JsonResponse({"username": request.user.username, "token": token}, status=200)
-    # default 'bad request'
-    return JsonResponse({"username": None, "token": None}, status=400)
+def mqtt_token(request):
+    # TODO if request.method == 'POST':
+    username = request.POST.get("username", None)
+    id_auth = request.POST.get("id_auth", None)
+    id_token = request.POST.get("id_token", None)
+    realm = request.POST.get("realm", "realm")
+    scene = request.POST.get("scene", None)
+    camid = request.POST.get("camid", None)
+    ctrlid1 = request.POST.get("ctrlid1", None)
+    ctrlid2 = request.POST.get("ctrlid2", None)
+
+    secret = os.environ['SECRET_KEY_BASE64']
+    # secret = 'secret'  # TODO remove
+    payload = {
+        'sub': request.user.username,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
+    }
+    subs = []
+    pubs = []
+    if request.user.is_authenticated:
+        subs.append("#")
+        pubs.append("#")
+    else:  # Anonymous User
+        subs.append("#")
+        if camid:
+            pubs.append(realm + "/s/" + scene + "/" + camid)
+            pubs.append(realm + "/s/" + scene + "/" + "arena-face-tracker")
+        if ctrlid1:
+            pubs.append(realm + "/s/" + scene + "/" + ctrlid1)
+        if ctrlid2:
+            pubs.append(realm + "/s/" + scene + "/" + ctrlid2)
+    if len(subs) > 0:
+        payload['subs'] = subs
+    if len(pubs) > 0:
+        payload['publ'] = pubs
+    token = jwt.encode(payload, secret, algorithm='HS256')
+    return JsonResponse({"username": request.user.username, "token": token.decode("utf-8")}, status=200)

@@ -163,9 +163,10 @@ USE_TZ = True
 
 STATIC_URL = '/user/static/'
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
-]
-
-# Static root
-STATIC_ROOT = "./static"
+if DEBUG:
+    STATICFILES_DIRS = [
+        os.path.join(BASE_DIR, "static"),
+    ]
+else:
+    # Static root
+    STATIC_ROOT = "./static"
