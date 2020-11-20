@@ -161,10 +161,14 @@ def mqtt_token(request):
             pubs.append(realm + "/s/" + scene + "/" + ctrlid1 + "/#")
         if ctrlid2:
             pubs.append(realm + "/s/" + scene + "/" + ctrlid2 + "/#")
-    # all: network graph
-    pubs.append("$NETWORK")
-    # all: chat messages
-    if userid and camid:
+    # runtime
+    pubs.append(realm + "/proc/#")
+    subs.append(realm + "/proc/#")
+    # network graph
+    pubs.append("$NETWORK/#")
+    subs.append("$NETWORK/#")
+    # chat messages
+    if userid:
         # receive private messages: Read
         pubs.append(realm + "/g/c/p/" + userid + "/#")
         # receive open messages to everyone and/or scene: Read
