@@ -124,39 +124,58 @@ def login_callback(request):
 
 
 def mqtt_token(request):
-    # TODO if request.method == 'POST':
-    username = request.POST.get("username", None)
+    if request.method != 'POST':
+        return JsonResponse({"username": None, "token": None}, status=400)
+
     id_auth = request.POST.get("id_auth", None)
-    id_token = request.POST.get("id_token", None)
+    if request.user.is_authenticated:
+        username = request.user.username
+    else:  # Anonymous User
+        username = request.POST.get("username", None)
+
     realm = request.POST.get("realm", "realm")
     scene = request.POST.get("scene", None)
     camid = request.POST.get("camid", None)
+    userid = request.POST.get("userid", None)
     ctrlid1 = request.POST.get("ctrlid1", None)
     ctrlid2 = request.POST.get("ctrlid2", None)
-
-    secret = os.environ['SECRET_KEY_BASE64']
-    # secret = 'secret'  # TODO remove
-    payload = {
-        'sub': request.user.username,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
-    }
     subs = []
     pubs = []
+
+    secret = os.environ['SECRET_KEY_BASE64']
+    payload = {
+        'sub': username,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
+    }
+    # user presence objects
+    subs.append(realm + "/s/#")
+    subs.append(realm + "/g/a/#")
     if request.user.is_authenticated:
-        subs.append("#")
-        pubs.append("#")
+        pubs.append(realm + "/s/#")
     else:  # Anonymous User
-        subs.append("#")
         if camid:
-            pubs.append(realm + "/s/" + scene + "/" + camid)
-            pubs.append(realm + "/s/" + scene + "/" + "arena-face-tracker")
+            pubs.append(realm + "/s/" + scene + "/" + camid + "/#")
+            pubs.append(realm + "/g/a/" + camid + "/#")
+            pubs.append("topic/vio/" + camid + "/#")
         if ctrlid1:
-            pubs.append(realm + "/s/" + scene + "/" + ctrlid1)
+            pubs.append(realm + "/s/" + scene + "/" + ctrlid1 + "/#")
         if ctrlid2:
-            pubs.append(realm + "/s/" + scene + "/" + ctrlid2)
+            pubs.append(realm + "/s/" + scene + "/" + ctrlid2 + "/#")
+    # all: network graph
+    pubs.append("$NETWORK")
+    # all: chat messages
+    if userid and camid:
+        # receive private messages: Read
+        pubs.append(realm + "/g/c/p/" + userid + "/#")
+        # receive open messages to everyone and/or scene: Read
+        pubs.append(realm + "/g/c/o/#")
+        # send open messages (chat keepalive, messages to all/scene): Write
+        subs.append(realm + "/g/c/o/" + userid)
+        # private messages to user: Write
+        subs.append(realm + "/g/c/p/+/" + userid)
     if len(subs) > 0:
         payload['subs'] = subs
     if len(pubs) > 0:
         payload['publ'] = pubs
     token = jwt.encode(payload, secret, algorithm='HS256')
-    return JsonResponse({"username": request.user.username, "token": token.decode("utf-8")}, status=200)
+    return JsonResponse({"username": username, "token": token.decode("utf-8")}, status=200)
