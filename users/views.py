@@ -148,35 +148,35 @@ def mqtt_token(request):
         'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
     }
     # user presence objects
-    subs.append(realm + "/s/#")
-    subs.append(realm + "/g/a/#")
+    subs.append(f"{realm}/s/#")
+    subs.append(f"{realm}/g/a/#")
     if request.user.is_authenticated:
-        pubs.append(realm + "/s/#")
+        pubs.append(f"{realm}/s/#")
     else:  # Anonymous User
         if camid:
-            pubs.append(realm + "/s/" + scene + "/" + camid + "/#")
-            pubs.append(realm + "/g/a/" + camid + "/#")
-            pubs.append("topic/vio/" + camid + "/#")
+            pubs.append(f"{realm}/s/{scene}/{camid}/#")
+            pubs.append(f"{realm}/g/a/{camid}/#")
+            pubs.append(f"topic/vio/{camid}/#")
         if ctrlid1:
-            pubs.append(realm + "/s/" + scene + "/" + ctrlid1 + "/#")
+            pubs.append(f"{realm}/s/{scene}/{ctrlid1}/#")
         if ctrlid2:
-            pubs.append(realm + "/s/" + scene + "/" + ctrlid2 + "/#")
+            pubs.append(f"{realm}/s/{scene}/{ctrlid2}/#")
     # runtime
-    pubs.append(realm + "/proc/#")
-    subs.append(realm + "/proc/#")
+    pubs.append(f"{realm}/proc/#")
+    subs.append(f"{realm}/proc/#")
     # network graph
     pubs.append("$NETWORK/#")
     subs.append("$NETWORK/#")
     # chat messages
     if userid:
         # receive private messages: Read
-        pubs.append(realm + "/g/c/p/" + userid + "/#")
+        pubs.append(f"{realm}/g/c/p/{userid}/#")
         # receive open messages to everyone and/or scene: Read
-        pubs.append(realm + "/g/c/o/#")
+        pubs.append(f"{realm}/g/c/o/#")
         # send open messages (chat keepalive, messages to all/scene): Write
-        subs.append(realm + "/g/c/o/" + userid)
+        subs.append(f"{realm}/g/c/o/{userid}")
         # private messages to user: Write
-        subs.append(realm + "/g/c/p/+/" + userid)
+        subs.append(f"{realm}/g/c/p/+/{userid}")
     if len(subs) > 0:
         payload['subs'] = subs
     if len(pubs) > 0:
