@@ -123,14 +123,30 @@ def login_callback(request):
     return render(request=request, template_name="users/login_callback.html")
 
 
+def user_state(request):
+    if request.method != 'POST':
+        return JsonResponse({}, status=400)
+    if request.user.is_authenticated:
+        return JsonResponse({
+            "authenticated": request.user.is_authenticated,
+            "username": request.user.username,
+            "name": f"{request.user.first_name} {request.user.last_name}",
+            "email": request.user.email,
+        }, status=200)
+    else:  # AnonymousUser
+        return JsonResponse({
+            "authenticated": request.user.is_authenticated,
+        }, status=200)
+
+
 def mqtt_token(request):
     if request.method != 'POST':
-        return JsonResponse({"username": None, "token": None}, status=400)
+        return JsonResponse({}, status=400)
 
     id_auth = request.POST.get("id_auth", None)
     if request.user.is_authenticated:
         username = request.user.username
-    else:  # Anonymous User
+    else:  # AnonymousUser
         username = request.POST.get("username", None)
 
     realm = request.POST.get("realm", "realm")
@@ -152,7 +168,7 @@ def mqtt_token(request):
     subs.append(f"{realm}/g/a/#")
     if request.user.is_authenticated:
         pubs.append(f"{realm}/s/#")
-    else:  # Anonymous User
+    else:  # AnonymousUser
         if camid:
             pubs.append(f"{realm}/s/{scene}/{camid}/#")
             pubs.append(f"{realm}/g/a/{camid}/#")
@@ -182,4 +198,7 @@ def mqtt_token(request):
     if len(pubs) > 0:
         payload['publ'] = pubs
     token = jwt.encode(payload, secret, algorithm='HS256')
-    return JsonResponse({"username": username, "token": token.decode("utf-8")}, status=200)
+    return JsonResponse({
+        "username": username,
+        "token": token.decode("utf-8"),
+    }, status=200)
