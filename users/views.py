@@ -30,28 +30,16 @@ def register_request(request):
         form = NewUserForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)
-            messages.success(request, "Registration successful.")
-            return redirect("login_callback")
-        messages.error(
-            request, "Unsuccessful registration. Invalid information.")
-    form = NewUserForm
-    return render(request=request, template_name="users/register.html", context={"register_form": form})
-
-
-def register(request):
-    if request.method == "POST":
-        form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
             username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password1')
             messages.success(request, f"New account created: {username}")
+            user = authenticate(username=username, password=password)
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return redirect("login_callback")
         else:
             messages.error(request, "Account creation failed")
 
-    form = UserCreationForm()
+    form = NewUserForm()
     return render(request, "users/register.html", {"form": form})
 
 
@@ -92,24 +80,23 @@ def password_reset_request(request):
                     email_template_name = "users/password/password_reset_email.txt"
                     c = {
                         "email": user.email,
-                        # TODO (mwfarb): update domain for production
-                        'domain': '127.0.0.1:8000',
+                        'domain': os.environ['HOSTNAME'],
                         'site_name': 'ARENA Website',
                         "uid": urlsafe_base64_encode(force_bytes(user.pk)),
                         "user": user,
                         'token': default_token_generator.make_token(user),
-                        'protocol': 'http',
+                        'protocol': 'https',
                     }
                     email = render_to_string(email_template_name, c)
-                    try:  # TODO (mwfarb): update 'from' email for production
-                        send_mail(subject, email, 'admin@arena.andrew.cmu.edu',
+                    try:
+                        send_mail(subject, email, os.environ['EMAIL'],
                                   [user.email], fail_silently=False)
                     except BadHeaderError:
                         return HttpResponse('Invalid header found.')
-                    return redirect("/user/password_reset/done/")
+                    return redirect("/password_reset/done/")
                     # messages.success(
                     #     request, 'A message with reset password instructions has been sent to your inbox.')
-                    # return redirect("/user/")
+                    # return redirect("/")
     password_reset_form = PasswordResetForm()
     return render(request=request, template_name="users/password/password_reset.html", context={"password_reset_form": password_reset_form})
 
@@ -130,7 +117,7 @@ def user_state(request):
         return JsonResponse({
             "authenticated": request.user.is_authenticated,
             "username": request.user.username,
-            "name": f"{request.user.first_name} {request.user.last_name}",
+            "fullname": request.user.get_full_name(),
             "email": request.user.email,
         }, status=200)
     else:  # AnonymousUser
