@@ -11,8 +11,11 @@ RUN chmod +x /docker-entrypoint.sh
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN echo -e "\nCreate arena-account admin ($DJANGO_SUPERUSER_USERNAME:$DJANGO_SUPERUSER_PASSWORD) \n"
-RUN python manage.py createsuperuser --noinput
+RUN python manage.py makemigrations --noinput
+RUN python manage.py migrate 
+RUN python manage.py collectstatic --noinput
+
+RUN python manage.py createsuperuser --username $DJANGO_SUPERUSER_USERNAME --noinput
 
 EXPOSE 8000
 
