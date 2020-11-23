@@ -5,6 +5,7 @@ WORKDIR /usr/src/app
 COPY . .
 
 RUN mkdir static || true
+RUN mkdir db || true
 
 COPY ./docker-entrypoint.sh /
 RUN chmod +x /docker-entrypoint.sh
