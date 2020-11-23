@@ -15,8 +15,6 @@ RUN python manage.py makemigrations --noinput
 RUN python manage.py migrate 
 RUN python manage.py collectstatic --noinput
 
-RUN python manage.py createsuperuser --username $DJANGO_SUPERUSER_USERNAME --noinput
-
 EXPOSE 8000
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
