@@ -119,6 +119,7 @@ def user_state(request):
             "username": request.user.username,
             "fullname": request.user.get_full_name(),
             "email": request.user.email,
+            "type": "email",  # TODO: should also lookup social account link
         }, status=200)
     else:  # AnonymousUser
         return JsonResponse({
@@ -130,7 +131,6 @@ def mqtt_token(request):
     if request.method != 'POST':
         return JsonResponse({}, status=400)
 
-    id_auth = request.POST.get("id_auth", None)
     if request.user.is_authenticated:
         username = request.user.username
     else:  # AnonymousUser
@@ -173,13 +173,13 @@ def mqtt_token(request):
     # chat messages
     if userid:
         # receive private messages: Read
-        pubs.append(f"{realm}/g/c/p/{userid}/#")
+        subs.append(f"{realm}/g/c/p/{userid}/#")
         # receive open messages to everyone and/or scene: Read
-        pubs.append(f"{realm}/g/c/o/#")
+        subs.append(f"{realm}/g/c/o/#")
         # send open messages (chat keepalive, messages to all/scene): Write
-        subs.append(f"{realm}/g/c/o/{userid}")
+        pubs.append(f"{realm}/g/c/o/{userid}")
         # private messages to user: Write
-        subs.append(f"{realm}/g/c/p/+/{userid}")
+        pubs.append(f"{realm}/g/c/p/+/{userid}")
     if len(subs) > 0:
         payload['subs'] = subs
     if len(pubs) > 0:

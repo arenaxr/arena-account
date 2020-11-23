@@ -53,10 +53,9 @@ AUTHENTICATION_BACKENDS = (
     'allauth.account.auth_backends.AuthenticationBackend',
 )
 
-SITE_ID = 2
-
+# allauth social accounts
+SITE_ID = 2  # must match our domain Site used in admin: Sites
 LOGIN_REDIRECT_URL = '/user/login_callback'
-
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': [
