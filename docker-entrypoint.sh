@@ -10,4 +10,5 @@ from django.contrib.auth.models import User; \
 u = User.objects.get(username=USER); \
 u.set_password(PASS);"
   
+python manage.py collectstatic --noinput
 python manage.py runserver 0.0.0.0:8000
