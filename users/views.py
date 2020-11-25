@@ -153,7 +153,7 @@ def mqtt_token(request):
     # user presence objects
     subs.append(f"{realm}/s/#")
     subs.append(f"{realm}/g/a/#")
-    if request.user.is_authenticated:
+    if request.user.is_authenticated and request.user.is_staff:
         pubs.append(f"{realm}/s/#")
     else:  # AnonymousUser
         if camid:
