@@ -1,7 +1,9 @@
 import datetime
+import json
 import os
 
 import jwt
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import (AuthenticationForm, PasswordResetForm,
@@ -145,7 +147,10 @@ def mqtt_token(request):
     subs = []
     pubs = []
 
-    secret = os.environ['SECRET_KEY_BASE64']
+    MQTT_TOKEN_PRIVKEY = getattr(settings, "MQTT_TOKEN_PRIVKEY", None)
+    with open(MQTT_TOKEN_PRIVKEY) as privatefile:
+        private_key = privatefile.read()
+    print(private_key)
     payload = {
         'sub': username,
         'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
@@ -184,8 +189,11 @@ def mqtt_token(request):
         payload['subs'] = subs
     if len(pubs) > 0:
         payload['publ'] = pubs
-    token = jwt.encode(payload, secret, algorithm='HS256')
-    return JsonResponse({
+    token = jwt.encode(payload, private_key, algorithm='RS256')
+    response = HttpResponse(json.dumps({
         "username": username,
         "token": token.decode("utf-8"),
-    }, status=200)
+    }))
+    response.set_cookie('mqtt_token', token, max_age=86400000,
+                        httponly=True, secure=True)
+    return response

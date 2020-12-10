@@ -28,6 +28,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'arena-account']
 
+USE_X_FORWARDED_HOST = True
+MQTT_TOKEN_PRIVKEY = "/home/node/app/pubsubkey.pem"
 
 # Application definition
 
@@ -56,6 +58,7 @@ AUTHENTICATION_BACKENDS = (
 # allauth social accounts
 SITE_ID = 2  # must match our domain Site used in admin: Sites
 LOGIN_REDIRECT_URL = '/user/login_callback'
+
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': [
@@ -80,14 +83,6 @@ MESSAGE_TAGS = {
 
 # TODO (mwfarb): For production, change backend to an email sending service.
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# MAILER_EMAIL_BACKEND = EMAIL_BACKEND
-# EMAIL_HOST = 'your_mail_server'
-# EMAIL_HOST_PASSWORD = 'your_password'
-# EMAIL_HOST_USER = 'your_email'
-# EMAIL_PORT = 465
-# EMAIL_USE_SSL = True
-# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
