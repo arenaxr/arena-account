@@ -193,7 +193,7 @@ def mqtt_token(request):
     response = HttpResponse(json.dumps({
         "username": username,
         "token": token.decode("utf-8"),
-    }))
-    response.set_cookie('mqtt_token', token, max_age=86400000,
+    }), content_type='application/json')
+    response.set_cookie('mqtt_token', token.decode("utf-8"), max_age=86400000,
                         httponly=True, secure=True)
     return response
