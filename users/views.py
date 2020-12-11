@@ -1,3 +1,4 @@
+import base64
 import datetime
 import json
 import os
@@ -155,36 +156,47 @@ def mqtt_token(request):
         'sub': username,
         'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
     }
+    # TODO: if request.user.is_authenticated and request.user.is_staff:
     # user presence objects
-    subs.append(f"{realm}/s/#")
-    subs.append(f"{realm}/g/a/#")
-    if request.user.is_authenticated and request.user.is_staff:
-        pubs.append(f"{realm}/s/#")
-    else:  # AnonymousUser
-        if camid:
+    if scene:
+        subs.append(f"{realm}/s/{scene}/#")
+        subs.append(f"{realm}/g/a/#")
+        if camid:  # probable web browser write
+            pubs.append(f"{realm}/s/{scene}/{camid}")
             pubs.append(f"{realm}/s/{scene}/{camid}/#")
-            pubs.append(f"{realm}/g/a/{camid}/#")
-            pubs.append(f"topic/vio/{camid}/#")
+            pubs.append(f"{realm}/g/a/{camid}")
+            pubs.append(f"topic/vio/{camid}")
+            # TODO: remove later, needed for clicks
+            pubs.append(f"{realm}/s/{scene}/#")
+        else:  # probable cli client write
+            pubs.append(f"{realm}/s/{scene}")
+            pubs.append(f"{realm}/s/{scene}/#")
         if ctrlid1:
-            pubs.append(f"{realm}/s/{scene}/{ctrlid1}/#")
+            pubs.append(f"{realm}/s/{scene}/{ctrlid1}")
         if ctrlid2:
-            pubs.append(f"{realm}/s/{scene}/{ctrlid2}/#")
-    # runtime
-    pubs.append(f"{realm}/proc/#")
-    subs.append(f"{realm}/proc/#")
-    # network graph
-    pubs.append("$NETWORK/#")
-    subs.append("$NETWORK/#")
+            pubs.append(f"{realm}/s/{scene}/{ctrlid2}")
+    else:
+        subs.append(f"{realm}/s/#")
+        subs.append(f"{realm}/g/a/#")
+        pubs.append(f"{realm}/s/#")
+        pubs.append(f"{realm}/g/a/#")
     # chat messages
     if userid:
+        userhandle = userid + base64.b64encode(userid)
         # receive private messages: Read
-        subs.append(f"{realm}/g/c/p/{userid}/#")
+        subs.append(f"{realm}/g/c/p/{userhandle}")
         # receive open messages to everyone and/or scene: Read
         subs.append(f"{realm}/g/c/o/#")
         # send open messages (chat keepalive, messages to all/scene): Write
-        pubs.append(f"{realm}/g/c/o/{userid}")
+        pubs.append(f"{realm}/g/c/o/{userhandle}")
         # private messages to user: Write
-        pubs.append(f"{realm}/g/c/p/+/{userid}")
+        pubs.append(f"{realm}/g/c/p/+/{userhandle}")
+    # runtime
+    subs.append(f"{realm}/proc/#")
+    pubs.append(f"{realm}/proc/#")
+    # network graph
+    subs.append(f"NETWORK")
+    pubs.append(f"NETWORK/latency")
     if len(subs) > 0:
         payload['subs'] = subs
     if len(pubs) > 0:
