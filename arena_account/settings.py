@@ -171,3 +171,10 @@ if DEBUG:
 else:
     # Static root
     STATIC_ROOT = "./static"
+
+# pubsub settings
+PUBSUB = {
+    'mqtt_server': {'host': '127.0.0.1', 'port': 1883, 'ws_port': 9001, 'wss_port': 8083},
+    'mqtt_realm': 'realm',
+    'mqtt_username': 'arena_account',
+}

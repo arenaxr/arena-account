@@ -148,10 +148,9 @@ def mqtt_token(request):
     subs = []
     pubs = []
 
-    MQTT_TOKEN_PRIVKEY = getattr(settings, "MQTT_TOKEN_PRIVKEY", None)
-    with open(MQTT_TOKEN_PRIVKEY) as privatefile:
+    privkeyfile = settings.MQTT_TOKEN_PRIVKEY
+    with open(privkeyfile) as privatefile:
         private_key = privatefile.read()
-    print(private_key)
     payload = {
         'sub': username,
         'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
@@ -182,7 +181,7 @@ def mqtt_token(request):
         pubs.append(f"{realm}/g/a/#")
     # chat messages
     if userid:
-        userhandle = userid + base64.b64encode(userid)
+        userhandle = userid + base64.b64encode(userid.encode()).decode()
         # receive private messages: Read
         subs.append(f"{realm}/g/c/p/{userhandle}")
         # receive open messages to everyone and/or scene: Read
