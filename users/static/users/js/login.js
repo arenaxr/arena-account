@@ -1,5 +1,5 @@
 window.onload = function() {
-    initEmailAuth();
+    // TODO: temp remove initEmailAuth();
     initAnonAuth();
 };
 
