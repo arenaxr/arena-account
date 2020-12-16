@@ -104,9 +104,8 @@ def password_reset_request(request):
     return render(request=request, template_name="users/password/password_reset.html", context={"password_reset_form": password_reset_form})
 
 
-def user_profile(request, username):
-    user = User.objects.get(username=username)
-    return render(request=request, template_name="users/user_profile.html", context={"user": user})
+def user_profile(request):
+    return render(request=request, template_name="users/user_profile.html", context={"user": request.user})
 
 
 def login_callback(request):
