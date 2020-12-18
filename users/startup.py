@@ -7,9 +7,12 @@ from urllib.error import HTTPError, URLError
 
 import jwt
 from django.conf import settings
-from users.models import Scene
+
+from .models import Scene
 
 # TODO: remove extra debugging prints
+
+
 def migrate_persist():
     print('starting persist name migrate')
     config = settings.PUBSUB
@@ -53,7 +56,6 @@ def migrate_persist():
     for p_scene in p_scenes:
         print(f'persist scene test: {p_scene}')
         if p_scene not in a_scenes:
-            now = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
             s = Scene(
                 name=p_scene,
                 summary='Existing scene name migrated from persistence database.',

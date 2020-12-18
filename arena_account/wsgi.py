@@ -11,10 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-import arena_account.startup as startup
-
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'arena_account.settings')
-
-startup.migrate_persist()
 
 application = get_wsgi_application()

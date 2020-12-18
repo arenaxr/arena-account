@@ -193,8 +193,8 @@ def mqtt_token(request):
     subs.append(f"{realm}/proc/#")
     pubs.append(f"{realm}/proc/#")
     # network graph
-    subs.append(f"NETWORK")
-    pubs.append(f"NETWORK/latency")
+    subs.append(f"$NETWORK")
+    pubs.append(f"$NETWORK/latency")
     if len(subs) > 0:
         payload['subs'] = subs
     if len(pubs) > 0:
