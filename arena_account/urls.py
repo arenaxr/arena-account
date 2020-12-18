@@ -16,6 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from django.contrib.auth import views as auth_views
+from users.views import socialaccount_signup_view
 
 urlpatterns = [
     path('user/', include('users.urls')),
@@ -27,5 +28,6 @@ urlpatterns = [
         template_name="users/password/password_reset_confirm.html"), name='password_reset_confirm'),
     path('user/reset/done/', auth_views.PasswordResetCompleteView.as_view(
         template_name='users/password/password_reset_complete.html'), name='password_reset_complete'),
+    path("socialaccounts/signup/", view=socialaccount_signup_view),
     path('user/accounts/', include('allauth.urls')),
 ]

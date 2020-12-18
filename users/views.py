@@ -4,6 +4,7 @@ import json
 import os
 
 import jwt
+from allauth.socialaccount.views import SignupView
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -110,6 +111,14 @@ def user_profile(request):
 
 def login_callback(request):
     return render(request=request, template_name="users/login_callback.html")
+
+
+class SocialAccountSignupView(SignupView):
+    # Allauth Social Signup View extended
+    template_name = "users/social_signup.html"
+
+
+socialaccount_signup_view = SocialAccountSignupView.as_view()
 
 
 def user_state(request):
