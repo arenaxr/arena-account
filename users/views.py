@@ -23,6 +23,8 @@ from django.utils.http import urlsafe_base64_encode
 from .forms import NewUserForm
 from .models import Scene
 
+STAFF_ACCTNAME = "scene"
+
 
 def index(request):
     # index is treated as login
@@ -163,11 +165,21 @@ def mqtt_token(request):
         'sub': username,
         'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
     }
-    # TODO: if request.user.is_authenticated and request.user.is_staff:
     # user presence objects
-    if scene:
+    subs.append(f"{realm}/g/a/#")
+    if request.user.is_authenticated and request.user.is_staff:
+        # staff/admin have rights to all scene objects
+        subs.append(f"{realm}/s/#")
+        pubs.append(f"{realm}/s/#")
+        pubs.append(f"{realm}/g/a/#")
+    elif request.user.is_authenticated and scene and scene.startswith(f"{username}/"):
+        # scene owners have rights to this scene objects only
+        subs.append(f"{realm}/s/#")
+        pubs.append(f"{realm}/s/{scene}/#")
+        pubs.append(f"{realm}/g/a/#")
+    else:
+        # anon/non-owners have rights to view scene objects only
         subs.append(f"{realm}/s/{scene}/#")
-        subs.append(f"{realm}/g/a/#")
         if camid:  # probable web browser write
             pubs.append(f"{realm}/s/{scene}/{camid}")
             pubs.append(f"{realm}/s/{scene}/{camid}/#")
@@ -182,11 +194,6 @@ def mqtt_token(request):
             pubs.append(f"{realm}/s/{scene}/{ctrlid1}")
         if ctrlid2:
             pubs.append(f"{realm}/s/{scene}/{ctrlid2}")
-    else:
-        subs.append(f"{realm}/s/#")
-        subs.append(f"{realm}/g/a/#")
-        pubs.append(f"{realm}/s/#")
-        pubs.append(f"{realm}/g/a/#")
     # chat messages
     if userid:
         userhandle = userid + base64.b64encode(userid.encode()).decode()
