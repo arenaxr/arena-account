@@ -9,7 +9,7 @@ var initEmailAuth = function() {
         emailBtn.addEventListener('click', function(event) {
             var emailLoginPanel = document.getElementById('emailLoginWrapper');
             emailLoginPanel.hidden = false;
-            localStorage.setItem("auth_choice", "email");
+            localStorage.setItem("auth_choice", "arena");
         });
     }
 }

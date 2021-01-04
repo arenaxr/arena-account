@@ -129,7 +129,7 @@ def user_state(request):
     if request.user.is_authenticated:
         # TODO: should also lookup social account link
         if request.user.username.startswith("admin"):
-            authType = "email"
+            authType = "arena"
         else:
             authType = "google"
 
