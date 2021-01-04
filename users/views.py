@@ -127,12 +127,18 @@ def user_state(request):
     if request.method != 'POST':
         return JsonResponse({}, status=400)
     if request.user.is_authenticated:
+        # TODO: should also lookup social account link
+        if request.user.username.startswith("admin"):
+            authType = "email"
+        else:
+            authType = "google"
+
         return JsonResponse({
             "authenticated": request.user.is_authenticated,
             "username": request.user.username,
             "fullname": request.user.get_full_name(),
             "email": request.user.email,
-            "type": "email",  # TODO: should also lookup social account link
+            "type": authType,
         }, status=200)
     else:  # AnonymousUser
         return JsonResponse({
