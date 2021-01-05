@@ -26,3 +26,8 @@ class SocialSignupForm(SignupForm):
         # Add your own processing here.
         # You must return the original result.
         return user
+
+
+class UpdateStaffForm(forms.Form):
+    staff_username = forms.CharField()
+    is_staff = forms.BooleanField()

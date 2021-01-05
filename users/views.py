@@ -20,7 +20,7 @@ from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
-from .forms import NewUserForm, SocialSignupForm
+from .forms import NewUserForm, SocialSignupForm, UpdateStaffForm
 from .models import Scene
 
 STAFF_ACCTNAME = "scene"
@@ -107,8 +107,30 @@ def password_reset_request(request):
     return render(request=request, template_name="users/password/password_reset.html", context={"password_reset_form": password_reset_form})
 
 
+def update_staff(request):
+    # update staff status if allowed
+    if request.method != 'POST':
+        return JsonResponse({}, status=400)
+    form = UpdateStaffForm(request.POST)
+    if form.is_valid() and request.user.is_authenticated:
+        staff_username = form.cleaned_data['staff_username']
+        is_staff = form.cleaned_data['is_staff']
+        print(staff_username)
+        print(is_staff)
+        print(request.user.is_authenticated)
+        print(request.user.is_superuser)
+        print(User.objects.filter(username=staff_username).exists())
+        if request.user.is_authenticated and request.user.is_superuser and User.objects.filter(username=staff_username).exists():
+            user = User.objects.get(username=staff_username)
+            user.is_staff = is_staff
+            user.save()
+
+    return redirect("user_profile")
+
+
 def user_profile(request):
-    # load lost of scenes this user can edit
+    # load list of scenes this user can edit
+    # load updated list of staff users
     scenes = None
     staff = None
     if request.user.is_staff:  # admin/staff
@@ -117,11 +139,7 @@ def user_profile(request):
     elif request.user.is_authenticated:  # google/github
         scenes = Scene.objects.filter(editors=request.user)
     return render(request=request, template_name="users/user_profile.html",
-                  context={
-                      "user": request.user,
-                      "scenes": scenes,
-                      "staff": staff,
-                  })
+                  context={"user": request.user, "scenes": scenes, "staff": staff})
 
 
 def login_callback(request):
@@ -183,15 +201,17 @@ def mqtt_token(request):
     }
     # user presence objects
     subs.append(f"{realm}/g/a/#")
-    if request.user.is_authenticated and request.user.is_staff:
-        # staff/admin have rights to all scene objects
+    if request.user.is_authenticated:
         subs.append(f"{realm}/s/#")
-        pubs.append(f"{realm}/s/#")
-        pubs.append(f"{realm}/g/a/#")
-    elif request.user.is_authenticated and scene and scene.startswith(f"{username}/"):
-        # scene owners have rights to this scene objects only
-        subs.append(f"{realm}/s/#")
-        pubs.append(f"{realm}/s/{scene}/#")
+        if request.user.is_staff:
+            # staff/admin have rights to all scene objects
+            pubs.append(f"{realm}/s/#")
+        else:
+            # scene owners have rights to their scene objects only
+            pubs.append(f"{realm}/s/{username}/#")
+            scenes = Scene.objects.filter(editors=request.user)
+            for scene in scenes:
+                pubs.append(f"{realm}/s/{scene.name}/#")
         pubs.append(f"{realm}/g/a/#")
     else:
         # anon/non-owners have rights to view scene objects only

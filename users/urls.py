@@ -12,6 +12,7 @@ urlpatterns = [
     path("login_callback", views.login_callback, name="login_callback"),
     path('mqtt_auth', views.mqtt_token, name="mqtt_token"),
     path('user_state', views.user_state, name="user_state"),
+    path('update_staff', views.update_staff, name="update_staff"),
 ]
 
 startup.migrate_persist()

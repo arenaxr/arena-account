@@ -17,15 +17,15 @@
         Staff Role: {{ user.is_staff }}<br>
         Superuser Role: {{ user.is_superuser }}<br>
         <br>
-        <!-- TODO: Add Admin: Set user as Staff -->
-        <!-- TODO: Add Admin: Remove user as Staff -->
         {% if user.is_superuser %}
+            <!-- Set or Remove user as Staff -->
             <h5>Admin Functions:</h5>
-            <form method="post">
+            <form action="update_staff" method="POST">
+                {% csrf_token %}
                 <label for="username">Username:</label>
                 <input type="text" id="staff_username" name="staff_username">
-                <button type="submit" name="btn_add_staff">Add Staff</button>
-                <button type="submit" name="btn_rm_staff">Remove Staff</button>
+                <button type="submit" name="is_staff" value="true">Add Staff</button>
+                <button type="submit" name="is_staff" value="false">Remove Staff</button>
             </form>
             <h5>Staff Users:</h5>
             <ul>
@@ -39,7 +39,7 @@
             </ul>
             <br>
         {% endif %}
-        <!-- TODO: List scenes user can edit, and links -->
+        <!-- List scenes user can edit, and links -->
         <h5>Scene Write MQTT Permissions:</h5>
         <ul>
             {% if scenes %}
