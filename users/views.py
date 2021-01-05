@@ -115,12 +115,8 @@ def update_staff(request):
     if form.is_valid() and request.user.is_authenticated:
         staff_username = form.cleaned_data['staff_username']
         is_staff = form.cleaned_data['is_staff']
-        print(staff_username)
-        print(is_staff)
-        print(request.user.is_authenticated)
-        print(request.user.is_superuser)
-        print(User.objects.filter(username=staff_username).exists())
         if request.user.is_authenticated and request.user.is_superuser and User.objects.filter(username=staff_username).exists():
+            print(f"Setting user {staff_username}, is_staff={is_staff}")
             user = User.objects.get(username=staff_username)
             user.is_staff = is_staff
             user.save()
@@ -213,7 +209,7 @@ def mqtt_token(request):
             for scene in scenes:
                 pubs.append(f"{realm}/s/{scene.name}/#")
         pubs.append(f"{realm}/g/a/#")
-    else:
+    if scene:
         # anon/non-owners have rights to view scene objects only
         subs.append(f"{realm}/s/{scene}/#")
         if camid:  # probable web browser write
@@ -248,8 +244,10 @@ def mqtt_token(request):
     subs.append(f"$NETWORK")
     pubs.append(f"$NETWORK/latency")
     if len(subs) > 0:
+        subs.sort()
         payload['subs'] = subs
     if len(pubs) > 0:
+        pubs.sort()
         payload['publ'] = pubs
     token = jwt.encode(payload, private_key, algorithm='RS256')
     response = HttpResponse(json.dumps({
