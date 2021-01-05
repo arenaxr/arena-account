@@ -31,6 +31,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'arena-account']
 USE_X_FORWARDED_HOST = True
 MQTT_TOKEN_PRIVKEY = "/home/node/app/pubsubkey.pem"
 
+# TODO (mwfarb): this list can be reduced after webserver refactor
 # namespaces that are reserved for the webserver, see ARENA-core and nginx
 USERNAME_RESERVED = [
     'aframe',

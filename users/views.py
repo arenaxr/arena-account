@@ -20,7 +20,7 @@ from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
-from .forms import NewUserForm
+from .forms import NewUserForm, SocialSignupForm
 from .models import Scene
 
 STAFF_ACCTNAME = "scene"
@@ -109,12 +109,13 @@ def password_reset_request(request):
 
 def user_profile(request):
     # load lost of scenes this user can edit
-    if request.user.is_staff:
+    scenes = None
+    staff = None
+    if request.user.is_staff:  # admin/staff
         scenes = Scene.objects.all()
         staff = User.objects.filter(is_staff=True)
-    else:
+    elif request.user.is_authenticated:  # google/github
         scenes = Scene.objects.filter(editors=request.user)
-        staff = None
     return render(request=request, template_name="users/user_profile.html",
                   context={
                       "user": request.user,
@@ -127,13 +128,9 @@ def login_callback(request):
     return render(request=request, template_name="users/login_callback.html")
 
 
-# class SocialAccountSignupView(SignupView):
-#     # Allauth Social Signup View extended
-#     template_name = "users/social_signup.html"
-# socialaccount_signup_view = SocialAccountSignupView.as_view()
-
-def social_signup(request):
-    return render(request, "users/social_signup.html")
+def socialaccount_signup(request):
+    form = SocialSignupForm()
+    return render(request, "users/social_signup.html", {"form": form})
 
 
 def user_state(request):

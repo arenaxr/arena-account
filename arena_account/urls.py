@@ -17,6 +17,7 @@ from allauth.socialaccount import views as signup_views
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
+from users import views
 
 urlpatterns = [
     path('user/', include('users.urls')),
@@ -28,7 +29,7 @@ urlpatterns = [
         template_name="users/password/password_reset_confirm.html"), name='password_reset_confirm'),
     path('user/reset/done/', auth_views.PasswordResetCompleteView.as_view(
         template_name='users/password/password_reset_complete.html'), name='password_reset_complete'),
+    path('user/accounts/social/signup',
+         views.socialaccount_signup, name='socialaccount_signup'),
     path('user/accounts/', include('allauth.urls')),
-    path("user/accounts/social/signup", signup_views.SignupView.as_view(
-        template_name='users/social_signup.html'), name='social_signup'),
 ]
