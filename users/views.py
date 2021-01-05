@@ -108,7 +108,12 @@ def password_reset_request(request):
 
 
 def user_profile(request):
-    return render(request=request, template_name="users/user_profile.html", context={"user": request.user})
+    # load lost of scenes this user can edit
+    if request.user.is_staff:
+        scenes = Scene.objects.all()
+    else:
+        scenes = Scene.objects.filter(editors=request.user)
+    return render(request=request, template_name="users/user_profile.html", context={"user": request.user, "scenes": scenes})
 
 
 def login_callback(request):

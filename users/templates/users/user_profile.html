@@ -8,14 +8,43 @@
 <div class="container p-5">
     {% include 'users/includes/messages.html' %}
     {% if user.is_authenticated %}
-    <h1>User Profile</h1>
-    Username: {{ user.get_username }}<br>
-    Name: {{ user.first_name }} {{ user.last_name }}<br>
-    Email: {{ user.email }}<br>
-    Groups: {{ user.groups }}<br>
-    Permissions: {{ user.user_permissions }}<br>
-    Staff Role: {{ user.is_staff }}<br>
-    Superuser Role: {{ user.is_superuser }}<br>
+        <h1>User Profile</h1>
+        Username: {{ user.get_username }}<br>
+        Name: {{ user.first_name }} {{ user.last_name }}<br>
+        Email: {{ user.email }}<br>
+        Groups: {{ user.groups }}<br>
+        Permissions: {{ user.user_permissions }}<br>
+        Staff Role: {{ user.is_staff }}<br>
+        Superuser Role: {{ user.is_superuser }}<br>
+        <br>
+        <!-- TODO: Add Admin: Set user as Staff -->
+        <!-- TODO: Add Admin: Remove user as Staff -->
+        {% if user.is_superuser %}
+            <h5>Admin Functions:</h5>
+            <form>
+                <label for="username">Username:</label>
+                <input type="text" id="add_staff" name="add_staff">
+                <button type="submit">Add Staff Role</button>
+            </form>
+            <br>
+        {% endif %}
+        <!-- TODO: List scenes user can edit, and links -->
+        <h5>Scene Write MQTT Permissions:</h5>
+        <ul>
+            {% if scenes %}
+                {% for scene in scenes %}
+                    <li><a href="../../{{ scene.name }}">{{ scene.name }}</a></li>
+                {% endfor %}
+            {% else %}
+                <li>None</li>
+            {% endif %}
+            </ul>
+        <br>
+        {% else %}
+        <h5>Anonymous users have no profile.</h5>
+        <form action="{% url 'login' %}">
+            <button type="submit" class="btn btn-primary">Login</button>
+        </form>
     {% endif %}
 </div>
 
