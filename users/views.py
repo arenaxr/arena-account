@@ -111,9 +111,16 @@ def user_profile(request):
     # load lost of scenes this user can edit
     if request.user.is_staff:
         scenes = Scene.objects.all()
+        staff = User.objects.filter(is_staff=True)
     else:
         scenes = Scene.objects.filter(editors=request.user)
-    return render(request=request, template_name="users/user_profile.html", context={"user": request.user, "scenes": scenes})
+        staff = None
+    return render(request=request, template_name="users/user_profile.html",
+                  context={
+                      "user": request.user,
+                      "scenes": scenes,
+                      "staff": staff,
+                  })
 
 
 def login_callback(request):

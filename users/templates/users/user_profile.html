@@ -21,11 +21,22 @@
         <!-- TODO: Add Admin: Remove user as Staff -->
         {% if user.is_superuser %}
             <h5>Admin Functions:</h5>
-            <form>
+            <form method="post">
                 <label for="username">Username:</label>
-                <input type="text" id="add_staff" name="add_staff">
-                <button type="submit">Add Staff Role</button>
+                <input type="text" id="staff_username" name="staff_username">
+                <button type="submit" name="btn_add_staff">Add Staff</button>
+                <button type="submit" name="btn_rm_staff">Remove Staff</button>
             </form>
+            <h5>Staff Users:</h5>
+            <ul>
+                {% if staff %}
+                    {% for staff_user in staff %}
+                        <li>{{ staff_user.username }}</li>
+                    {% endfor %}
+                {% else %}
+                    <li>None</li>
+                {% endif %}
+            </ul>
             <br>
         {% endif %}
         <!-- TODO: List scenes user can edit, and links -->

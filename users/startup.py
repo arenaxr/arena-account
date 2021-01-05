@@ -10,7 +10,7 @@ from django.conf import settings
 
 from .models import Scene
 
-# TODO: remove extra debugging prints
+# TODO: this file can be removed when user/scene reservation is supported
 
 
 def migrate_persist():
@@ -34,6 +34,7 @@ def migrate_persist():
 
     # request all _scenes from persist
     host = config['mqtt_server']['host']
+    # in docker on localhost this url will fail
     url = f'https://{host}/persist/!allscenes'
     context = None
     p_scenes = []
