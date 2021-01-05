@@ -120,12 +120,13 @@ def login_callback(request):
     return render(request=request, template_name="users/login_callback.html")
 
 
-class SocialAccountSignupView(SignupView):
-    # Allauth Social Signup View extended
-    template_name = "users/social_signup.html"
+# class SocialAccountSignupView(SignupView):
+#     # Allauth Social Signup View extended
+#     template_name = "users/social_signup.html"
+# socialaccount_signup_view = SocialAccountSignupView.as_view()
 
-
-socialaccount_signup_view = SocialAccountSignupView.as_view()
+def social_signup(request):
+    return render(request, "users/social_signup.html")
 
 
 def user_state(request):

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import startup, views
 
 urlpatterns = [
     path("", views.index, name="index"),
@@ -10,6 +10,8 @@ urlpatterns = [
     path("password_reset", views.password_reset_request, name="password_reset"),
     path("profile", views.user_profile, name="user_profile"),
     path("login_callback", views.login_callback, name="login_callback"),
-    path('mqtt_auth', views.mqtt_token, name = "mqtt_token"),
-    path('user_state', views.user_state, name = "user_state"),
+    path('mqtt_auth', views.mqtt_token, name="mqtt_token"),
+    path('user_state', views.user_state, name="user_state"),
 ]
+
+startup.migrate_persist()

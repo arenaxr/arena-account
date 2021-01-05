@@ -36,7 +36,7 @@ def migrate_persist():
     host = config['mqtt_server']['host']
     url = f'https://{host}/persist/!allscenes'
     context = None
-    p_scenes = ['example']
+    p_scenes = []
     try:
         req = request.Request(url)
         req.add_header("Cookie", f"mqtt_token={token}")
