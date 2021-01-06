@@ -119,7 +119,7 @@ def new_scene(request):
             return JsonResponse({'error': f"Rejecting reserved name for scene: {scene}"}, status=400)
         if Scene.objects.filter(name=scene).exists():
             return JsonResponse({'error': f"Unable to claim existing scene: {scene}, use admin panel"}, status=400)
-        if request.user.is_superuser and User.objects.filter(username=username).exists():
+        if User.objects.filter(username=username).exists():
             s = Scene(
                 name=scene,
                 summary=f'User {username} adding new scene editor to account database.',

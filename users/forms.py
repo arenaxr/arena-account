@@ -35,4 +35,4 @@ class UpdateStaffForm(forms.Form):
 
 class NewSceneForm(forms.Form):
     username = forms.CharField()
-    scene = forms.BooleanField()
+    scene = forms.CharField()

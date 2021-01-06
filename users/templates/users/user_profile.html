@@ -17,6 +17,14 @@
         Staff Role: {{ user.is_staff }}<br>
         Superuser Role: {{ user.is_superuser }}<br>
         <br>
+        <h5>New Scene Request:</h5>
+        <form action="new_scene" method="POST">
+            {% csrf_token %}
+            <label for="scene">Scene Name:</label>
+            <input type="text" id="scene" name="scene" pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$">
+            <button type="submit" name="username" value="{{ user.get_username }}">Request Scene</button>
+        </form>
+        <br>
         {% if user.is_superuser %}
             <!-- Set or Remove user as Staff -->
             <h5>Admin Functions:</h5>
