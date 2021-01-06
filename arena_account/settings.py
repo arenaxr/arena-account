@@ -38,7 +38,7 @@ USERNAME_RESERVED = [
     'apriltag',
     'ar',
     'audio',
-    'auth',  # nginx
+    'auth',  # proxy
     'build',
     'chat',
     'conf',
@@ -47,17 +47,18 @@ USERNAME_RESERVED = [
     'images',
     'libs',
     'models',
-    'mqtt',  # nginx
+    'mqtt',  # proxy
     'network',
     'node_modules',
-    'persist',  # nginx
+    'persist',  # proxy
     'runtime-mngr',
     'screenshare',
+    'scene',  # public namespace (tentative)
     'signin',
     'store',
-    'storemng',  # nginx
+    'storemng',  # proxy
     'textures',
-    'user',  # nginx
+    'user',  # proxy
     'vendor',
 ]
 
@@ -91,6 +92,9 @@ LOGIN_REDIRECT_URL = '/user/login_callback'
 # require social accounts to use the signup form
 SOCIALACCOUNT_AUTO_SIGNUP = False
 SOCIALACCOUNT_EMAIL_REQUIRED = True
+
+#ACCOUNT_SIGNUP_FORM_CLASS = 'users.forms.SocialSignupForm'
+SOCIALACCOUNT_FORMS = {'signup': 'users.forms.SocialSignupForm'}
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
