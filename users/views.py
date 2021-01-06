@@ -20,7 +20,7 @@ from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 
-from .forms import NewUserForm, SocialSignupForm, UpdateStaffForm
+from .forms import NewSceneForm, NewUserForm, SocialSignupForm, UpdateStaffForm
 from .models import Scene
 
 STAFF_ACCTNAME = "scene"
@@ -107,6 +107,29 @@ def password_reset_request(request):
     return render(request=request, template_name="users/password/password_reset.html", context={"password_reset_form": password_reset_form})
 
 
+def new_scene(request):
+    # add new scene editor
+    if request.method != 'POST':
+        return JsonResponse({}, status=400)
+    form = NewSceneForm(request.POST)
+    if form.is_valid() and request.user.is_authenticated:
+        username = form.cleaned_data['username']
+        scene = form.cleaned_data['scene']
+        if scene in settings.USERNAME_RESERVED:
+            return JsonResponse({'error': f"Rejecting reserved name for scene: {scene}"}, status=400)
+        if Scene.objects.filter(name=scene).exists():
+            return JsonResponse({'error': f"Unable to claim existing scene: {scene}, use admin panel"}, status=400)
+        if request.user.is_superuser and User.objects.filter(username=username).exists():
+            s = Scene(
+                name=scene,
+                summary=f'User {username} adding new scene editor to account database.',
+            )
+            print(f"Setting user {username}, editor for scene: {scene}")
+            s.save()
+
+    return redirect("user_profile")
+
+
 def update_staff(request):
     # update staff status if allowed
     if request.method != 'POST':
@@ -115,7 +138,7 @@ def update_staff(request):
     if form.is_valid() and request.user.is_authenticated:
         staff_username = form.cleaned_data['staff_username']
         is_staff = form.cleaned_data['is_staff']
-        if request.user.is_authenticated and request.user.is_superuser and User.objects.filter(username=staff_username).exists():
+        if request.user.is_superuser and User.objects.filter(username=staff_username).exists():
             print(f"Setting user {staff_username}, is_staff={is_staff}")
             user = User.objects.get(username=staff_username)
             user.is_staff = is_staff

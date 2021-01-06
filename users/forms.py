@@ -31,3 +31,8 @@ class SocialSignupForm(SignupForm):
 class UpdateStaffForm(forms.Form):
     staff_username = forms.CharField()
     is_staff = forms.BooleanField()
+
+
+class NewSceneForm(forms.Form):
+    username = forms.CharField()
+    scene = forms.BooleanField()

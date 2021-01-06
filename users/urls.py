@@ -13,6 +13,7 @@ urlpatterns = [
     path('mqtt_auth', views.mqtt_token, name="mqtt_token"),
     path('user_state', views.user_state, name="user_state"),
     path('update_staff', views.update_staff, name="update_staff"),
+    path('new_scene', views.new_scene, name="new_scene"),
 ]
 
 startup.migrate_persist()

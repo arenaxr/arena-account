@@ -61,7 +61,7 @@ def migrate_persist():
                 name=p_scene,
                 summary='Existing scene name migrated from persistence database.',
             )
-            print(f'Adding scene to account: {p_scene}')
+            print(f'Adding scene to account database: {p_scene}')
             s.save()
 
     print('ending persist name migrate')
