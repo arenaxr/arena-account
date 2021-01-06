@@ -197,31 +197,30 @@ def mqtt_token(request):
     }
     # user presence objects
     subs.append(f"{realm}/g/a/#")
+    subs.append(f"{realm}/s/#")
     if request.user.is_authenticated:
-        subs.append(f"{realm}/s/#")
+        pubs.append(f"{realm}/g/a/#")
         if request.user.is_staff:
             # staff/admin have rights to all scene objects
             pubs.append(f"{realm}/s/#")
         else:
             # scene owners have rights to their scene objects only
             pubs.append(f"{realm}/s/{username}/#")
-            scenes = Scene.objects.filter(editors=request.user)
-            for scene in scenes:
-                pubs.append(f"{realm}/s/{scene.name}/#")
-        pubs.append(f"{realm}/g/a/#")
-    if scene:
-        # anon/non-owners have rights to view scene objects only
-        subs.append(f"{realm}/s/{scene}/#")
+            # TODO (mwfarb): temporarily add 'owned' scenes until namespace transition
+            u_scenes = Scene.objects.filter(editors=request.user)
+            for u_scene in u_scenes:
+                pubs.append(f"{realm}/s/{u_scene.name}/#")
+    # anon/non-owners have rights to view scene objects only
+    if scene and not request.user.is_staff:
+        # TODO (mwfarb): remove later, needed for clicks
+        pubs.append(f"{realm}/s/{scene}/#")
         if camid:  # probable web browser write
             pubs.append(f"{realm}/s/{scene}/{camid}")
             pubs.append(f"{realm}/s/{scene}/{camid}/#")
             pubs.append(f"{realm}/g/a/{camid}")
             pubs.append(f"topic/vio/{camid}")
-            # TODO: remove later, needed for clicks
-            pubs.append(f"{realm}/s/{scene}/#")
         else:  # probable cli client write
             pubs.append(f"{realm}/s/{scene}")
-            pubs.append(f"{realm}/s/{scene}/#")
         if ctrlid1:
             pubs.append(f"{realm}/s/{scene}/{ctrlid1}")
         if ctrlid2:
