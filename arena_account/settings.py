@@ -73,12 +73,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'users',
     'crispy_forms',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'rest_auth',
     'django.contrib.sites',
     'allauth',
     'allauth.account',
+    'rest_auth.registration',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    'allauth.socialaccount.providers.github',
 ]
 
 AUTHENTICATION_BACKENDS = (
