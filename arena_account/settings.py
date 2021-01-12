@@ -51,6 +51,7 @@ USERNAME_RESERVED = [
     'network',
     'node_modules',
     'persist',  # proxy
+    'public',  # public namespace (tentative)
     'runtime-mngr',
     'screenshare',
     'scene',  # public namespace (tentative)
