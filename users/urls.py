@@ -1,6 +1,26 @@
+import os
+
+from django.conf.urls import url
 from django.urls import path
+from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import permissions
 
 from . import startup, views
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="ARENA Users API",
+        default_version='v1',
+        description="ARENA Users Django site endpoints.",
+        # terms_of_service=f"{os.environ['HOSTNAME']}/eula",
+        contact=openapi.Contact(email=os.environ['EMAIL']),
+        license=openapi.License(name="BSD 3-Clause License"),
+    ),
+    # TODO: review permissions
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+)
 
 urlpatterns = [
     path("", views.index, name="index"),
@@ -14,6 +34,12 @@ urlpatterns = [
     path('user_state', views.user_state, name="user_state"),
     path('update_staff', views.update_staff, name="update_staff"),
     path('new_scene', views.new_scene, name="new_scene"),
+    url(r'^swagger(?P<format>\.json|\.yaml)$',
+        schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    url(r'^swagger/$',
+        schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    url(r'^redoc/$',
+        schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
 
 startup.migrate_persist()

@@ -22,6 +22,7 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from google.auth.transport import requests
 from google.oauth2 import id_token
+from rest_framework.decorators import api_view,
 
 from .forms import NewSceneForm, NewUserForm, SocialSignupForm, UpdateStaffForm
 from .models import Scene
@@ -110,6 +111,7 @@ def password_reset_request(request):
     return render(request=request, template_name="users/password/password_reset.html", context={"password_reset_form": password_reset_form})
 
 
+@api_view(['POST'])
 def new_scene(request):
     # add new scene editor
     if request.method != 'POST':
@@ -136,6 +138,7 @@ def new_scene(request):
     return redirect("user_profile")
 
 
+@api_view(['POST'])
 def update_staff(request):
     # update staff status if allowed
     if request.method != 'POST':
@@ -176,6 +179,7 @@ def socialaccount_signup(request):
     return render(request, "users/social_signup.html", {"form": form})
 
 
+@api_view(['POST'])
 def user_state(request):
     if request.method != 'POST':
         return JsonResponse({}, status=400)
@@ -199,6 +203,7 @@ def user_state(request):
         }, status=200)
 
 
+@api_view(['POST'])
 def mqtt_token(request):
     if request.method != 'POST':
         return JsonResponse({}, status=400)
