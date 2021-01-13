@@ -14,7 +14,6 @@ urlpatterns = [
     path('user_state', views.user_state, name="user_state"),
     path('update_staff', views.update_staff, name="update_staff"),
     path('new_scene', views.new_scene, name="new_scene"),
-    path('google_token', views.GoogleLogin.as_view(), name='google_token'),
 ]
 
 startup.migrate_persist()

@@ -5,8 +5,6 @@ import os
 
 import jwt
 from allauth.socialaccount.models import SocialAccount
-from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
-from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from allauth.socialaccount.views import SignupView
 from django.conf import settings
 from django.contrib import messages
@@ -22,25 +20,13 @@ from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
-from rest_auth.registration.views import SocialLoginView
-
 from google.auth.transport import requests
 from google.oauth2 import id_token
 
 from .forms import NewSceneForm, NewUserForm, SocialSignupForm, UpdateStaffForm
-from .google import GoogleOAuth2AdapterIdToken
 from .models import Scene
 
 STAFF_ACCTNAME = "public"
-
-
-class GoogleLogin(SocialLoginView):
-    adapter_class = GoogleOAuth2AdapterIdToken
-    client_class = OAuth2Client
-
-# class GoogleLogin(SocialLoginView):
-#     adapter_class = GoogleOAuth2Adapter
-#     client_class = OAuth2Client
 
 
 def index(request):
