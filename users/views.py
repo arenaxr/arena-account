@@ -4,6 +4,7 @@ import json
 import os
 
 import jwt
+from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.views import SignupView
 from django.conf import settings
 from django.contrib import messages
@@ -19,11 +20,13 @@ from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
+from google.auth.transport import requests
+from google.oauth2 import id_token
 
 from .forms import NewSceneForm, NewUserForm, SocialSignupForm, UpdateStaffForm
 from .models import Scene
 
-STAFF_ACCTNAME = "scene"
+STAFF_ACCTNAME = "public"
 
 
 def index(request):
@@ -197,8 +200,30 @@ def mqtt_token(request):
     if request.method != 'POST':
         return JsonResponse({}, status=400)
 
-    if request.user.is_authenticated:
-        username = request.user.username
+    user = request.user
+    gid_token = request.POST.get("id_token", None)
+    if gid_token:
+        gclient_ids = [os.environ['GAUTH_CLIENTID'],
+                       os.environ['GAUTH_INSTALLED_CLIENTID']]
+        try:
+            idinfo = id_token.verify_oauth2_token(
+                gid_token, requests.Request())
+            if idinfo['aud'] not in gclient_ids:
+                raise ValueError('Could not verify audience.')
+            # ID token is valid. Get the user's Google Account ID from the decoded token.
+            userid = idinfo['sub']
+        except ValueError as err:
+            return JsonResponse({"error": "{0}".format(err)}, status=403)
+        g_users = SocialAccount.objects.filter(uid=userid)
+        if len(g_users) != 1:
+            return JsonResponse({"error": "Database error"}, status=400)
+        try:
+            user = User.objects.get(username=g_users[0].user)
+        except User.DoesNotExist:
+            return JsonResponse({"error": "Website login required first"}, status=403)
+
+    if user.is_authenticated:
+        username = user.username
     else:  # AnonymousUser
         username = request.POST.get("username", None)
 
@@ -221,20 +246,20 @@ def mqtt_token(request):
     # user presence objects
     subs.append(f"{realm}/g/a/#")
     subs.append(f"{realm}/s/#")
-    if request.user.is_authenticated:
+    if user.is_authenticated:
         pubs.append(f"{realm}/g/a/#")
-        if request.user.is_staff:
+        if user.is_staff:
             # staff/admin have rights to all scene objects
             pubs.append(f"{realm}/s/#")
         else:
             # scene owners have rights to their scene objects only
             pubs.append(f"{realm}/s/{username}/#")
             # TODO (mwfarb): temporarily add 'owned' scenes until namespace transition
-            u_scenes = Scene.objects.filter(editors=request.user)
+            u_scenes = Scene.objects.filter(editors=user)
             for u_scene in u_scenes:
                 pubs.append(f"{realm}/s/{u_scene.name}/#")
     # anon/non-owners have rights to view scene objects only
-    if scene and not request.user.is_staff:
+    if scene and not user.is_staff:
         # TODO (mwfarb): remove later, needed for clicks
         pubs.append(f"{realm}/s/{scene}/#")
         if camid:  # probable web browser write
