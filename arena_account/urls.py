@@ -22,13 +22,13 @@ from users import views
 urlpatterns = [
     path('user/', include('users.urls')),
     path('user/admin/', admin.site.urls),
-    #path('user/accounts/', include('django.contrib.auth.urls')),
-    path('user/password_reset/done/', auth_views.PasswordResetDoneView.as_view(
-        template_name='users/password/password_reset_done.html'), name='password_reset_done'),
-    path('user/reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(
-        template_name="users/password/password_reset_confirm.html"), name='password_reset_confirm'),
-    path('user/reset/done/', auth_views.PasswordResetCompleteView.as_view(
-        template_name='users/password/password_reset_complete.html'), name='password_reset_complete'),
+    # path('user/accounts/', include('django.contrib.auth.urls')),
+    # path('user/password_reset/done/', auth_views.PasswordResetDoneView.as_view(
+    #     template_name='users/password/password_reset_done.html'), name='password_reset_done'),
+    # path('user/reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(
+    #     template_name="users/password/password_reset_confirm.html"), name='password_reset_confirm'),
+    # path('user/reset/done/', auth_views.PasswordResetCompleteView.as_view(
+    #     template_name='users/password/password_reset_complete.html'), name='password_reset_complete'),
     path('user/accounts/social/signup',
          views.socialaccount_signup, name='socialaccount_signup'),
     path('user/accounts/', include('allauth.urls')),
