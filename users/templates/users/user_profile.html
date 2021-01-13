@@ -21,9 +21,14 @@
         <h5>New Scene Request:</h5>
         <form action="new_scene" method="POST">
             {% csrf_token %}
+            {% if staff %}
+                <label for="is_public">Public:</label>
+                <input type="checkbox" id="is_public" name="is_public" value="Public">
+                <br>
+            {% endif %}
             <label for="scene">Scene Name:</label>
             <input type="text" id="scene" name="scene" pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,200}$">
-            <button type="submit" name="username" value="{{ user.get_username }}">Request Scene</button>
+            <button type="submit">Request Scene</button>
         </form>
         <br>
         {% if user.is_superuser %}

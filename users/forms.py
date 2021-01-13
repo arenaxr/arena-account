@@ -34,5 +34,5 @@ class UpdateStaffForm(forms.Form):
 
 
 class NewSceneForm(forms.Form):
-    username = forms.CharField()
     scene = forms.CharField()
+    is_public = forms.BooleanField()

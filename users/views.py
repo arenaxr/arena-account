@@ -116,18 +116,21 @@ def new_scene(request):
         return JsonResponse({}, status=400)
     form = NewSceneForm(request.POST)
     if form.is_valid() and request.user.is_authenticated:
-        username = form.cleaned_data['username']
+        username = request.user.username
         scene = form.cleaned_data['scene']
+        is_public = form.cleaned_data['is_public']
         if scene in settings.USERNAME_RESERVED:
             return JsonResponse({'error': f"Rejecting reserved name for scene: {scene}"}, status=400)
+        if not is_public:
+            scene = f'{username}/{scene}'  # use namespace for normal users
         if Scene.objects.filter(name=scene).exists():
             return JsonResponse({'error': f"Unable to claim existing scene: {scene}, use admin panel"}, status=400)
         if User.objects.filter(username=username).exists():
             s = Scene(
                 name=scene,
-                summary=f'User {username} adding new scene editor to account database.',
+                summary=f'User {username} adding new scene {scene} to account database.',
             )
-            print(f"Setting user {username}, editor for scene: {scene}")
+            # TODO: set user {username}, editor for scene: {scene}
             s.save()
 
     return redirect("user_profile")
