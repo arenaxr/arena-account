@@ -6,11 +6,38 @@ from urllib import parse, request
 from urllib.error import HTTPError, URLError
 
 import jwt
+from allauth.socialaccount.models import SocialApp
 from django.conf import settings
+from django.contrib.sites.models import Site
 
 from .models import Scene
 
-# TODO: this file can be removed when user/scene reservation is supported
+SAPP_PROV = 'google'
+SAPP_NAME = 'Google ARENA OAuth Web'
+
+
+def setup_socialapps():
+    # add host to Sites if not there already
+    host = os.getenv('HOSTNAME')
+    hc = Site.objects.filter(domain=host).count()
+    print(f"Site table found expected '{host}': {hc}")
+    if hc == 0:
+        print(f"Adding '{host}' to Site table...")
+        site = Site(name=host, domain=host)
+        site.save()
+        # TODO: potentially should confirm id == settings.SITE_ID
+
+    # add google to SocialApps if not there already
+    ac = SocialApp.objects.filter(provider=SAPP_PROV).count()
+    print(f"SocialApp table found expected '{SAPP_PROV}': {ac}")
+    if ac == 0:
+        print(f"Adding '{SAPP_PROV}' to SocialApp table...")
+        gclientid = os.getenv('GAUTH_CLIENTID')
+        gsecret = os.getenv('GAUTH_CLIENTSECRET')
+        sapp = SocialApp(provider=SAPP_PROV, name=SAPP_NAME,
+                         client_id=gclientid, secret=gsecret)
+        sapp.save()
+        sapp.sites.add(settings.SITE_ID)
 
 
 def migrate_persist():

@@ -17,3 +17,4 @@ urlpatterns = [
 ]
 
 startup.migrate_persist()
+startup.setup_socialapps()
