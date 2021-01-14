@@ -115,23 +115,28 @@ def new_scene(request):
     if request.method != 'POST':
         return JsonResponse({}, status=400)
     form = NewSceneForm(request.POST)
-    if form.is_valid() and request.user.is_authenticated:
-        username = request.user.username
-        scene = form.cleaned_data['scene']
-        is_public = form.cleaned_data['is_public']
-        if scene in settings.USERNAME_RESERVED:
-            return JsonResponse({'error': f"Rejecting reserved name for scene: {scene}"}, status=400)
-        if not is_public:
-            scene = f'{username}/{scene}'  # use namespace for normal users
-        if Scene.objects.filter(name=scene).exists():
-            return JsonResponse({'error': f"Unable to claim existing scene: {scene}, use admin panel"}, status=400)
-        if User.objects.filter(username=username).exists():
-            s = Scene(
-                name=scene,
-                summary=f'User {username} adding new scene {scene} to account database.',
-            )
-            # TODO: set user {username}, editor for scene: {scene}
-            s.save()
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': f"Not authenticated."}, status=403)
+    if not form.is_valid():
+        return JsonResponse({'error': f"Invalid parameters"}, status=500)
+    username = request.user.username
+    scene = form.cleaned_data['scene']
+    is_public = form.cleaned_data['is_public']
+    if scene in settings.USERNAME_RESERVED:
+        return JsonResponse({'error': f"Rejecting reserved name for scene: {scene}"}, status=400)
+    if is_public and request.user.is_staff:
+        scene = f'{STAFF_ACCTNAME}/{scene}'
+    else:
+        scene = f'{username}/{scene}'  # use namespace for normal users
+    if Scene.objects.filter(name=scene).exists():
+        return JsonResponse({'error': f"Unable to claim existing scene: {scene}, use admin panel"}, status=400)
+    if User.objects.filter(username=username).exists():
+        s = Scene(
+            name=scene,
+            summary=f'User {username} adding new scene {scene} to account database.',
+        )
+        # TODO: set user {username}, editor for scene: {scene}
+        s.save()
 
     return redirect("user_profile")
 
@@ -141,14 +146,17 @@ def update_staff(request):
     if request.method != 'POST':
         return JsonResponse({}, status=400)
     form = UpdateStaffForm(request.POST)
-    if form.is_valid() and request.user.is_authenticated:
-        staff_username = form.cleaned_data['staff_username']
-        is_staff = form.cleaned_data['is_staff']
-        if request.user.is_superuser and User.objects.filter(username=staff_username).exists():
-            print(f"Setting user {staff_username}, is_staff={is_staff}")
-            user = User.objects.get(username=staff_username)
-            user.is_staff = is_staff
-            user.save()
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': f"Not authenticated."}, status=403)
+    if not form.is_valid():
+        return JsonResponse({'error': f"Invalid parameters"}, status=500)
+    staff_username = form.cleaned_data['staff_username']
+    is_staff = form.cleaned_data['is_staff']
+    if request.user.is_superuser and User.objects.filter(username=staff_username).exists():
+        print(f"Setting user {staff_username}, is_staff={is_staff}")
+        user = User.objects.get(username=staff_username)
+        user.is_staff = is_staff
+        user.save()
 
     return redirect("user_profile")
 
@@ -257,7 +265,7 @@ def mqtt_token(request):
         else:
             # scene owners have rights to their scene objects only
             pubs.append(f"{realm}/s/{username}/#")
-            # TODO (mwfarb): temporarily add 'owned' scenes until namespace transition
+            # add scenes that have granted by other owners
             u_scenes = Scene.objects.filter(editors=user)
             for u_scene in u_scenes:
                 pubs.append(f"{realm}/s/{u_scene.name}/#")

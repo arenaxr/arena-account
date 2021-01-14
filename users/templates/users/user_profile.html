@@ -23,12 +23,13 @@
             {% csrf_token %}
             {% if staff %}
                 <label for="is_public">Public:</label>
-                <input type="checkbox" id="is_public" name="is_public" value="Public">
+                <input type="checkbox" id="is_public" name="is_public">
                 <br>
             {% endif %}
             <label for="scene">Scene Name:</label>
             <input type="text" id="scene" name="scene" pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,200}$">
-            <button type="submit">Request Scene</button>
+            <button type="submit">Request Scene</button><br>
+            <small style="color: grey">Do not include username or slash '/', it will be generated for you.</small>
         </form>
         <br>
         {% if user.is_superuser %}
