@@ -63,19 +63,23 @@ def migrate_persist():
     host = config['mqtt_server']['host']
     # in docker on localhost this url will fail
     url = f'https://{host}/persist/!allscenes'
-    context = None
     p_scenes = []
     try:
         req = request.Request(url)
-        req.add_header("Cookie", f"mqtt_token={token}")
+        req.add_header("Cookie", f"mqtt_token={token.decode('utf-8')}")
         if settings.DEBUG:
             context = ssl.create_default_context()
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
-        res = request.urlopen(req, context=context)
-        p_scenes = res.read().decode('utf-8')
+            res = request.urlopen(req, context=context)
+        else:
+            res = request.urlopen(req)
+        result = res.read().decode('utf-8')
+        p_scenes = json.loads(result)
     except (URLError, HTTPError) as err:
         print("{0}: ".format(err)+url)
+    except ValueError as err:
+        print(f"{result} {0}: ".format(err)+url)
 
     # add only-missing scenes to scene database
     print(f'persist scenes: {p_scenes}')
