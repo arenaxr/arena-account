@@ -169,7 +169,7 @@ def my_scenes(request):
             name__startswith=f'{request.user.username}/')
         ext_scenes = Scene.objects.filter(editors=request.user)
         # merge 'my' namespaced scenes and extras scenes granted
-    return scenes | ext_scenes
+    return (scenes | ext_scenes).order_by('name')
 
 
 def user_profile(request):
