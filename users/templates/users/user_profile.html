@@ -58,13 +58,16 @@
         <h5>Scene Write MQTT Permissions:</h5>
         <ul>
             {% if scenes %}
+                <table>
                 {% for scene in scenes %}
-                    <li><a href="../../{{ scene.name }}">{{ scene.name }}</a></li>
+                <tr>
+                    <td><a href="../../{{ scene.name }}">{{ scene.name }}</a></td>
+                </tr>
                 {% endfor %}
+                </table>
             {% else %}
-                <li>None</li>
+                None
             {% endif %}
-            </ul>
         <br>
         {% else %}
         <h5>Anonymous users have no profile.</h5>
