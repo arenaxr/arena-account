@@ -14,7 +14,7 @@ schema_view = get_schema_view(
         title="ARENA Users API",
         default_version='v1',
         description="ARENA Users Django site endpoints.",
-        terms_of_service=f"{os.environ['HOSTNAME']}/eula",
+        # TODO: terms_of_service=f"/eula",
         contact=openapi.Contact(email=os.environ['EMAIL']),
         license=openapi.License(name="BSD 3-Clause License"),
     ),
