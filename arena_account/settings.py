@@ -54,7 +54,7 @@ USERNAME_RESERVED = [
     'public',  # public namespace (tentative)
     'runtime-mngr',
     'screenshare',
-    'scene',  # public namespace (tentative)
+    'scene',
     'signin',
     'store',
     'storemng',  # proxy
@@ -80,6 +80,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'rest_framework',
+    'rest_framework.authtoken',
+    'rest_framework_swagger',
     'drf_yasg',
 ]
 
@@ -89,6 +91,9 @@ AUTHENTICATION_BACKENDS = (
 )
 
 REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
 }
 
