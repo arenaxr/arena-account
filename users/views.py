@@ -3,6 +3,8 @@ import datetime
 import json
 import os
 
+import coreapi
+import coreschema
 import jwt
 from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.views import SignupView
@@ -20,9 +22,12 @@ from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
+from drf_yasg.utils import swagger_auto_schema
 from google.auth.transport import requests
 from google.oauth2 import id_token
-from rest_framework.decorators import api_view
+from rest_framework import permissions
+from rest_framework.decorators import api_view, permission_classes, schema
+from rest_framework.schemas import AutoSchema, ManualSchema
 
 from .forms import NewSceneForm, NewUserForm, SocialSignupForm, UpdateStaffForm
 from .models import Scene
@@ -218,8 +223,36 @@ def user_state(request):
         }, status=200)
 
 
+mqtt_token_schema = AutoSchema(manual_fields=[
+    coreapi.Field("id_auth", required=True, location="body", type="string",
+                  description="Authentication type: 'anonymous', 'google', 'google-installed'."),
+    coreapi.Field("username", required=True, location="body", type="string",
+                  description="ARENA user database username, or like 'anonymous-[name]'."),
+    coreapi.Field("id_token", required=False, location="body", type="string",
+                  description="JWT id_token from social account authentication service, \
+                               if forwarding from remote client like arena-py."),
+    coreapi.Field("realm", required=False, location="body", type="string",
+                  description="Name of the ARENA realm used in the topic string (default: 'realm')."),
+    coreapi.Field("scene", required=False, location="body", type="string",
+                  description="Name of the ARENA scene: '[namespace]/[scene]'."),
+    coreapi.Field("userid", required=False, location="body", type="string",
+                  description="Name of the user's ARENA web client id."),
+    coreapi.Field("camid", required=False, location="body", type="string",
+                  description="Name of the user's ARENA camera object id."),
+    coreapi.Field("ctrlid1", required=False, location="body", type="string",
+                  description="Name of the user's ARENA controller object 1, like vive left."),
+    coreapi.Field("ctrlid2", required=False, location="body", type="string",
+                  description="Name of the user's ARENA controller object 2, like vive right."),
+])
+
+
+@schema(mqtt_token_schema)  # TODO: schema not working yet
 @api_view(['POST'])
+@permission_classes((permissions.AllowAny,))
 def mqtt_token(request):
+    """
+    Request a MQTT JWT token with permissions for an anonymous or authenticated user given incoming parameters.
+    """
     if request.method != 'POST':
         return JsonResponse({}, status=400)
 
