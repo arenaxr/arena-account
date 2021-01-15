@@ -22,7 +22,7 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from google.auth.transport import requests
 from google.oauth2 import id_token
-from rest_framework.decorators import api_view,
+from rest_framework.decorators import api_view
 
 from .forms import NewSceneForm, NewUserForm, SocialSignupForm, UpdateStaffForm
 from .models import Scene
