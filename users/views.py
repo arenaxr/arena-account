@@ -125,17 +125,14 @@ def new_scene(request):
     if scene in settings.USERNAME_RESERVED:
         return JsonResponse({'error': f"Rejecting reserved name for scene: {scene}"}, status=400)
     if is_public and request.user.is_staff:
-        scene = f'{STAFF_ACCTNAME}/{scene}'
+        scene = f'{STAFF_ACCTNAME}/{scene}'  # public namespace
     else:
-        scene = f'{username}/{scene}'  # use namespace for normal users
+        scene = f'{username}/{scene}'  # user namespace for normal users
     if Scene.objects.filter(name=scene).exists():
         return JsonResponse({'error': f"Unable to claim existing scene: {scene}, use admin panel"}, status=400)
     if User.objects.filter(username=username).exists():
-        s = Scene(
-            name=scene,
-            summary=f'User {username} adding new scene {scene} to account database.',
-        )
-        # TODO: set user {username}, editor for scene: {scene}
+        s = Scene(name=scene,
+                  summary=f'User {username} adding new scene {scene} to account database.')
         s.save()
 
     return redirect("user_profile")
@@ -161,16 +158,26 @@ def update_staff(request):
     return redirect("user_profile")
 
 
-def user_profile(request):
+def my_scenes(request):
     # load list of scenes this user can edit
-    # load updated list of staff users
-    scenes = None
-    staff = None
+    scenes = Scene.objects.none()
+    ext_scenes = Scene.objects.none()
     if request.user.is_staff:  # admin/staff
         scenes = Scene.objects.all()
+    elif request.user.is_authenticated:  # standard user
+        scenes = Scene.objects.filter(
+            name__startswith=f'{request.user.username}/')
+        ext_scenes = Scene.objects.filter(editors=request.user)
+        # merge 'my' namespaced scenes and extras scenes granted
+    return scenes | ext_scenes
+
+
+def user_profile(request):
+    # load updated list of staff users
+    scenes = my_scenes(request)
+    staff = None
+    if request.user.is_staff:  # admin/staff
         staff = User.objects.filter(is_staff=True)
-    elif request.user.is_authenticated:  # google/github
-        scenes = Scene.objects.filter(editors=request.user)
     return render(request=request, template_name="users/user_profile.html",
                   context={"user": request.user, "scenes": scenes, "staff": staff})
 
