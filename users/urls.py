@@ -1,8 +1,35 @@
-from django.urls import path
+import os
+
+from django.conf.urls import url
+from django.contrib import admin
+from django.urls import include, path, re_path
+from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import permissions
 
 from . import startup, views
 
+schema_view = get_schema_view(
+    openapi.Info(
+        title="ARENA Users API",
+        default_version='v1',
+        description="ARENA Users Django site endpoints.",
+        # TODO: terms_of_service=f"/eula",
+        contact=openapi.Contact(email=os.environ['EMAIL']),
+        license=openapi.License(name="BSD 3-Clause License"),
+    ),
+    # TODO: review permissions
+    public=True,
+    permission_classes=(permissions.AllowAny,),
+)
+
 urlpatterns = [
+    re_path(r'^doc(?P<format>\.json|\.yaml)$',
+            schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    path('doc/', schema_view.with_ui('swagger', cache_timeout=0),
+         name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0),
+         name='schema-redoc'),
     path("", views.index, name="index"),
     # path("register", views.register_request, name="register"),
     path("login", views.login_request, name="login"),
