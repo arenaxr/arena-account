@@ -29,10 +29,20 @@ class SocialSignupForm(SignupForm):
 
 
 class UpdateStaffForm(forms.Form):
-    staff_username = forms.CharField()
-    is_staff = forms.BooleanField()
+    staff_username = forms.CharField(
+        label='staff_username',
+        required=True)
+    is_staff = forms.BooleanField(
+        label='is_staff',
+        required=False,
+        initial=False)
 
 
 class NewSceneForm(forms.Form):
-    scene = forms.CharField()
-    is_public = forms.BooleanField()
+    scene = forms.CharField(
+        label='scene',
+        required=True)
+    is_public = forms.BooleanField(
+        label='is_public',
+        required=False,
+        initial=False)
