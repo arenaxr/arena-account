@@ -25,12 +25,15 @@ from django.utils.http import urlsafe_base64_encode
 from drf_yasg.utils import swagger_auto_schema
 from google.auth.transport import requests
 from google.oauth2 import id_token
-from rest_framework import permissions
-from rest_framework.decorators import api_view, permission_classes, schema
+from rest_framework import permissions, response
+from rest_framework.compat import coreapi
+from rest_framework.decorators import (api_view, permission_classes,
+                                       renderer_classes, schema)
 from rest_framework.schemas import AutoSchema, ManualSchema
 
 from .forms import NewSceneForm, NewUserForm, SocialSignupForm, UpdateStaffForm
 from .models import Scene
+from .serializers import SceneSerializer
 
 STAFF_ACCTNAME = "public"
 
@@ -117,6 +120,7 @@ def password_reset_request(request):
 
 
 @api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
 def new_scene(request):
     # add new scene editor
     if request.method != 'POST':
@@ -146,6 +150,7 @@ def new_scene(request):
 
 
 @api_view(['POST'])
+@permission_classes([permissions.IsAdminUser])
 def update_staff(request):
     # update staff status if allowed
     if request.method != 'POST':
@@ -166,7 +171,16 @@ def update_staff(request):
     return redirect("user_profile")
 
 
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
 def my_scenes(request):
+    if request.method != 'GET':
+        return JsonResponse({}, status=400)
+    serializer = SceneSerializer(user_scenes(request), many=True)
+    return JsonResponse(serializer.data, safe=False)
+
+
+def user_scenes(request):
     # load list of scenes this user can edit
     scenes = Scene.objects.none()
     ext_scenes = Scene.objects.none()
@@ -182,7 +196,7 @@ def my_scenes(request):
 
 def user_profile(request):
     # load updated list of staff users
-    scenes = my_scenes(request)
+    scenes = user_scenes(request)
     staff = None
     if request.user.is_staff:  # admin/staff
         staff = User.objects.filter(is_staff=True)
@@ -199,9 +213,10 @@ def socialaccount_signup(request):
     return render(request, "users/social_signup.html", {"form": form})
 
 
-@api_view(['POST'])
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
 def user_state(request):
-    if request.method != 'POST':
+    if request.method != 'GET':
         return JsonResponse({}, status=400)
     if request.user.is_authenticated:
         # TODO: should also lookup social account link
@@ -223,32 +238,39 @@ def user_state(request):
         }, status=200)
 
 
-mqtt_token_schema = AutoSchema(manual_fields=[
-    coreapi.Field("id_auth", required=True, location="body", type="string",
-                  description="Authentication type: 'anonymous', 'google', 'google-installed'."),
-    coreapi.Field("username", required=True, location="body", type="string",
-                  description="ARENA user database username, or like 'anonymous-[name]'."),
-    coreapi.Field("id_token", required=False, location="body", type="string",
-                  description="JWT id_token from social account authentication service, \
-                               if forwarding from remote client like arena-py."),
-    coreapi.Field("realm", required=False, location="body", type="string",
-                  description="Name of the ARENA realm used in the topic string (default: 'realm')."),
-    coreapi.Field("scene", required=False, location="body", type="string",
-                  description="Name of the ARENA scene: '[namespace]/[scene]'."),
-    coreapi.Field("userid", required=False, location="body", type="string",
-                  description="Name of the user's ARENA web client id."),
-    coreapi.Field("camid", required=False, location="body", type="string",
-                  description="Name of the user's ARENA camera object id."),
-    coreapi.Field("ctrlid1", required=False, location="body", type="string",
-                  description="Name of the user's ARENA controller object 1, like vive left."),
-    coreapi.Field("ctrlid2", required=False, location="body", type="string",
-                  description="Name of the user's ARENA controller object 2, like vive right."),
-])
+class MqttTokenSchema(AutoSchema):
+    def __init__(self):
+        super(MqttTokenSchema, self).__init__()
+
+    def get_manual_fields(self, path, method):
+        extra_fields = [
+            coreapi.Field("id_auth", required=True, location="body", type="string",
+                          description="Authentication type: 'anonymous', 'google', 'google-installed'."),
+            coreapi.Field("username", required=True, location="body", type="string",
+                          description="ARENA user database username, or like 'anonymous-[name]'."),
+            coreapi.Field("id_token", required=False, location="body", type="string",
+                          description="JWT id_token from social account authentication service, \
+                                    if forwarding from remote client like arena-py."),
+            coreapi.Field("realm", required=False, location="body", type="string",
+                          description="Name of the ARENA realm used in the topic string (default: 'realm')."),
+            coreapi.Field("scene", required=False, location="body", type="string",
+                          description="Name of the ARENA scene: '[namespace]/[scene]'."),
+            coreapi.Field("userid", required=False, location="body", type="string",
+                          description="Name of the user's ARENA web client id."),
+            coreapi.Field("camid", required=False, location="body", type="string",
+                          description="Name of the user's ARENA camera object id."),
+            coreapi.Field("ctrlid1", required=False, location="body", type="string",
+                          description="Name of the user's ARENA controller object 1, like vive left."),
+            coreapi.Field("ctrlid2", required=False, location="body", type="string",
+                          description="Name of the user's ARENA controller object 2, like vive right."),
+        ]
+        manual_fields = super().get_manual_fields(path, method)
+        return manual_fields + extra_fields
 
 
-@schema(mqtt_token_schema)  # TODO: schema not working yet
 @api_view(['POST'])
-@permission_classes((permissions.AllowAny,))
+@permission_classes([permissions.AllowAny])
+@schema(MqttTokenSchema())  # TODO: schema not working yet
 def mqtt_token(request):
     """
     Request a MQTT JWT token with permissions for an anonymous or authenticated user given incoming parameters.
