@@ -4,6 +4,8 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
+from .models import Scene
+
 
 class NewUserForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -46,3 +48,17 @@ class NewSceneForm(forms.Form):
         label='is_public',
         required=False,
         initial=False)
+
+
+class SceneListForm(forms.ModelForm):
+    editors = forms.ModelMultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple(),
+        required=False,
+        label='',
+        help_text='Selection is not required',
+        queryset=User.objects.all().order_by('username'))
+
+    class Meta:
+        model = Scene
+        fields = ['editors', 'public_read', 'public_write']
+        #labels = {'post_subject': 'Post subject'}
