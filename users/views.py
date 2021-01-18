@@ -194,7 +194,6 @@ def update_staff(request):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
 def my_scenes(request):
     """
     Request a list of scenes this user can write to.
@@ -239,7 +238,6 @@ def socialaccount_signup(request):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
 def user_state(request):
     """
     Request the user's authenticated status, username, name, email.
@@ -295,7 +293,6 @@ class MqttTokenSchema(AutoSchema):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.AllowAny])
 @schema(MqttTokenSchema())  # TODO: schema not working yet
 def mqtt_token(request):
     """
