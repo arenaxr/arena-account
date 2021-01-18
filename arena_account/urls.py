@@ -29,7 +29,5 @@ urlpatterns = [
     #     template_name="users/password/password_reset_confirm.html"), name='password_reset_confirm'),
     # path('user/reset/done/', auth_views.PasswordResetCompleteView.as_view(
     #     template_name='users/password/password_reset_complete.html'), name='password_reset_complete'),
-    path('user/accounts/social/signup',
-         views.socialaccount_signup, name='socialaccount_signup'),
     path('user/accounts/', include('allauth.urls')),
 ]

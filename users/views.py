@@ -6,6 +6,7 @@ import os
 import coreapi
 import coreschema
 import jwt
+from allauth.socialaccount.forms import SignupForm as SocialSignupForm
 from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.views import SignupView
 from django.conf import settings
@@ -31,7 +32,7 @@ from rest_framework.decorators import (api_view, permission_classes,
                                        renderer_classes, schema)
 from rest_framework.schemas import AutoSchema, ManualSchema
 
-from .forms import NewSceneForm, NewUserForm, SocialSignupForm, UpdateStaffForm
+from .forms import NewSceneForm, NewUserForm, UpdateStaffForm
 from .models import Scene
 from .serializers import SceneSerializer
 
@@ -234,8 +235,8 @@ def login_callback(request):
 
 
 def socialaccount_signup(request):
-    form = SocialSignupForm()
-    return render(request, "users/social_signup.html", {"form": form})
+    #form = SocialSignupForm()
+    return render(request, "users/social_signup.html")  # , {"form": form})
 
 
 @api_view(['GET'])
