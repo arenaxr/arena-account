@@ -119,9 +119,28 @@ def password_reset_request(request):
     return render(request=request, template_name="users/password/password_reset.html", context={"password_reset_form": password_reset_form})
 
 
+class NewSceneSchema(AutoSchema):
+    def __init__(self):
+        super(NewSceneSchema, self).__init__()
+
+    def get_manual_fields(self, path, method):
+        extra_fields = [
+            coreapi.Field("scene", required=True, location="form", type="string",
+                          description="The scene name, without slash '/' or namespace."),
+            coreapi.Field("is_public", required=False, location="form", type="boolean",
+                          description="True to use 'public' namespace, False for user namespace."),
+        ]
+        manual_fields = super().get_manual_fields(path, method)
+        return manual_fields + extra_fields
+
+
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
+@schema(NewSceneSchema())  # TODO: schema not working yet
 def new_scene(request):
+    """
+    Add a new scene to the known scenes table, either 'public' or user namespaced.
+    """
     # add new scene editor
     if request.method != 'POST':
         return JsonResponse({}, status=400)
@@ -152,6 +171,9 @@ def new_scene(request):
 @api_view(['POST'])
 @permission_classes([permissions.IsAdminUser])
 def update_staff(request):
+    """
+    Toggle the user's is_staff true/false status.
+    """
     # update staff status if allowed
     if request.method != 'POST':
         return JsonResponse({}, status=400)
@@ -174,6 +196,9 @@ def update_staff(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def my_scenes(request):
+    """
+    Request a list of scenes this user can write to.
+    """
     if request.method != 'GET':
         return JsonResponse({}, status=400)
     serializer = SceneSerializer(user_scenes(request), many=True)
@@ -216,6 +241,9 @@ def socialaccount_signup(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def user_state(request):
+    """
+    Request the user's authenticated status, username, name, email.
+    """
     if request.method != 'GET':
         return JsonResponse({}, status=400)
     if request.user.is_authenticated:
@@ -244,8 +272,6 @@ class MqttTokenSchema(AutoSchema):
 
     def get_manual_fields(self, path, method):
         extra_fields = [
-            coreapi.Field("id_auth", required=True, location="body", type="string",
-                          description="Authentication type: 'anonymous', 'google', 'google-installed'."),
             coreapi.Field("username", required=True, location="body", type="string",
                           description="ARENA user database username, or like 'anonymous-[name]'."),
             coreapi.Field("id_token", required=False, location="body", type="string",
