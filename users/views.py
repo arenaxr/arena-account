@@ -346,8 +346,8 @@ def mqtt_token(request):
     }
     # user presence objects
     subs.append(f"{realm}/g/a/#")
-    subs.append(f"{realm}/s/#")
     if user.is_authenticated:
+        subs.append(f"{realm}/s/#")
         pubs.append(f"{realm}/g/a/#")
         if user.is_staff:
             # staff/admin have rights to all scene objects
@@ -361,8 +361,17 @@ def mqtt_token(request):
                 pubs.append(f"{realm}/s/{u_scene.name}/#")
     # anon/non-owners have rights to view scene objects only
     if scene and not user.is_staff:
-        # TODO (mwfarb): remove later, needed for clicks
-        pubs.append(f"{realm}/s/{scene}/#")
+        scene_opt = Scene.objects.filter(name=scene)
+        if scene_opt.exists:
+            if scene_opt.public_read:
+                subs.append(f"{realm}/s/{scene}/#")
+            if scene_opt.public_write:
+                # TODO (mwfarb): publishing objects and object events should be separated in topics
+                pubs.append(f"{realm}/s/{scene}/#")
+        else:
+            subs.append(f"{realm}/s/{scene}/#")
+            # TODO (mwfarb): publishing objects and object events should be separated in topics
+            pubs.append(f"{realm}/s/{scene}/#")
         if camid:  # probable web browser write
             pubs.append(f"{realm}/s/{scene}/{camid}")
             pubs.append(f"{realm}/s/{scene}/{camid}/#")
@@ -389,8 +398,8 @@ def mqtt_token(request):
     subs.append(f"{realm}/proc/#")
     pubs.append(f"{realm}/proc/#")
     # network graph
-    subs.append(f"$NETWORK")
-    pubs.append(f"$NETWORK/latency")
+    subs.append("$NETWORK")
+    pubs.append("$NETWORK/latency")
     if len(subs) > 0:
         subs.sort()
         payload['subs'] = subs
