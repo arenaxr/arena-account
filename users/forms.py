@@ -50,15 +50,15 @@ class NewSceneForm(forms.Form):
         initial=False)
 
 
-class SceneListForm(forms.ModelForm):
-    editors = forms.ModelMultipleChoiceField(
-        widget=forms.CheckboxSelectMultiple(),
+class UpdateSceneForm(forms.Form):
+    name = forms.CharField(
+        label='name',
+        required=True)
+    public_read = forms.BooleanField(
+        label='public_read',
         required=False,
-        label='',
-        help_text='Selection is not required',
-        queryset=User.objects.all().order_by('username'))
-
-    class Meta:
-        model = Scene
-        fields = ['editors', 'public_read', 'public_write']
-        #labels = {'post_subject': 'Post subject'}
+        initial=True)
+    public_write = forms.BooleanField(
+        label='public_write',
+        required=False,
+        initial=True)

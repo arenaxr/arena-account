@@ -31,7 +31,8 @@ from rest_framework.decorators import (api_view, permission_classes,
                                        renderer_classes, schema)
 from rest_framework.schemas import AutoSchema, ManualSchema
 
-from .forms import NewSceneForm, NewUserForm, SocialSignupForm, UpdateStaffForm
+from .forms import (NewSceneForm, NewUserForm, SocialSignupForm,
+                    UpdateSceneForm, UpdateStaffForm)
 from .models import Scene
 from .serializers import SceneSerializer
 
@@ -164,6 +165,35 @@ def new_scene(request):
         s = Scene(name=scene,
                   summary=f'User {username} adding new scene {scene} to account database.')
         s.save()
+
+    return redirect("user_profile")
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def update_scene(request):
+    """
+    Update existing scene permissions the user has access to.
+    """
+    if request.method != 'POST':
+        return JsonResponse({}, status=400)
+    form = UpdateSceneForm(request.POST)
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': f"Not authenticated."}, status=403)
+    if not form.is_valid():
+        return JsonResponse({'error': f"Invalid parameters"}, status=500)
+    username = request.user.username
+    name = form.cleaned_data['name']
+    public_read = form.cleaned_data['public_read']
+    public_write = form.cleaned_data['public_write']
+    if not Scene.objects.filter(name=name).exists():
+        return JsonResponse({'error': f"Unable to update existing scene: {name}, not found"}, status=500)
+    scene = Scene.objects.get(name=name)
+    if scene not in user_scenes(request):
+        return JsonResponse({'error': f"User does not have permission for: {name}."}, status=400)
+    scene.public_read = public_read
+    scene.public_write = public_write
+    scene.save()
 
     return redirect("user_profile")
 
