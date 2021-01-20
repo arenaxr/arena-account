@@ -377,22 +377,25 @@ def mqtt_token(request):
     # user presence objects
     subs.append(f"{realm}/g/a/#")
     if user.is_authenticated:
-        subs.append(f"{realm}/s/#")
         pubs.append(f"{realm}/g/a/#")
         if user.is_staff:
             # staff/admin have rights to all scene objects
+            subs.append(f"{realm}/s/#")
             pubs.append(f"{realm}/s/#")
         else:
             # scene owners have rights to their scene objects only
+            subs.append(f"{realm}/s/{username}/#")
             pubs.append(f"{realm}/s/{username}/#")
             # add scenes that have granted by other owners
             u_scenes = Scene.objects.filter(editors=user)
             for u_scene in u_scenes:
+                subs.append(f"{realm}/s/{u_scene.name}/#")
                 pubs.append(f"{realm}/s/{u_scene.name}/#")
     # anon/non-owners have rights to view scene objects only
     if scene and not user.is_staff:
         scene_opt = Scene.objects.filter(name=scene)
         if scene_opt.exists():
+            # did the user request sub or pub to be private?
             scene_opt = Scene.objects.get(name=scene)
             if scene_opt.public_read:
                 subs.append(f"{realm}/s/{scene}/#")
@@ -400,6 +403,7 @@ def mqtt_token(request):
                 # TODO (mwfarb): publishing objects and object events should be separated in topics
                 pubs.append(f"{realm}/s/{scene}/#")
         else:
+            # otherwise, assume public access to scene, fail open
             subs.append(f"{realm}/s/{scene}/#")
             # TODO (mwfarb): publishing objects and object events should be separated in topics
             pubs.append(f"{realm}/s/{scene}/#")
