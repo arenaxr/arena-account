@@ -43,6 +43,7 @@ urlpatterns = [
     path('user_state', views.user_state, name="user_state"),
     path('update_staff', views.update_staff, name="update_staff"),
     path('new_scene', views.new_scene, name="new_scene"),
+    path('update_scene', views.update_scene, name="update_scene"),
     path('my_scenes', views.my_scenes, name="my_scenes"),
 ]
 
