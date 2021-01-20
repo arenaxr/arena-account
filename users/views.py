@@ -392,7 +392,8 @@ def mqtt_token(request):
     # anon/non-owners have rights to view scene objects only
     if scene and not user.is_staff:
         scene_opt = Scene.objects.filter(name=scene)
-        if scene_opt.exists:
+        if scene_opt.exists():
+            scene_opt = Scene.objects.get(name=scene)
             if scene_opt.public_read:
                 subs.append(f"{realm}/s/{scene}/#")
             if scene_opt.public_write:
