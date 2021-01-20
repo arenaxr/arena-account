@@ -32,7 +32,8 @@ from rest_framework.decorators import (api_view, permission_classes,
                                        renderer_classes, schema)
 from rest_framework.schemas import AutoSchema, ManualSchema
 
-from .forms import NewSceneForm, NewUserForm, UpdateStaffForm
+from .forms import (NewSceneForm, NewUserForm, SocialSignupForm,
+                    UpdateSceneForm, UpdateStaffForm)
 from .models import Scene
 from .serializers import SceneSerializer
 
@@ -170,6 +171,35 @@ def new_scene(request):
 
 
 @api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def update_scene(request):
+    """
+    Update existing scene permissions the user has access to.
+    """
+    if request.method != 'POST':
+        return JsonResponse({}, status=400)
+    form = UpdateSceneForm(request.POST)
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': f"Not authenticated."}, status=403)
+    if not form.is_valid():
+        return JsonResponse({'error': f"Invalid parameters"}, status=500)
+    username = request.user.username
+    name = form.cleaned_data['name']
+    public_read = form.cleaned_data['public_read']
+    public_write = form.cleaned_data['public_write']
+    if not Scene.objects.filter(name=name).exists():
+        return JsonResponse({'error': f"Unable to update existing scene: {name}, not found"}, status=500)
+    scene = Scene.objects.get(name=name)
+    if scene not in user_scenes(request):
+        return JsonResponse({'error': f"User does not have permission for: {name}."}, status=400)
+    scene.public_read = public_read
+    scene.public_write = public_write
+    scene.save()
+
+    return redirect("user_profile")
+
+
+@api_view(['POST'])
 @permission_classes([permissions.IsAdminUser])
 def update_staff(request):
     """
@@ -195,7 +225,6 @@ def update_staff(request):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
 def my_scenes(request):
     """
     Request a list of scenes this user can write to.
@@ -240,7 +269,6 @@ def socialaccount_signup(request):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
 def user_state(request):
     """
     Request the user's authenticated status, username, name, email.
@@ -296,7 +324,6 @@ class MqttTokenSchema(AutoSchema):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.AllowAny])
 @schema(MqttTokenSchema())  # TODO: schema not working yet
 def mqtt_token(request):
     """
@@ -350,8 +377,8 @@ def mqtt_token(request):
     }
     # user presence objects
     subs.append(f"{realm}/g/a/#")
-    subs.append(f"{realm}/s/#")
     if user.is_authenticated:
+        subs.append(f"{realm}/s/#")
         pubs.append(f"{realm}/g/a/#")
         if user.is_staff:
             # staff/admin have rights to all scene objects
@@ -365,8 +392,17 @@ def mqtt_token(request):
                 pubs.append(f"{realm}/s/{u_scene.name}/#")
     # anon/non-owners have rights to view scene objects only
     if scene and not user.is_staff:
-        # TODO (mwfarb): remove later, needed for clicks
-        pubs.append(f"{realm}/s/{scene}/#")
+        scene_opt = Scene.objects.filter(name=scene)
+        if scene_opt.exists:
+            if scene_opt.public_read:
+                subs.append(f"{realm}/s/{scene}/#")
+            if scene_opt.public_write:
+                # TODO (mwfarb): publishing objects and object events should be separated in topics
+                pubs.append(f"{realm}/s/{scene}/#")
+        else:
+            subs.append(f"{realm}/s/{scene}/#")
+            # TODO (mwfarb): publishing objects and object events should be separated in topics
+            pubs.append(f"{realm}/s/{scene}/#")
         if camid:  # probable web browser write
             pubs.append(f"{realm}/s/{scene}/{camid}")
             pubs.append(f"{realm}/s/{scene}/{camid}/#")
@@ -393,8 +429,8 @@ def mqtt_token(request):
     subs.append(f"{realm}/proc/#")
     pubs.append(f"{realm}/proc/#")
     # network graph
-    subs.append(f"$NETWORK")
-    pubs.append(f"$NETWORK/latency")
+    subs.append("$NETWORK")
+    pubs.append("$NETWORK/latency")
     if len(subs) > 0:
         subs.sort()
         payload['subs'] = subs
