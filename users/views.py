@@ -1,6 +1,7 @@
 import base64
 import datetime
 import json
+import logging
 import os
 
 import coreapi
@@ -38,6 +39,8 @@ from .serializers import SceneSerializer
 from .startup import get_persist_scenes
 
 STAFF_ACCTNAME = "public"
+
+logger = logging.getLogger(__name__)
 
 
 def index(request):
@@ -148,9 +151,9 @@ def new_scene(request):
 
 @permission_classes([permissions.IsAuthenticated])
 def profile_new_scene(request):
-    res = _new_scene(request)
-    if res.status_code != 200:
-        return res
+    response = _new_scene(request)
+    if response.status_code != 200:
+        return response
     return redirect("user_profile")
 
 
@@ -165,6 +168,7 @@ def _new_scene(request):
         return JsonResponse({'error': f"Invalid parameters"}, status=500)
     username = request.user.username
     scene = form.cleaned_data['scene']
+    logger.info(f"_new_scene, is_public '{request.POST.get('is_public')}'")
     is_public = form.cleaned_data['is_public']
     if is_public and request.user.is_staff:
         scene = f'{STAFF_ACCTNAME}/{scene}'  # public namespace
@@ -224,7 +228,7 @@ def profile_update_staff(request):
     staff_username = form.cleaned_data['staff_username']
     is_staff = form.cleaned_data['is_staff']
     if request.user.is_superuser and User.objects.filter(username=staff_username).exists():
-        print(f"Setting user {staff_username}, is_staff={is_staff}")
+        logger.info(f"Setting user {staff_username}, is_staff={is_staff}")
         user = User.objects.get(username=staff_username)
         user.is_staff = is_staff
         user.save()
