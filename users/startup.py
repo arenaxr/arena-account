@@ -40,8 +40,8 @@ def setup_socialapps():
         sapp.sites.add(settings.SITE_ID)
 
 
-def migrate_persist():
-    print('starting persist name migrate')
+def get_persist_scenes():
+    p_scenes = []
     config = settings.PUBSUB
     privkeyfile = settings.MQTT_TOKEN_PRIVKEY
 
@@ -63,7 +63,6 @@ def migrate_persist():
     host = config['mqtt_server']['host']
     # in docker on localhost this url will fail
     url = f'https://{host}/persist/!allscenes'
-    p_scenes = []
     try:
         req = request.Request(url)
         req.add_header("Cookie", f"mqtt_token={token.decode('utf-8')}")
@@ -80,6 +79,12 @@ def migrate_persist():
         print("{0}: ".format(err)+url)
     except ValueError as err:
         print(f"{result} {0}: ".format(err)+url)
+    return p_scenes
+
+
+def migrate_persist():
+    print('starting persist name migrate')
+    p_scenes = get_persist_scenes()
 
     # add only-missing scenes to scene database
     print(f'persist scenes: {p_scenes}')

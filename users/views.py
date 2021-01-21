@@ -35,6 +35,7 @@ from .forms import (NewSceneForm, NewUserForm, SocialSignupForm,
                     UpdateSceneForm, UpdateStaffForm)
 from .models import Scene
 from .serializers import SceneSerializer
+from .startup import get_persist_scenes
 
 STAFF_ACCTNAME = "public"
 
@@ -142,6 +143,18 @@ def new_scene(request):
     """
     Add a new scene to the known scenes table, either 'public' or user namespaced.
     """
+    return _new_scene(request)
+
+
+@permission_classes([permissions.IsAuthenticated])
+def profile_new_scene(request):
+    res = _new_scene(request)
+    if res.status_code != 200:
+        return res
+    return redirect("user_profile")
+
+
+def _new_scene(request):
     # add new scene editor
     if request.method != 'POST':
         return JsonResponse({}, status=400)
@@ -153,8 +166,6 @@ def new_scene(request):
     username = request.user.username
     scene = form.cleaned_data['scene']
     is_public = form.cleaned_data['is_public']
-    if scene in settings.USERNAME_RESERVED:
-        return JsonResponse({'error': f"Rejecting reserved name for scene: {scene}"}, status=400)
     if is_public and request.user.is_staff:
         scene = f'{STAFF_ACCTNAME}/{scene}'  # public namespace
     else:
@@ -166,12 +177,11 @@ def new_scene(request):
                   summary=f'User {username} adding new scene {scene} to account database.')
         s.save()
 
-    return redirect("user_profile")
+    return JsonResponse({})
 
 
-@api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
-def update_scene(request):
+def profile_update_scene(request):
     """
     Update existing scene permissions the user has access to.
     """
@@ -198,9 +208,8 @@ def update_scene(request):
     return redirect("user_profile")
 
 
-@api_view(['POST'])
 @permission_classes([permissions.IsAdminUser])
-def update_staff(request):
+def profile_update_staff(request):
     """
     Toggle the user's is_staff true/false status.
     """
@@ -252,6 +261,7 @@ def user_scenes(user):
 def user_profile(request):
     # load updated list of staff users
     scenes = user_scenes(request.user)
+    p_scenes = get_persist_scenes()
     staff = None
     if request.user.is_staff:  # admin/staff
         staff = User.objects.filter(is_staff=True)
@@ -264,6 +274,7 @@ def login_callback(request):
 
 
 def socialaccount_signup(request):
+    # TODO: (mwfarb): reject usernames in form on signup: settings.USERNAME_RESERVED:
     form = SocialSignupForm()
     return render(request, "users/social_signup.html", {"form": form})
 

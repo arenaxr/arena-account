@@ -41,9 +41,13 @@ urlpatterns = [
     path("login_callback", views.login_callback, name="login_callback"),
     path('mqtt_auth', views.mqtt_token, name="mqtt_token"),
     path('user_state', views.user_state, name="user_state"),
-    path('update_staff', views.update_staff, name="update_staff"),
+    path('profile_update_staff', views.profile_update_staff,
+         name="profile_update_staff"),
+    path('profile_new_scene', views.profile_new_scene,
+         name="profile_new_scene"),
+    path('profile_update_scene', views.profile_update_scene,
+         name="profile_update_scene"),
     path('new_scene', views.new_scene, name="new_scene"),
-    path('update_scene', views.update_scene, name="update_scene"),
     path('my_scenes', views.my_scenes, name="my_scenes"),
 ]
 
