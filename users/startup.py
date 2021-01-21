@@ -17,24 +17,25 @@ SAPP_PROV = 'google'
 SAPP_NAME = 'Google ARENA OAuth Web'
 
 logger = logging.getLogger(__name__)
+logger.info("startup.py load test...")
 
 
 def setup_socialapps():
     # add host to Sites if not there already
     host = os.getenv('HOSTNAME')
     hc = Site.objects.filter(domain=host).count()
-    logger.info(f"Site table found expected '{host}': {hc}")
+    print(f"Site table found expected '{host}': {hc}")
     if hc == 0:
-        logger.info(f"Adding '{host}' to Site table...")
+        print(f"Adding '{host}' to Site table...")
         site = Site(name=host, domain=host)
         site.save()
         # TODO: potentially should confirm id == settings.SITE_ID
 
     # add google to SocialApps if not there already
     ac = SocialApp.objects.filter(provider=SAPP_PROV).count()
-    logger.info(f"SocialApp table found expected '{SAPP_PROV}': {ac}")
+    print(f"SocialApp table found expected '{SAPP_PROV}': {ac}")
     if ac == 0:
-        logger.info(f"Adding '{SAPP_PROV}' to SocialApp table...")
+        print(f"Adding '{SAPP_PROV}' to SocialApp table...")
         gclientid = os.getenv('GAUTH_CLIENTID')
         gsecret = os.getenv('GAUTH_CLIENTSECRET')
         sapp = SocialApp(provider=SAPP_PROV, name=SAPP_NAME,
@@ -51,7 +52,7 @@ def get_persist_scenes():
     # get key for persist
     if not os.path.exists(privkeyfile):
         privkeyfile = '../data/keys/pubsubkey.pem'
-    logger.info('Using keyfile at: ' + privkeyfile)
+    print('Using keyfile at: ' + privkeyfile)
     with open(privkeyfile) as privatefile:
         private_key = privatefile.read()
 
@@ -79,28 +80,28 @@ def get_persist_scenes():
         result = res.read().decode('utf-8')
         p_scenes = json.loads(result)
     except (URLError, HTTPError) as err:
-        logger.info("{0}: ".format(err)+url)
+        print("{0}: ".format(err)+url)
     except ValueError as err:
-        logger.info(f"{result} {0}: ".format(err)+url)
+        print(f"{result} {0}: ".format(err)+url)
     return p_scenes
 
 
 def migrate_persist():
-    logger.info('starting persist name migrate')
+    print('starting persist name migrate')
     p_scenes = get_persist_scenes()
 
     # add only-missing scenes to scene database
-    logger.info(f'persist scenes: {p_scenes}')
+    print(f'persist scenes: {p_scenes}')
     a_scenes = Scene.objects.values_list('name', flat=True)
-    logger.info(f'account scenes: {a_scenes}')
+    print(f'account scenes: {a_scenes}')
     for p_scene in p_scenes:
-        logger.info(f'persist scene test: {p_scene}')
+        print(f'persist scene test: {p_scene}')
         if p_scene not in a_scenes:
             s = Scene(
                 name=p_scene,
                 summary='Existing scene name migrated from persistence database.',
             )
-            logger.info(f'Adding scene to account database: {p_scene}')
+            print(f'Adding scene to account database: {p_scene}')
             s.save()
 
-    logger.info('ending persist name migrate')
+    print('ending persist name migrate')

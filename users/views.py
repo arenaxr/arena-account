@@ -41,6 +41,7 @@ from .startup import get_persist_scenes
 STAFF_ACCTNAME = "public"
 
 logger = logging.getLogger(__name__)
+logger.info("views.py load test...")
 
 
 def index(request):
@@ -168,7 +169,7 @@ def _new_scene(request):
         return JsonResponse({'error': f"Invalid parameters"}, status=500)
     username = request.user.username
     scene = form.cleaned_data['scene']
-    logger.info(f"_new_scene, is_public '{request.POST.get('is_public')}'")
+    print(f"_new_scene, is_public '{request.POST.get('is_public')}'")
     is_public = form.cleaned_data['is_public']
     if is_public and request.user.is_staff:
         scene = f'{STAFF_ACCTNAME}/{scene}'  # public namespace
@@ -228,7 +229,7 @@ def profile_update_staff(request):
     staff_username = form.cleaned_data['staff_username']
     is_staff = form.cleaned_data['is_staff']
     if request.user.is_superuser and User.objects.filter(username=staff_username).exists():
-        logger.info(f"Setting user {staff_username}, is_staff={is_staff}")
+        print(f"Setting user {staff_username}, is_staff={is_staff}")
         user = User.objects.get(username=staff_username)
         user.is_staff = is_staff
         user.save()
@@ -464,4 +465,3 @@ def mqtt_token(request):
     response.set_cookie('mqtt_token', token.decode("utf-8"), max_age=86400000,
                         httponly=True, secure=True)
     return response
-
