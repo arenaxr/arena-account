@@ -19,7 +19,7 @@
         <br>
         <!-- New Scene Request -->
         <h5>New Scene Request:</h5>
-        <form action="new_scene" method="POST">
+        <form action="profile_new_scene" method="POST">
             <small style="color: grey">Do not include username or slash '/', it will be generated for you.</small><br>
             {% csrf_token %}
             {% if staff %}
@@ -35,7 +35,7 @@
         {% if user.is_superuser %}
             <!-- Set or Remove user as Staff -->
             <h5>Admin Functions:</h5>
-            <form action="update_staff" method="POST">
+            <form action="profile_update_staff" method="POST">
                 {% csrf_token %}
                 <label for="username">Username:</label>
                 <input type="text" name="staff_username" pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$">
@@ -75,7 +75,7 @@
                     <!-- <td>Editors</td><td></td> -->
                 </tr>
                 {% for scene in scenes %}
-                <form action="update_scene" method="POST">
+                <form action="profile_update_scene" method="POST">
                     {% csrf_token %}
                     <tr>
                     <td><a href="../../{{ scene.name }}">{{ scene.name }}</a></td><td></td>
