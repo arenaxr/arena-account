@@ -189,7 +189,7 @@ def update_scene(request):
     if not Scene.objects.filter(name=name).exists():
         return JsonResponse({'error': f"Unable to update existing scene: {name}, not found"}, status=500)
     scene = Scene.objects.get(name=name)
-    if scene not in user_scenes(request):
+    if scene not in user_scenes(request.user):
         return JsonResponse({'error': f"User does not have permission for: {name}."}, status=400)
     scene.public_read = public_read
     scene.public_write = public_write
@@ -230,27 +230,28 @@ def my_scenes(request):
     """
     if request.method != 'GET':
         return JsonResponse({}, status=400)
-    serializer = SceneSerializer(user_scenes(request), many=True)
+    serializer = SceneSerializer(user_scenes(request.user), many=True)
     return JsonResponse(serializer.data, safe=False)
 
 
-def user_scenes(request):
+def user_scenes(user):
     # load list of scenes this user can edit
     scenes = Scene.objects.none()
     ext_scenes = Scene.objects.none()
-    if request.user.is_staff:  # admin/staff
-        scenes = Scene.objects.all()
-    elif request.user.is_authenticated:  # standard user
-        scenes = Scene.objects.filter(
-            name__startswith=f'{request.user.username}/')
-        ext_scenes = Scene.objects.filter(editors=request.user)
-        # merge 'my' namespaced scenes and extras scenes granted
+    if user.is_authenticated:
+        if user.is_staff:  # admin/staff
+            scenes = Scene.objects.all()
+        else:  # standard user
+            scenes = Scene.objects.filter(
+                name__startswith=f'{user.username}/')
+            ext_scenes = Scene.objects.filter(editors=user)
+            # merge 'my' namespaced scenes and extras scenes granted
     return (scenes | ext_scenes).order_by('name')
 
 
 def user_profile(request):
     # load updated list of staff users
-    scenes = user_scenes(request)
+    scenes = user_scenes(request.user)
     staff = None
     if request.user.is_staff:  # admin/staff
         staff = User.objects.filter(is_staff=True)
@@ -377,22 +378,25 @@ def mqtt_token(request):
     # user presence objects
     subs.append(f"{realm}/g/a/#")
     if user.is_authenticated:
-        subs.append(f"{realm}/s/#")
         pubs.append(f"{realm}/g/a/#")
         if user.is_staff:
             # staff/admin have rights to all scene objects
+            subs.append(f"{realm}/s/#")
             pubs.append(f"{realm}/s/#")
         else:
             # scene owners have rights to their scene objects only
+            subs.append(f"{realm}/s/{username}/#")
             pubs.append(f"{realm}/s/{username}/#")
             # add scenes that have granted by other owners
             u_scenes = Scene.objects.filter(editors=user)
             for u_scene in u_scenes:
+                subs.append(f"{realm}/s/{u_scene.name}/#")
                 pubs.append(f"{realm}/s/{u_scene.name}/#")
     # anon/non-owners have rights to view scene objects only
     if scene and not user.is_staff:
         scene_opt = Scene.objects.filter(name=scene)
         if scene_opt.exists():
+            # did the user check public read or public write to be private instead?
             scene_opt = Scene.objects.get(name=scene)
             if scene_opt.public_read:
                 subs.append(f"{realm}/s/{scene}/#")
@@ -400,6 +404,7 @@ def mqtt_token(request):
                 # TODO (mwfarb): publishing objects and object events should be separated in topics
                 pubs.append(f"{realm}/s/{scene}/#")
         else:
+            # otherwise, assume public access to scene, fail open
             subs.append(f"{realm}/s/{scene}/#")
             # TODO (mwfarb): publishing objects and object events should be separated in topics
             pubs.append(f"{realm}/s/{scene}/#")
