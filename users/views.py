@@ -261,7 +261,6 @@ def user_scenes(user):
 def user_profile(request):
     # load updated list of staff users
     scenes = user_scenes(request.user)
-    p_scenes = get_persist_scenes()
     staff = None
     if request.user.is_staff:  # admin/staff
         staff = User.objects.filter(is_staff=True)
