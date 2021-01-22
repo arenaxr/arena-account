@@ -7,7 +7,7 @@ import os
 import coreapi
 import coreschema
 import jwt
-from allauth.socialaccount.forms import SignupForm as SocialSignupForm
+#from allauth.socialaccount.forms import SignupForm as SocialSignupForm
 from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.views import SignupView
 from django.conf import settings
@@ -33,8 +33,7 @@ from rest_framework.decorators import (api_view, permission_classes,
                                        renderer_classes, schema)
 from rest_framework.schemas import AutoSchema, ManualSchema
 
-from .forms import (NewSceneForm, NewUserForm, SocialSignupForm,
-                    UpdateSceneForm, UpdateStaffForm)
+from .forms import NewSceneForm, NewUserForm, UpdateSceneForm, UpdateStaffForm, GoogleSignUpForm
 from .models import Scene
 from .serializers import SceneSerializer
 from .startup import get_persist_scenes
@@ -280,7 +279,8 @@ def login_callback(request):
 
 def socialaccount_signup(request):
     # TODO: (mwfarb): reject usernames in form on signup: settings.USERNAME_RESERVED:
-    form = SocialSignupForm()
+    # form = SocialSignupForm()
+    form = GoogleSignUpForm()
     return render(request, "users/social_signup.html", {"form": form})
 
 
@@ -466,4 +466,3 @@ def mqtt_token(request):
     response.set_cookie('mqtt_token', token.decode("utf-8"), max_age=86400000,
                         httponly=True, secure=True)
     return response
-
