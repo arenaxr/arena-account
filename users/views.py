@@ -160,8 +160,6 @@ def profile_new_scene(request):
 
 def _new_scene(request):
     # add new scene editor
-    if request.method != 'POST':
-        return JsonResponse({}, status=400)
     form = NewSceneForm(request.POST)
     if not request.user.is_authenticated:
         return JsonResponse({'error': f"Not authenticated."}, status=403)
@@ -242,8 +240,6 @@ def my_scenes(request):
     """
     Request a list of scenes this user can write to.
     """
-    if request.method != 'GET':
-        return JsonResponse({}, status=400)
     serializer = SceneSerializer(user_scenes(request.user), many=True)
     return JsonResponse(serializer.data, safe=False)
 
@@ -283,13 +279,20 @@ def socialaccount_signup(request):
     return render(request, "users/social_signup.html", {"form": form})
 
 
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 def user_state(request):
     """
     Request the user's authenticated status, username, name, email.
     """
-    if request.method != 'GET':
-        return JsonResponse({}, status=400)
+    user = request.user
+    if request.method == 'POST':
+        gid_token = request.POST.get("id_token", None)
+        if gid_token:
+            try:
+                user = get_user_from_id_token(gid_token)
+            except (ValueError, User.DoesNotExist) as err:
+                return JsonResponse({"error": "{0}".format(err)}, status=403)
+
     if request.user.is_authenticated:
         # TODO: should also lookup social account link
         if request.user.username.startswith("admin"):
@@ -338,36 +341,37 @@ class MqttTokenSchema(AutoSchema):
         return manual_fields + extra_fields
 
 
+def get_user_from_id_token(gid_token):
+    if not gid_token:
+        raise ValueError('Missing token.')
+    gclient_ids = [os.environ['GAUTH_CLIENTID'],
+                   os.environ['GAUTH_INSTALLED_CLIENTID']]
+    idinfo = id_token.verify_oauth2_token(
+        gid_token, requests.Request())
+    if idinfo['aud'] not in gclient_ids:
+        raise ValueError('Could not verify audience.')
+    # ID token is valid. Get the user's Google Account ID from the decoded token.
+    userid = idinfo['sub']
+    g_user = SocialAccount.objects.get(uid=userid)
+    if not g_user:
+        raise ValueError('Database error.')
+
+    return User.objects.get(username=g_user.user)
+
+
 @api_view(['POST'])
 @schema(MqttTokenSchema())  # TODO: schema not working yet
 def mqtt_token(request):
     """
     Request a MQTT JWT token with permissions for an anonymous or authenticated user given incoming parameters.
     """
-    if request.method != 'POST':
-        return JsonResponse({}, status=400)
-
     user = request.user
     gid_token = request.POST.get("id_token", None)
     if gid_token:
-        gclient_ids = [os.environ['GAUTH_CLIENTID'],
-                       os.environ['GAUTH_INSTALLED_CLIENTID']]
         try:
-            idinfo = id_token.verify_oauth2_token(
-                gid_token, requests.Request())
-            if idinfo['aud'] not in gclient_ids:
-                raise ValueError('Could not verify audience.')
-            # ID token is valid. Get the user's Google Account ID from the decoded token.
-            userid = idinfo['sub']
-        except ValueError as err:
+            user = get_user_from_id_token(gid_token)
+        except (ValueError, User.DoesNotExist) as err:
             return JsonResponse({"error": "{0}".format(err)}, status=403)
-        g_users = SocialAccount.objects.filter(uid=userid)
-        if len(g_users) != 1:
-            return JsonResponse({"error": "Database error"}, status=400)
-        try:
-            user = User.objects.get(username=g_users[0].user)
-        except User.DoesNotExist:
-            return JsonResponse({"error": "Website login required first"}, status=403)
 
     if user.is_authenticated:
         username = user.username
@@ -465,4 +469,3 @@ def mqtt_token(request):
     response.set_cookie('mqtt_token', token.decode("utf-8"), max_age=86400000,
                         httponly=True, secure=True)
     return response
-
