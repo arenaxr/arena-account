@@ -293,23 +293,23 @@ def user_state(request):
             except (ValueError, User.DoesNotExist) as err:
                 return JsonResponse({"error": "{0}".format(err)}, status=403)
 
-    if request.user.is_authenticated:
+    if user.is_authenticated:
         # TODO: should also lookup social account link
-        if request.user.username.startswith("admin"):
+        if user.username.startswith("admin"):
             authType = "arena"
         else:
             authType = "google"
 
         return JsonResponse({
-            "authenticated": request.user.is_authenticated,
-            "username": request.user.username,
-            "fullname": request.user.get_full_name(),
-            "email": request.user.email,
+            "authenticated": user.is_authenticated,
+            "username": user.username,
+            "fullname": user.get_full_name(),
+            "email": user.email,
             "type": authType,
         }, status=200)
     else:  # AnonymousUser
         return JsonResponse({
-            "authenticated": request.user.is_authenticated,
+            "authenticated": user.is_authenticated,
         }, status=200)
 
 
