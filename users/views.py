@@ -390,9 +390,13 @@ def mqtt_token(request):
     privkeyfile = settings.MQTT_TOKEN_PRIVKEY
     with open(privkeyfile) as privatefile:
         private_key = privatefile.read()
+    if user.is_authenticated:
+        duration = datetime.timedelta(days=1)
+    else:
+        duration = datetime.timedelta(hours=6)
     payload = {
         'sub': username,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
+        'exp': datetime.datetime.utcnow() + duration
     }
     # user presence objects
     subs.append(f"{realm}/g/a/#")
