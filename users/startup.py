@@ -3,15 +3,13 @@ import json
 import logging
 import os
 import ssl
-from urllib import parse, request
+from urllib import request
 from urllib.error import HTTPError, URLError
 
 import jwt
 from allauth.socialaccount.models import SocialApp
 from django.conf import settings
 from django.contrib.sites.models import Site
-
-from .models import Scene
 
 SAPP_PROV = 'google'
 SAPP_NAME = 'Google ARENA OAuth Web'

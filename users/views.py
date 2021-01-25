@@ -3,52 +3,30 @@ import datetime
 import json
 import logging
 import os
-from io import BytesIO
-from urllib.parse import urlparse
-from urllib.request import urlopen
 
 import coreapi
-import coreschema
 import jwt
-from allauth.account import app_settings
-from allauth.account.adapter import get_adapter
-from allauth.account.forms import SignupForm
-from allauth.account.utils import complete_signup
-from allauth.account.views import SignupView as SignupViewDefault
-from allauth.exceptions import ImmediateHttpResponse
-from allauth.socialaccount import helpers
-#from allauth.socialaccount.forms import SignupForm as SocialSignupForm
-from allauth.socialaccount.models import SocialAccount, SocialLogin
-from allauth.socialaccount.views import SignupView
+from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.views import SignupView as SocialSignupViewDefault
-#from common.forms import UserProfileForm
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import (AuthenticationForm, PasswordResetForm,
-                                       UserCreationForm)
+from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
-from django.core.files.images import ImageFile
 from django.core.mail import BadHeaderError, send_mail
-from django.db import transaction
 from django.db.models.query_utils import Q
 from django.http import HttpResponse, JsonResponse
-from django.http.response import HttpResponseNotFound, HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
-from django.urls import reverse_lazy
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
-from django.views.generic import DetailView, TemplateView, UpdateView
-from drf_yasg.utils import swagger_auto_schema
 from google.auth.transport import requests
 from google.oauth2 import id_token
-from rest_framework import permissions, response
+from rest_framework import permissions
 from rest_framework.compat import coreapi
-from rest_framework.decorators import (api_view, permission_classes,
-                                       renderer_classes, schema)
-from rest_framework.schemas import AutoSchema, ManualSchema
+from rest_framework.decorators import api_view, permission_classes, schema
+from rest_framework.schemas import AutoSchema
 
 from .forms import (NewSceneForm, NewUserForm, SocialSignupForm,
                     UpdateSceneForm, UpdateStaffForm)
@@ -245,9 +223,9 @@ def profile_update_staff(request):
         return JsonResponse({}, status=400)
     form = UpdateStaffForm(request.POST)
     if not request.user.is_authenticated:
-        return JsonResponse({'error': f"Not authenticated."}, status=403)
+        return JsonResponse({'error': "Not authenticated."}, status=403)
     if not form.is_valid():
-        return JsonResponse({'error': f"Invalid parameters"}, status=500)
+        return JsonResponse({'error': "Invalid parameters"}, status=500)
     staff_username = form.cleaned_data['staff_username']
     is_staff = form.cleaned_data['is_staff']
     if request.user.is_superuser and User.objects.filter(username=staff_username).exists():
@@ -305,11 +283,6 @@ def login_callback(request):
     return render(request=request, template_name="users/login_callback.html")
 
 
-# def socialaccount_signup(request):
-#     # form = SocialSignupForm()
-#     return render(request, "users/social_signup.html", {"form": form})
-
-
 class SocialSignupView(SocialSignupViewDefault):
 
     def get(self, request, *args, **kwargs):
@@ -321,9 +294,7 @@ class SocialSignupView(SocialSignupViewDefault):
         social_form = self.get_form(form_class)
 
         if social_form.is_valid():
-            return self.form_valid(
-                social_form
-            )
+            return self.form_valid(social_form)
 
         return self.form_invalid(social_form)
 
