@@ -25,4 +25,4 @@ jobs:
              cd ..
              ./prod.sh stop arena-account
              ./prod.sh up --force-recreate --build -d arena-account
-             
+             ./prod.sh restart arena-web
