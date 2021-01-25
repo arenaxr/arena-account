@@ -84,24 +84,3 @@ def get_persist_scenes():
     except ValueError as err:
         print(f"{result} {0}: ".format(err)+url)
     return p_scenes
-
-
-def migrate_persist():
-    print('starting persist name migrate')
-    p_scenes = get_persist_scenes()
-
-    # add only-missing scenes to scene database
-    print(f'persist scenes: {p_scenes}')
-    a_scenes = Scene.objects.values_list('name', flat=True)
-    print(f'account scenes: {a_scenes}')
-    for p_scene in p_scenes:
-        print(f'persist scene test: {p_scene}')
-        if p_scene not in a_scenes:
-            s = Scene(
-                name=p_scene,
-                summary='Existing scene name migrated from persistence database.',
-            )
-            print(f'Adding scene to account database: {p_scene}')
-            s.save()
-
-    print('ending persist name migrate')

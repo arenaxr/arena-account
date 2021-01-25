@@ -160,8 +160,6 @@ def profile_new_scene(request):
 
 def _new_scene(request):
     # add new scene editor
-    if request.method != 'POST':
-        return JsonResponse({}, status=400)
     form = NewSceneForm(request.POST)
     if not request.user.is_authenticated:
         return JsonResponse({'error': f"Not authenticated."}, status=403)
@@ -198,7 +196,9 @@ def profile_update_scene(request):
     if not form.is_valid():
         return JsonResponse({'error': f"Invalid parameters"}, status=500)
     username = request.user.username
-    name = form.cleaned_data['name']
+    name = form.cleaned_data['save']
+    if not name:
+        name = form.cleaned_data['delete']
     public_read = form.cleaned_data['public_read']
     public_write = form.cleaned_data['public_write']
     if not Scene.objects.filter(name=name).exists():
@@ -206,9 +206,13 @@ def profile_update_scene(request):
     scene = Scene.objects.get(name=name)
     if scene not in user_scenes(request.user):
         return JsonResponse({'error': f"User does not have permission for: {name}."}, status=400)
-    scene.public_read = public_read
-    scene.public_write = public_write
-    scene.save()
+    if 'save' in request.POST:
+        scene.public_read = public_read
+        scene.public_write = public_write
+        scene.save()
+    elif 'delete' in request.POST:
+        scene.delete()
+        # TODO (mwfarb): this should also remove the objects from persist db
 
     return redirect("user_profile")
 
@@ -242,13 +246,20 @@ def my_scenes(request):
     """
     Request a list of scenes this user can write to.
     """
-    if request.method != 'GET':
-        return JsonResponse({}, status=400)
     serializer = SceneSerializer(user_scenes(request.user), many=True)
     return JsonResponse(serializer.data, safe=False)
 
 
 def user_scenes(user):
+    # update scene list from object persistance db
+    p_scenes = get_persist_scenes()  # TODO (mwfarb): read mongo db directly
+    a_scenes = Scene.objects.values_list('name', flat=True)
+    for p_scene in p_scenes:
+        if p_scene not in a_scenes:
+            s = Scene(name=p_scene,
+                      summary='Existing scene name migrated from persistence database.')
+            s.save()
+
     # load list of scenes this user can edit
     scenes = Scene.objects.none()
     ext_scenes = Scene.objects.none()
@@ -256,8 +267,7 @@ def user_scenes(user):
         if user.is_staff:  # admin/staff
             scenes = Scene.objects.all()
         else:  # standard user
-            scenes = Scene.objects.filter(
-                name__startswith=f'{user.username}/')
+            scenes = Scene.objects.filter(name__startswith=f'{user.username}/')
             ext_scenes = Scene.objects.filter(editors=user)
             # merge 'my' namespaced scenes and extras scenes granted
     return (scenes | ext_scenes).order_by('name')
@@ -284,30 +294,37 @@ def socialaccount_signup(request):
     return render(request, "users/social_signup.html", {"form": form})
 
 
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 def user_state(request):
     """
     Request the user's authenticated status, username, name, email.
     """
-    if request.method != 'GET':
-        return JsonResponse({}, status=400)
-    if request.user.is_authenticated:
+    user = request.user
+    if request.method == 'POST':
+        gid_token = request.POST.get("id_token", None)
+        if gid_token:
+            try:
+                user = get_user_from_id_token(gid_token)
+            except (ValueError, User.DoesNotExist) as err:
+                return JsonResponse({"error": "{0}".format(err)}, status=403)
+
+    if user.is_authenticated:
         # TODO: should also lookup social account link
-        if request.user.username.startswith("admin"):
+        if user.username.startswith("admin"):
             authType = "arena"
         else:
             authType = "google"
 
         return JsonResponse({
-            "authenticated": request.user.is_authenticated,
-            "username": request.user.username,
-            "fullname": request.user.get_full_name(),
-            "email": request.user.email,
+            "authenticated": user.is_authenticated,
+            "username": user.username,
+            "fullname": user.get_full_name(),
+            "email": user.email,
             "type": authType,
         }, status=200)
     else:  # AnonymousUser
         return JsonResponse({
-            "authenticated": request.user.is_authenticated,
+            "authenticated": user.is_authenticated,
         }, status=200)
 
 
@@ -339,36 +356,37 @@ class MqttTokenSchema(AutoSchema):
         return manual_fields + extra_fields
 
 
+def get_user_from_id_token(gid_token):
+    if not gid_token:
+        raise ValueError('Missing token.')
+    gclient_ids = [os.environ['GAUTH_CLIENTID'],
+                   os.environ['GAUTH_INSTALLED_CLIENTID']]
+    idinfo = id_token.verify_oauth2_token(
+        gid_token, requests.Request())
+    if idinfo['aud'] not in gclient_ids:
+        raise ValueError('Could not verify audience.')
+    # ID token is valid. Get the user's Google Account ID from the decoded token.
+    userid = idinfo['sub']
+    g_user = SocialAccount.objects.get(uid=userid)
+    if not g_user:
+        raise ValueError('Database error.')
+
+    return User.objects.get(username=g_user.user)
+
+
 @api_view(['POST'])
 @schema(MqttTokenSchema())  # TODO: schema not working yet
 def mqtt_token(request):
     """
     Request a MQTT JWT token with permissions for an anonymous or authenticated user given incoming parameters.
     """
-    if request.method != 'POST':
-        return JsonResponse({}, status=400)
-
     user = request.user
     gid_token = request.POST.get("id_token", None)
     if gid_token:
-        gclient_ids = [os.environ['GAUTH_CLIENTID'],
-                       os.environ['GAUTH_INSTALLED_CLIENTID']]
         try:
-            idinfo = id_token.verify_oauth2_token(
-                gid_token, requests.Request())
-            if idinfo['aud'] not in gclient_ids:
-                raise ValueError('Could not verify audience.')
-            # ID token is valid. Get the user's Google Account ID from the decoded token.
-            userid = idinfo['sub']
-        except ValueError as err:
+            user = get_user_from_id_token(gid_token)
+        except (ValueError, User.DoesNotExist) as err:
             return JsonResponse({"error": "{0}".format(err)}, status=403)
-        g_users = SocialAccount.objects.filter(uid=userid)
-        if len(g_users) != 1:
-            return JsonResponse({"error": "Database error"}, status=400)
-        try:
-            user = User.objects.get(username=g_users[0].user)
-        except User.DoesNotExist:
-            return JsonResponse({"error": "Website login required first"}, status=403)
 
     if user.is_authenticated:
         username = user.username
@@ -387,9 +405,13 @@ def mqtt_token(request):
     privkeyfile = settings.MQTT_TOKEN_PRIVKEY
     with open(privkeyfile) as privatefile:
         private_key = privatefile.read()
+    if user.is_authenticated:
+        duration = datetime.timedelta(days=1)
+    else:
+        duration = datetime.timedelta(hours=6)
     payload = {
         'sub': username,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
+        'exp': datetime.datetime.utcnow() + duration
     }
     # user presence objects
     subs.append(f"{realm}/g/a/#")
