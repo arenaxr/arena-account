@@ -245,6 +245,15 @@ def my_scenes(request):
 
 
 def user_scenes(user):
+    # update scene list from object persistance db
+    p_scenes = get_persist_scenes()  # TODO (mwfarb): read mongo db directly
+    a_scenes = Scene.objects.values_list('name', flat=True)
+    for p_scene in p_scenes:
+        if p_scene not in a_scenes:
+            s = Scene(name=p_scene,
+                      summary='Existing scene name migrated from persistence database.')
+            s.save()
+
     # load list of scenes this user can edit
     scenes = Scene.objects.none()
     ext_scenes = Scene.objects.none()
@@ -252,8 +261,7 @@ def user_scenes(user):
         if user.is_staff:  # admin/staff
             scenes = Scene.objects.all()
         else:  # standard user
-            scenes = Scene.objects.filter(
-                name__startswith=f'{user.username}/')
+            scenes = Scene.objects.filter(name__startswith=f'{user.username}/')
             ext_scenes = Scene.objects.filter(editors=user)
             # merge 'my' namespaced scenes and extras scenes granted
     return (scenes | ext_scenes).order_by('name')

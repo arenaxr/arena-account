@@ -51,5 +51,4 @@ urlpatterns = [
     path('my_scenes', views.my_scenes, name="my_scenes"),
 ]
 
-startup.migrate_persist()
 startup.setup_socialapps()
