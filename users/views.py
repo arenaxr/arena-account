@@ -429,9 +429,9 @@ def mqtt_token(request):
     subs.append(f"{realm}/g/a/#")
     if user.is_authenticated:
         pubs.append(f"{realm}/g/a/#")
+        subs.append(f"{realm}/s/#") # allows !allscenes for all auth users
         if user.is_staff:
             # staff/admin have rights to all scene objects
-            subs.append(f"{realm}/s/#")
             pubs.append(f"{realm}/s/#")
         else:
             # scene owners have rights to their scene objects only
