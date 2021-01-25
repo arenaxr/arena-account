@@ -6,6 +6,7 @@ import os
 
 import coreapi
 import jwt
+from allauth.socialaccount import helpers
 from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.views import SignupView as SocialSignupViewDefault
 from django.conf import settings
@@ -15,6 +16,7 @@ from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import BadHeaderError, send_mail
+from django.db import transaction
 from django.db.models.query_utils import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
@@ -158,9 +160,9 @@ def _new_scene(request):
     # add new scene editor
     form = NewSceneForm(request.POST)
     if not request.user.is_authenticated:
-        return JsonResponse({'error': f"Not authenticated."}, status=403)
+        return JsonResponse({'error': "Not authenticated."}, status=403)
     if not form.is_valid():
-        return JsonResponse({'error': f"Invalid parameters"}, status=500)
+        return JsonResponse({'error': "Invalid parameters"}, status=500)
     username = request.user.username
     scene = form.cleaned_data['scene']
     print(f"_new_scene, is_public '{request.POST.get('is_public')}'")
@@ -188,9 +190,9 @@ def profile_update_scene(request):
         return JsonResponse({}, status=400)
     form = UpdateSceneForm(request.POST)
     if not request.user.is_authenticated:
-        return JsonResponse({'error': f"Not authenticated."}, status=403)
+        return JsonResponse({'error': "Not authenticated."}, status=403)
     if not form.is_valid():
-        return JsonResponse({'error': f"Invalid parameters"}, status=500)
+        return JsonResponse({'error': "Invalid parameters"}, status=500)
     username = request.user.username
     name = form.cleaned_data['save']
     if not name:
@@ -292,11 +294,16 @@ class SocialSignupView(SocialSignupViewDefault):
     def post(self, request, *args, **kwargs):
         form_class = self.get_form_class()
         social_form = self.get_form(form_class)
-
         if social_form.is_valid():
             return self.form_valid(social_form)
+        return render(request, "users/social_signup.html", {"form": social_form, 'account': self.sociallogin.account})
 
-        return self.form_invalid(social_form)
+    @transaction.atomic
+    def form_valid(self, social_form):
+        self.request.session.pop('socialaccount_sociallogin', None)
+        user = social_form.save(self.request)
+        name = self.sociallogin.account.extra_data.get('name', '')
+        return helpers.complete_social_signup(self.request, self.sociallogin)
 
 
 @api_view(['GET', 'POST'])
