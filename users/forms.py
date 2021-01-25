@@ -1,10 +1,19 @@
-from allauth.account.forms import PasswordField, SetPasswordField
-from allauth.socialaccount.forms import SignupForm
+from allauth.socialaccount.forms import SignupForm as _SocialSignupForm
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import Scene
+
+class SocialSignupForm(_SocialSignupForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.sociallogin and \
+           self.sociallogin.account.provider in ('google'):
+            name = self.sociallogin.account.extra_data['email'].split('@')[0]
+            self.fields['username'].widget.attrs.update({'value': name})
+
+    # TODO: (mwfarb): reject usernames in form on signup: settings.USERNAME_RESERVED:
 
 
 class NewUserForm(UserCreationForm):
@@ -14,20 +23,6 @@ class NewUserForm(UserCreationForm):
         model = User
         fields = ('first_name', 'last_name', 'email',
                   'username', 'password1', 'password2')
-
-
-class SocialSignupForm(SignupForm):
-
-    def __init__(self, **kwargs):
-        super(SocialSignupForm, self).__init__(**kwargs)
-
-    def save(self, request):
-        # Ensure you call the parent class's save.
-        # .save() returns a User object.
-        user = super(SocialSignupForm, self).save(request)
-        # Add your own processing here.
-        # You must return the original result.
-        return user
 
 
 class UpdateStaffForm(forms.Form):

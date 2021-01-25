@@ -1,8 +1,6 @@
 import os
 
-from django.conf.urls import url
-from django.contrib import admin
-from django.urls import include, path, re_path
+from django.urls import path, re_path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
@@ -37,6 +35,8 @@ urlpatterns = [
     path("login", views.login_request, name="login"),
     path("logout", views.logout_request, name="logout"),
     # path("password_reset", views.password_reset_request, name="password_reset"),
+    path('accounts/social/signup/', views.SocialSignupView.as_view(),
+         name='socialaccount_signup'),
     path("profile", views.user_profile, name="user_profile"),
     path("login_callback", views.login_callback, name="login_callback"),
     path('mqtt_auth', views.mqtt_token, name="mqtt_token"),

@@ -1,26 +1,38 @@
 {% extends "users/header.html" %}
+{% load static %}
+{% load account %}
+{% load socialaccount %}
 
 {% block content %}
-
 {% load crispy_forms_tags %}
 
 <!--Social Sign Up-->
 <div class="container p-5">
     {% include 'users/includes/messages.html' %}
-    <h2>Sign Up</h2>
+    <h1>Sign Up</h1>
 
-    <p>{% blocktrans with provider_name=account.get_provider.name site_name=site.name %}You are about to use your
-        {{provider_name}} account to login to
-        {{site_name}}. As a final step, please complete the following form:{% endblocktrans %}</p>
+    <p>You are about to use your
+        {{account.get_provider.name}} account to login. As a final step, please complete the following form:</p>
 
-    <form class="signup" id="signup_form" method="post" action="{% url 'socialaccount_signup' %}">
-        {% raw %}{% csrf_token %}
+    <form class="signup" id="signup_form" method="post" action="{% url 'socialaccount_signup' %}" enctype="multipart/form-data">
+        {% csrf_token %}
         {{ crispy }}
-        {{ form.as_p }}{% endraw %}
+        {% for field in form %}
+        <p>
+            {{ field.label_tag }}<br>
+            {{ field }}
+            {% if field.help_text %}
+            <small style="color: grey">{{ field.help_text }}</small>
+            {% endif %}
+            {% for error in field.errors %}
+        <p style="color: red">{{ error }}</p>
+        {% endfor %}
+        </p>
+        {% endfor %}
         {% if redirect_field_value %}
         <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
         {% endif %}
-        <button type="submit" class="btn btn-primary">Sign Up</button>
+        <button type="submit" class="btn btn-primary">Sign Up &raquo;</button>
     </form>
 </div>
 

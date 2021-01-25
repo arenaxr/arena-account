@@ -5,15 +5,13 @@ import logging
 import os
 
 import coreapi
-import coreschema
 import jwt
 from allauth.socialaccount.models import SocialAccount
-from allauth.socialaccount.views import SignupView
+from allauth.socialaccount.views import SignupView as SocialSignupViewDefault
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import (AuthenticationForm, PasswordResetForm,
-                                       UserCreationForm)
+from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import BadHeaderError, send_mail
@@ -23,14 +21,12 @@ from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
-from drf_yasg.utils import swagger_auto_schema
 from google.auth.transport import requests
 from google.oauth2 import id_token
-from rest_framework import permissions, response
+from rest_framework import permissions
 from rest_framework.compat import coreapi
-from rest_framework.decorators import (api_view, permission_classes,
-                                       renderer_classes, schema)
-from rest_framework.schemas import AutoSchema, ManualSchema
+from rest_framework.decorators import api_view, permission_classes, schema
+from rest_framework.schemas import AutoSchema
 
 from .forms import (NewSceneForm, NewUserForm, SocialSignupForm,
                     UpdateSceneForm, UpdateStaffForm)
@@ -227,9 +223,9 @@ def profile_update_staff(request):
         return JsonResponse({}, status=400)
     form = UpdateStaffForm(request.POST)
     if not request.user.is_authenticated:
-        return JsonResponse({'error': f"Not authenticated."}, status=403)
+        return JsonResponse({'error': "Not authenticated."}, status=403)
     if not form.is_valid():
-        return JsonResponse({'error': f"Invalid parameters"}, status=500)
+        return JsonResponse({'error': "Invalid parameters"}, status=500)
     staff_username = form.cleaned_data['staff_username']
     is_staff = form.cleaned_data['is_staff']
     if request.user.is_superuser and User.objects.filter(username=staff_username).exists():
@@ -287,10 +283,20 @@ def login_callback(request):
     return render(request=request, template_name="users/login_callback.html")
 
 
-def socialaccount_signup(request):
-    # TODO: (mwfarb): reject usernames in form on signup: settings.USERNAME_RESERVED:
-    form = SocialSignupForm()
-    return render(request, "users/social_signup.html", {"form": form})
+class SocialSignupView(SocialSignupViewDefault):
+
+    def get(self, request, *args, **kwargs):
+        social_form = SocialSignupForm(sociallogin=self.sociallogin)
+        return render(request, "users/social_signup.html", {"form": social_form, 'account': self.sociallogin.account})
+
+    def post(self, request, *args, **kwargs):
+        form_class = self.get_form_class()
+        social_form = self.get_form(form_class)
+
+        if social_form.is_valid():
+            return self.form_valid(social_form)
+
+        return self.form_invalid(social_form)
 
 
 @api_view(['GET', 'POST'])
