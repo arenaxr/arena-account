@@ -317,7 +317,7 @@ def user_state(request):
         if gid_token:
             try:
                 user = get_user_from_id_token(gid_token)
-            except (ValueError, User.DoesNotExist) as err:
+            except (ValueError, SocialAccount.DoesNotExist) as err:
                 return JsonResponse({"error": "{0}".format(err)}, status=403)
 
     if user.is_authenticated:
@@ -397,7 +397,7 @@ def mqtt_token(request):
     if gid_token:
         try:
             user = get_user_from_id_token(gid_token)
-        except (ValueError, User.DoesNotExist) as err:
+        except (ValueError, SocialAccount.DoesNotExist) as err:
             return JsonResponse({"error": "{0}".format(err)}, status=403)
 
     if user.is_authenticated:
@@ -429,7 +429,7 @@ def mqtt_token(request):
     subs.append(f"{realm}/g/a/#")
     if user.is_authenticated:
         pubs.append(f"{realm}/g/a/#")
-        subs.append(f"{realm}/s/#") # allows !allscenes for all auth users
+        subs.append(f"{realm}/s/#")  # allows !allscenes for all auth users
         if user.is_staff:
             # staff/admin have rights to all scene objects
             pubs.append(f"{realm}/s/#")
