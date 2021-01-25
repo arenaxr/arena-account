@@ -34,6 +34,8 @@ MQTT_TOKEN_PRIVKEY = "/home/node/app/pubsubkey.pem"
 # TODO (mwfarb): this list can be reduced after webserver refactor
 # namespaces that are reserved for the webserver, see ARENA-core and nginx
 USERNAME_RESERVED = [
+    '.cache',
+    '.github',
     'aframe',
     'apriltag',
     'ar',
@@ -42,6 +44,7 @@ USERNAME_RESERVED = [
     'build',
     'chat',
     'conf',
+    'dist',
     'face-tracking',
     'icons',
     'images',
@@ -55,6 +58,7 @@ USERNAME_RESERVED = [
     'runtime-mngr',
     'screenshare',
     'scene',
+    'src',
     'signin',
     'store',
     'storemng',  # proxy

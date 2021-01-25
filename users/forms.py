@@ -1,10 +1,12 @@
 from allauth.socialaccount.forms import SignupForm as _SocialSignupForm
 from django import forms
+from django.conf import settings
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
 
 class SocialSignupForm(_SocialSignupForm):
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -13,7 +15,13 @@ class SocialSignupForm(_SocialSignupForm):
             name = self.sociallogin.account.extra_data['email'].split('@')[0]
             self.fields['username'].widget.attrs.update({'value': name})
 
-    # TODO: (mwfarb): reject usernames in form on signup: settings.USERNAME_RESERVED:
+    def clean(self):
+        cleaned_data = super().clean()
+        username = cleaned_data.get("username")
+        # reject usernames in form on signup: settings.USERNAME_RESERVED
+        if username in settings.USERNAME_RESERVED:
+            msg = f"Sorry, {username} is a reserved word for usernames."
+            self.add_error('username', msg)
 
 
 class NewUserForm(UserCreationForm):
