@@ -196,7 +196,9 @@ def profile_update_scene(request):
     if not form.is_valid():
         return JsonResponse({'error': f"Invalid parameters"}, status=500)
     username = request.user.username
-    name = form.cleaned_data['name']
+    name = form.cleaned_data['save']
+    if not name:
+        name = form.cleaned_data['delete']
     public_read = form.cleaned_data['public_read']
     public_write = form.cleaned_data['public_write']
     if not Scene.objects.filter(name=name).exists():
@@ -204,9 +206,13 @@ def profile_update_scene(request):
     scene = Scene.objects.get(name=name)
     if scene not in user_scenes(request.user):
         return JsonResponse({'error': f"User does not have permission for: {name}."}, status=400)
-    scene.public_read = public_read
-    scene.public_write = public_write
-    scene.save()
+    if 'save' in request.POST:
+        scene.public_read = public_read
+        scene.public_write = public_write
+        scene.save()
+    elif 'delete' in request.POST:
+        scene.delete()
+        # TODO (mwfarb): this should also remove the objects from persist db
 
     return redirect("user_profile")
 

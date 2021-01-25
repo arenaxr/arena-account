@@ -106,7 +106,11 @@
                             {{ scene.editors }}
                         </ul>
                     </td><td></td> -->
-                    <td><button type="submit" class="btn btn-primary btn-sm" name="name" value="{{ scene.name }}">Save</button></td><td></td>
+                    <td><button type="submit" class="btn btn-primary btn-sm" name="save" value="{{ scene.name }}">Save</button></td>
+                    <td></td>
+                    <td><button type="submit" class="btn btn-primary btn-sm" name="delete" value="{{ scene.name }}"
+                            onclick="return confirm('Are you sure you want to delete {{ scene.name }}?');">Delete</button></td>
+                    <td></td>
                 </tr>
                 </form>
                 {% endfor %}

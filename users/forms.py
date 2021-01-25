@@ -51,9 +51,12 @@ class NewSceneForm(forms.Form):
 
 
 class UpdateSceneForm(forms.Form):
-    name = forms.CharField(
-        label='name',
-        required=True)
+    save = forms.CharField(
+        label='save',
+        required=False)
+    delete = forms.CharField(
+        label='delete',
+        required=False)
     public_read = forms.BooleanField(
         label='public_read',
         required=False,
