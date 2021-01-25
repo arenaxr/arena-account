@@ -3,13 +3,25 @@ import datetime
 import json
 import logging
 import os
+from io import BytesIO
+from urllib.parse import urlparse
+from urllib.request import urlopen
 
 import coreapi
 import coreschema
 import jwt
+from allauth.account import app_settings
+from allauth.account.adapter import get_adapter
+from allauth.account.forms import SignupForm
+from allauth.account.utils import complete_signup
+from allauth.account.views import SignupView as SignupViewDefault
+from allauth.exceptions import ImmediateHttpResponse
+from allauth.socialaccount import helpers
 #from allauth.socialaccount.forms import SignupForm as SocialSignupForm
-from allauth.socialaccount.models import SocialAccount
+from allauth.socialaccount.models import SocialAccount, SocialLogin
 from allauth.socialaccount.views import SignupView
+from allauth.socialaccount.views import SignupView as SocialSignupViewDefault
+#from common.forms import UserProfileForm
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -17,13 +29,18 @@ from django.contrib.auth.forms import (AuthenticationForm, PasswordResetForm,
                                        UserCreationForm)
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
+from django.core.files.images import ImageFile
 from django.core.mail import BadHeaderError, send_mail
+from django.db import transaction
 from django.db.models.query_utils import Q
 from django.http import HttpResponse, JsonResponse
+from django.http.response import HttpResponseNotFound, HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
+from django.urls import reverse_lazy
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
+from django.views.generic import DetailView, TemplateView, UpdateView
 from drf_yasg.utils import swagger_auto_schema
 from google.auth.transport import requests
 from google.oauth2 import id_token
@@ -33,7 +50,8 @@ from rest_framework.decorators import (api_view, permission_classes,
                                        renderer_classes, schema)
 from rest_framework.schemas import AutoSchema, ManualSchema
 
-from .forms import NewSceneForm, NewUserForm, UpdateSceneForm, UpdateStaffForm, GoogleSignUpForm
+from .forms import (NewSceneForm, NewUserForm, SocialSignupForm,
+                    UpdateSceneForm, UpdateStaffForm)
 from .models import Scene
 from .serializers import SceneSerializer
 from .startup import get_persist_scenes
@@ -287,11 +305,27 @@ def login_callback(request):
     return render(request=request, template_name="users/login_callback.html")
 
 
-def socialaccount_signup(request):
-    # TODO: (mwfarb): reject usernames in form on signup: settings.USERNAME_RESERVED:
-    # form = SocialSignupForm()
-    form = GoogleSignUpForm()
-    return render(request, "users/social_signup.html", {"form": form})
+# def socialaccount_signup(request):
+#     # form = SocialSignupForm()
+#     return render(request, "users/social_signup.html", {"form": form})
+
+
+class SocialSignupView(SocialSignupViewDefault):
+
+    def get(self, request, *args, **kwargs):
+        social_form = SocialSignupForm(sociallogin=self.sociallogin)
+        return render(request, "users/social_signup.html", {"form": social_form, 'account': self.sociallogin.account})
+
+    def post(self, request, *args, **kwargs):
+        form_class = self.get_form_class()
+        social_form = self.get_form(form_class)
+
+        if social_form.is_valid():
+            return self.form_valid(
+                social_form
+            )
+
+        return self.form_invalid(social_form)
 
 
 @api_view(['GET', 'POST'])
