@@ -7,12 +7,8 @@ from urllib import request
 from urllib.error import HTTPError, URLError
 
 import jwt
-from allauth.socialaccount.models import SocialApp
 from django.conf import settings
 from django.contrib.sites.models import Site
-
-SAPP_PROV = 'google'
-SAPP_NAME = 'Google ARENA OAuth Web'
 
 logger = logging.getLogger(__name__)
 logger.info("startup.py load test...")
@@ -29,25 +25,6 @@ def setup_socialapps():
     else:
         hc = Site(id=settings.SITE_ID, name=host, domain=host)
     hc.save()
-
-    # print(f"Site table found expected '{host}': {hc}")
-    # if hc == 0:
-    #     print(f"Adding '{host}' to Site table...")
-    #     site = Site(name=host, domain=host)
-    #     site.save()
-    #     # TODO: potentially should confirm id == settings.SITE_ID
-
-    # # add google to SocialApps if not there already
-    # ac = SocialApp.objects.filter(provider=SAPP_PROV).count()
-    # print(f"SocialApp table found expected '{SAPP_PROV}': {ac}")
-    # if ac == 0:
-    #     print(f"Adding '{SAPP_PROV}' to SocialApp table...")
-    #     gclientid = os.getenv('GAUTH_CLIENTID')
-    #     gsecret = os.getenv('GAUTH_CLIENTSECRET')
-    #     sapp = SocialApp(provider=SAPP_PROV, name=SAPP_NAME,
-    #                      client_id=gclientid, secret=gsecret)
-    #     sapp.save()
-    #     sapp.sites.add(settings.SITE_ID)
 
 
 def get_persist_scenes():

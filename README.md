@@ -19,5 +19,5 @@ GAUTH_CLIENTSECRET=Google_OAuth_Web_Client_Secret
 - ```make run```
 
 **UIs:**
-- Admin: [http://localhost:8000/user/admin](ttp://localhost:8000/user/admin)
-- Visualize: [http://localhost:8000/user](http://localhost:8000/user)
+- Admin: [http://localhost:8000/user/admin](http://localhost:8000/user/admin)
+- Main Page: [http://localhost:8000/user](http://localhost:8000/user)

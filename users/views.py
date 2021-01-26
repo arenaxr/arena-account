@@ -321,7 +321,6 @@ def user_state(request):
                 return JsonResponse({"error": "{0}".format(err)}, status=403)
 
     if user.is_authenticated:
-        # TODO: should also lookup social account link
         if user.username.startswith("admin"):
             authType = "arena"
         else:
