@@ -442,6 +442,10 @@ def mqtt_token(request):
             for u_scene in u_scenes:
                 subs.append(f"{realm}/s/{u_scene.name}/#")
                 pubs.append(f"{realm}/s/{u_scene.name}/#")
+    # vio cameras
+    if scene and camid:
+        pubs.append(f"topic/vio/{camid}")
+        pubs.append(f"{realm}/vio/{scene}/{camid}")
     # anon/non-owners have rights to view scene objects only
     if scene and not user.is_staff:
         scene_opt = Scene.objects.filter(name=scene)
@@ -462,8 +466,6 @@ def mqtt_token(request):
             pubs.append(f"{realm}/s/{scene}/{camid}")
             pubs.append(f"{realm}/s/{scene}/{camid}/#")
             pubs.append(f"{realm}/g/a/{camid}")
-            pubs.append(f"topic/vio/{camid}")
-            pubs.append(f"{realm}/vio/{scene}/{camid}")
         else:  # probable cli client write
             pubs.append(f"{realm}/s/{scene}")
         if ctrlid1:
