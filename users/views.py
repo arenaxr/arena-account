@@ -473,7 +473,7 @@ def mqtt_token(request):
     if userid:
         userhandle = userid + base64.b64encode(userid.encode()).decode()
         # receive private messages: Read
-        subs.append(f"{realm}/g/c/p/{userhandle}")
+        subs.append(f"{realm}/g/c/p/{userid}/#")
         # receive open messages to everyone and/or scene: Read
         subs.append(f"{realm}/g/c/o/#")
         # send open messages (chat keepalive, messages to all/scene): Write
