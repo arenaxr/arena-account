@@ -463,6 +463,7 @@ def mqtt_token(request):
             pubs.append(f"{realm}/s/{scene}/{camid}/#")
             pubs.append(f"{realm}/g/a/{camid}")
             pubs.append(f"topic/vio/{camid}")
+            pubs.append(f"{realm}/vio/{scene}/{camid}")
         else:  # probable cli client write
             pubs.append(f"{realm}/s/{scene}")
         if ctrlid1:
