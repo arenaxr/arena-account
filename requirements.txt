@@ -10,3 +10,4 @@ coreapi
 pyyaml
 uritemplate
 drf_yasg
+python-dotenv

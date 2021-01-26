@@ -51,4 +51,4 @@ urlpatterns = [
     path('my_scenes', views.my_scenes, name="my_scenes"),
 ]
 
-startup.setup_socialapps()
+# startup.setup_socialapps()
