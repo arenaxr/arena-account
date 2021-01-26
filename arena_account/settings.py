@@ -76,7 +76,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users.apps.UsersConfig',
     'crispy_forms',
     'django.contrib.sites',
     'allauth',
@@ -87,6 +86,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rest_framework_swagger',
     'drf_yasg',
+    'users.apps.UsersConfig',
 ]
 
 AUTHENTICATION_BACKENDS = (
