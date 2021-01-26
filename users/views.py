@@ -444,7 +444,6 @@ def mqtt_token(request):
                 pubs.append(f"{realm}/s/{u_scene.name}/#")
     # vio cameras
     if scene and camid:
-        pubs.append(f"topic/vio/{camid}")
         pubs.append(f"{realm}/vio/{scene}/{camid}")
     # anon/non-owners have rights to view scene objects only
     if scene and not user.is_staff:
