@@ -13,4 +13,4 @@ class UsersConfig(AppConfig):
     name = 'users'
 
     def ready(self):
-        post_migrate.connect(post_migration_callback, sender=self)
+        #post_migrate.connect(post_migration_callback, sender=self)
