@@ -92,7 +92,8 @@
                 //redirect user to originally requested page
                 location.href = localStorage.getItem("request_uri");
             } else {
-                location.href = "{{request.scheme}}://{{request.get_host}}"; // back to main ARENA
+                //redirect user to root page
+                location.href = "{{request.scheme}}://{{request.get_host}}/user";
             }
         }
     </script>

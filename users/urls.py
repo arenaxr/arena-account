@@ -5,7 +5,7 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 
-from . import startup, views
+from . import views
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -50,5 +50,3 @@ urlpatterns = [
     path('new_scene', views.new_scene, name="new_scene"),
     path('my_scenes', views.my_scenes, name="my_scenes"),
 ]
-
-startup.setup_socialapps()

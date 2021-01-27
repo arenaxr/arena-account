@@ -76,7 +76,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users',
     'crispy_forms',
     'django.contrib.sites',
     'allauth',
@@ -87,6 +86,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'rest_framework_swagger',
     'drf_yasg',
+    'users.apps.UsersConfig',
 ]
 
 AUTHENTICATION_BACKENDS = (
@@ -114,11 +114,17 @@ LOGIN_REDIRECT_URL = '/user/login_callback'
 # require social accounts to use the signup form
 SOCIALACCOUNT_AUTO_SIGNUP = False
 SOCIALACCOUNT_EMAIL_REQUIRED = True
+#SOCIALACCOUNT_STORE_TOKENS = False
 
 SOCIALACCOUNT_FORMS = {'signup': 'users.forms.SocialSignupForm'}
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
+        "APP": {
+            "client_id": os.getenv('GAUTH_CLIENTID'),
+            "secret": os.getenv('GAUTH_CLIENTSECRET'),
+            "key": ""
+        },
         'SCOPE': [
             'profile',
             'email',
@@ -141,6 +147,27 @@ MESSAGE_TAGS = {
 
 # TODO (mwfarb): For production, change backend to an email sending service.
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+    'loggers': {
+        '*': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+    },
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -232,7 +259,7 @@ else:
 
 # pubsub settings
 PUBSUB = {
-    'mqtt_server': {'host': '127.0.0.1', 'port': 1883, 'ws_port': 9001, 'wss_port': 8083},
+    'mqtt_server': {'host': 'localhost', 'port': 1883, 'ws_port': 9001, 'wss_port': 8083},
     'mqtt_realm': 'realm',
     'mqtt_username': 'arena_account',
 }
