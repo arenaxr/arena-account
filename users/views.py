@@ -317,7 +317,7 @@ def user_state(request):
         if gid_token:
             try:
                 user = get_user_from_id_token(gid_token)
-            except (ValueError, User.DoesNotExist) as err:
+            except (ValueError, SocialAccount.DoesNotExist) as err:
                 return JsonResponse({"error": "{0}".format(err)}, status=403)
 
     if user.is_authenticated:
@@ -396,7 +396,7 @@ def mqtt_token(request):
     if gid_token:
         try:
             user = get_user_from_id_token(gid_token)
-        except (ValueError, User.DoesNotExist) as err:
+        except (ValueError, SocialAccount.DoesNotExist) as err:
             return JsonResponse({"error": "{0}".format(err)}, status=403)
 
     if user.is_authenticated:
@@ -428,7 +428,7 @@ def mqtt_token(request):
     subs.append(f"{realm}/g/a/#")
     if user.is_authenticated:
         pubs.append(f"{realm}/g/a/#")
-        subs.append(f"{realm}/s/#") # allows !allscenes for all auth users
+        subs.append(f"{realm}/s/#")  # allows !allscenes for all auth users
         if user.is_staff:
             # staff/admin have rights to all scene objects
             pubs.append(f"{realm}/s/#")
@@ -441,6 +441,9 @@ def mqtt_token(request):
             for u_scene in u_scenes:
                 subs.append(f"{realm}/s/{u_scene.name}/#")
                 pubs.append(f"{realm}/s/{u_scene.name}/#")
+    # vio cameras
+    if scene and camid:
+        pubs.append(f"{realm}/vio/{scene}/{camid}")
     # anon/non-owners have rights to view scene objects only
     if scene and not user.is_staff:
         scene_opt = Scene.objects.filter(name=scene)
@@ -461,7 +464,6 @@ def mqtt_token(request):
             pubs.append(f"{realm}/s/{scene}/{camid}")
             pubs.append(f"{realm}/s/{scene}/{camid}/#")
             pubs.append(f"{realm}/g/a/{camid}")
-            pubs.append(f"topic/vio/{camid}")
         else:  # probable cli client write
             pubs.append(f"{realm}/s/{scene}")
         if ctrlid1:
@@ -472,7 +474,7 @@ def mqtt_token(request):
     if userid:
         userhandle = userid + base64.b64encode(userid.encode()).decode()
         # receive private messages: Read
-        subs.append(f"{realm}/g/c/p/{userhandle}")
+        subs.append(f"{realm}/g/c/p/{userid}/#")
         # receive open messages to everyone and/or scene: Read
         subs.append(f"{realm}/g/c/o/#")
         # send open messages (chat keepalive, messages to all/scene): Write
