@@ -64,14 +64,12 @@
                     <td></td><td></td>
                     <td>Public</td><td></td>
                     <td>Public</td><td></td>
-                    <td>Public</td><td></td>
                     <!-- <td>Other</td><td></td> -->
                 </tr>
                 <tr>
                     <td>Scene</td><td></td>
                     <td>Read</td><td></td>
                     <td>Write</td><td></td>
-                    <td>Events</td><td></td>
                     <!-- <td>Editors</td><td></td> -->
                 </tr>
                 {% for scene in scenes %}
@@ -90,13 +88,6 @@
                     <td><input name="public_write" type="checkbox" checked /></td><td></td>
                     {% else %}
                     <td><input name="public_write" type="checkbox" /></td><td></td>
-                    {% endif %}
-                    <!--public publish events ok-->
-                    <!-- TODO: for now, publish object changes and object events are the same permissions by topic-->
-                    {% if scene.public_write %}
-                    <td><input name="public_event" type="checkbox" disabled checked/></td><td></td>
-                    {% else %}
-                    <td><input name="public_event" type="checkbox" disabled /></td><td></td>
                     {% endif %}
                     <!--editors-->
                     <!-- <td>
