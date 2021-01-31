@@ -42,36 +42,44 @@
                 <button type="submit" class="btn btn-primary btn-sm" name="is_staff" value="true">Add Staff</button>
                 <button type="submit" class="btn btn-primary btn-sm" name="is_staff" value="false">Remove Staff</button>
             </form>
+            <br>
             <h5>Staff Users:</h5>
-            <ul>
-                {% if staff %}
-                    {% for staff_user in staff %}
-                        <li>{{ staff_user.username }}</li>
-                    {% endfor %}
-                {% else %}
-                    <li>None</li>
-                {% endif %}
-            </ul>
+            {% if staff %}
+                <table>
+                <tr>
+                    <th>Username</th><th></th>
+                    <th>Full Name</th><th></th>
+                    <th>Email</th><th></th>
+                </tr>
+                {% for staff_user in staff %}
+                <tr>
+                    <td>{{ staff_user.username }}</td><td></td>
+                    <td>{{ staff_user.email }}</td><td></td>
+                    <td>{{ staff_user.first_name }} {{ staff_user.last_name }}</td><td></td>
+                </tr>
+                {% endfor %}
+                <table>
+            {% else %}
+            <ul><li>None</li></ul>
+            {% endif %}
             <br>
         {% endif %}
         <!-- List scenes user can edit, and links -->
         <h5>Scene Permissions:</h5>
-            <ul>
             {% if scenes %}
-                <small style="color: grey">Public writes to objects and events are currently synced in this version of the ARENA.</small><br>
                 <table>
-                <tr>
-                    <td></td><td></td>
-                    <td>Public</td><td></td>
-                    <td>Public</td><td></td>
-                    <!-- <td>Other</td><td></td> -->
-                </tr>
-                <tr>
-                    <td>Scene</td><td></td>
-                    <td>Read</td><td></td>
-                    <td>Write</td><td></td>
-                    <!-- <td>Editors</td><td></td> -->
-                </tr>
+                    <tr>
+                        <th></th><th></th>
+                        <th>Public</th><th></th>
+                        <th>Public</th><th></th>
+                        <!-- <th></th><th></th> -->
+                    </tr>
+                    <tr>
+                        <th>Scene</th><th></th>
+                        <th>Read</th><th></th>
+                        <th>Write</th><th></th>
+                        <!-- <th>Editors</th><th></th> -->
+                    </tr>
                 {% for scene in scenes %}
                 <form action="profile_update_scene" method="POST">
                     {% csrf_token %}
@@ -98,11 +106,9 @@
                         </ul>
                     </td><td></td> -->
                     <td><button type="submit" class="btn btn-primary btn-sm" name="save" value="{{ scene.name }}">Save</button></td>
-                    <td></td>
                     <td><button type="submit" class="btn btn-primary btn-sm" name="delete" value="{{ scene.name }}"
                             onclick="return confirm('Are you sure you want to delete {{ scene.name }}?');">Delete</button></td>
-                    <td></td>
-                </tr>
+                    </tr>
                 </form>
                 {% endfor %}
                 </table>
