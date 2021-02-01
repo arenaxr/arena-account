@@ -21,9 +21,10 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from google.auth.transport import requests
 from google.oauth2 import id_token
-from rest_framework import permissions
+from rest_framework import permissions, status
 from rest_framework.compat import coreapi
 from rest_framework.decorators import api_view, permission_classes, schema
+from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
 
 from .forms import (NewSceneForm, NewUserForm, SocialSignupForm,
@@ -210,6 +211,65 @@ def profile_update_scene(request):
         # TODO (mwfarb): this should also remove the objects from persist db
 
     return redirect("user_profile")
+
+
+@api_view(['GET', 'POST', 'DELETE'])
+def scene_list(request):
+    if request.method == 'GET':
+        scenes = Scene.objects.all()
+
+        name = request.query_params.get('name', None)
+        if name is not None:
+            scenes = scenes.filter(name__icontains=name)
+
+        scenes_serializer = SceneSerializer(scenes, many=True)
+        return JsonResponse(scenes_serializer.data, safe=False)
+        # 'safe=False' for objects serialization
+
+    elif request.method == 'POST':
+        scene_data = JSONParser().parse(request)
+        scene_serializer = SceneSerializer(data=scene_data)
+        if scene_serializer.is_valid():
+            scene_serializer.save()
+            return JsonResponse(scene_serializer.data, status=status.HTTP_201_CREATED)
+        return JsonResponse(scene_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        count = Scene.objects.all().delete()
+        return JsonResponse({'message': '{} Scenes were deleted successfully!'.format(count[0])}, status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def scene_detail(request, pk):
+    try:
+        scene = Scene.objects.get(pk=pk)
+    except Scene.DoesNotExist:
+        return JsonResponse({'message': 'The scene does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        scene_serializer = SceneSerializer(scene)
+        return JsonResponse(scene_serializer.data)
+
+    elif request.method == 'PUT':
+        scene_data = JSONParser().parse(request)
+        scene_serializer = SceneSerializer(scene, data=scene_data)
+        if scene_serializer.is_valid():
+            scene_serializer.save()
+            return JsonResponse(scene_serializer.data)
+        return JsonResponse(scene_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        scene.delete()
+        return JsonResponse({'message': 'Scene was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET'])
+def scene_list_published(request):
+    scenes = Scene.objects.filter(published=True)
+
+    if request.method == 'GET':
+        scenes_serializer = SceneSerializer(scenes, many=True)
+        return JsonResponse(scenes_serializer.data, safe=False)
 
 
 @permission_classes([permissions.IsAdminUser])
