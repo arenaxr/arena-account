@@ -3,6 +3,10 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 
+# Scene permissions defaults
+SCENE_PUBLIC_READ_DEF = True
+SCENE_PUBLIC_WRITE_DEF = True
+
 
 class Scene(models.Model):
     """Model representing a scene (but not a specific copy of a scene)."""
@@ -10,8 +14,8 @@ class Scene(models.Model):
     summary = models.TextField(max_length=1000)
     editors = models.ManyToManyField(User)
     creation_date = models.DateTimeField(auto_now_add=True)
-    public_read = models.BooleanField(default=True)
-    public_write = models.BooleanField(default=True)
+    public_read = models.BooleanField(default=SCENE_PUBLIC_READ_DEF)
+    public_write = models.BooleanField(default=SCENE_PUBLIC_WRITE_DEF)
 
     def save(self, *args, **kwargs):
         self.full_clean()  # performs regular validation then clean()

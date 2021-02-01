@@ -32,7 +32,7 @@ from rest_framework.schemas import AutoSchema
 
 from .forms import (NewSceneForm, NewUserForm, SocialSignupForm,
                     UpdateSceneForm, UpdateStaffForm)
-from .models import Scene
+from .models import SCENE_PUBLIC_READ_DEF, SCENE_PUBLIC_WRITE_DEF, Scene
 from .serializers import SceneSerializer
 from .startup import get_persist_scenes
 
@@ -250,7 +250,7 @@ def my_scenes(request):
 
 def user_scenes(user):
     # update scene list from object persistance db
-    p_scenes = get_persist_scenes()  # TODO (mwfarb): read mongo db directly
+    p_scenes = get_persist_scenes()
     a_scenes = Scene.objects.values_list('name', flat=True)
     for p_scene in p_scenes:
         if p_scene not in a_scenes:
@@ -441,31 +441,29 @@ def mqtt_token(request):
             for u_scene in u_scenes:
                 subs.append(f"{realm}/s/{u_scene.name}/#")
                 pubs.append(f"{realm}/s/{u_scene.name}/#")
-    # vio cameras
+    # vio or test cameras
     if scene and camid:
         pubs.append(f"{realm}/vio/{scene}/{camid}")
+        pubs.append(f"{realm}/g/a/{camid}")
     # anon/non-owners have rights to view scene objects only
     if scene and not user.is_staff:
         scene_opt = Scene.objects.filter(name=scene)
         if scene_opt.exists():
-            # did the user check public read or public write to be private instead?
+            # did the user set specific public read or public write?
             scene_opt = Scene.objects.get(name=scene)
             if scene_opt.public_read:
                 subs.append(f"{realm}/s/{scene}/#")
             if scene_opt.public_write:
-                # TODO (mwfarb): publishing objects and object events should be separated in topics
                 pubs.append(f"{realm}/s/{scene}/#")
         else:
-            # otherwise, assume public access to scene, fail open
-            subs.append(f"{realm}/s/{scene}/#")
-            # TODO (mwfarb): publishing objects and object events should be separated in topics
-            pubs.append(f"{realm}/s/{scene}/#")
+            # otherwise, use public access defaults
+            if SCENE_PUBLIC_READ_DEF:
+                subs.append(f"{realm}/s/{scene}/#")
+            if SCENE_PUBLIC_WRITE_DEF:
+                pubs.append(f"{realm}/s/{scene}/#")
         if camid:  # probable web browser write
             pubs.append(f"{realm}/s/{scene}/{camid}")
             pubs.append(f"{realm}/s/{scene}/{camid}/#")
-            pubs.append(f"{realm}/g/a/{camid}")
-        else:  # probable cli client write
-            pubs.append(f"{realm}/s/{scene}")
         if ctrlid1:
             pubs.append(f"{realm}/s/{scene}/{ctrlid1}")
         if ctrlid2:
