@@ -1,15 +1,11 @@
-import base64
-import datetime
 import json
 import logging
 import os
 
 import coreapi
-import jwt
 from allauth.socialaccount import helpers
 from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.views import SignupView as SocialSignupViewDefault
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
@@ -32,9 +28,10 @@ from rest_framework.schemas import AutoSchema
 
 from .forms import (NewSceneForm, NewUserForm, SocialSignupForm,
                     UpdateSceneForm, UpdateStaffForm)
-from .models import SCENE_PUBLIC_READ_DEF, SCENE_PUBLIC_WRITE_DEF, Scene
+from .models import Scene
+from .mqtt import generate_mqtt_token
+from .persistence import get_persist_scenes, scenes_read_token
 from .serializers import SceneSerializer
-from .startup import get_persist_scenes
 
 STAFF_ACCTNAME = "public"
 
@@ -250,7 +247,8 @@ def my_scenes(request):
 
 def user_scenes(user):
     # update scene list from object persistance db
-    p_scenes = get_persist_scenes()
+    token = scenes_read_token()
+    p_scenes = get_persist_scenes(token)
     a_scenes = Scene.objects.values_list('name', flat=True)
     for p_scene in p_scenes:
         if p_scene not in a_scenes:
@@ -404,94 +402,16 @@ def mqtt_token(request):
     else:  # AnonymousUser
         username = request.POST.get("username", None)
 
-    realm = request.POST.get("realm", "realm")
-    scene = request.POST.get("scene", None)
-    camid = request.POST.get("camid", None)
-    userid = request.POST.get("userid", None)
-    ctrlid1 = request.POST.get("ctrlid1", None)
-    ctrlid2 = request.POST.get("ctrlid2", None)
-    subs = []
-    pubs = []
-
-    privkeyfile = settings.MQTT_TOKEN_PRIVKEY
-    with open(privkeyfile) as privatefile:
-        private_key = privatefile.read()
-    if user.is_authenticated:
-        duration = datetime.timedelta(days=1)
-    else:
-        duration = datetime.timedelta(hours=6)
-    payload = {
-        'sub': username,
-        'exp': datetime.datetime.utcnow() + duration
-    }
-    # user presence objects
-    subs.append(f"{realm}/g/a/#")
-    if user.is_authenticated:
-        pubs.append(f"{realm}/g/a/#")
-        subs.append(f"{realm}/s/#")  # allows !allscenes for all auth users
-        if user.is_staff:
-            # staff/admin have rights to all scene objects
-            pubs.append(f"{realm}/s/#")
-        else:
-            # scene owners have rights to their scene objects only
-            subs.append(f"{realm}/s/{username}/#")
-            pubs.append(f"{realm}/s/{username}/#")
-            # add scenes that have granted by other owners
-            u_scenes = Scene.objects.filter(editors=user)
-            for u_scene in u_scenes:
-                subs.append(f"{realm}/s/{u_scene.name}/#")
-                pubs.append(f"{realm}/s/{u_scene.name}/#")
-    # vio or test cameras
-    if scene and camid:
-        pubs.append(f"{realm}/vio/{scene}/{camid}")
-        pubs.append(f"{realm}/g/a/{camid}")
-    # anon/non-owners have rights to view scene objects only
-    if scene and not user.is_staff:
-        scene_opt = Scene.objects.filter(name=scene)
-        if scene_opt.exists():
-            # did the user set specific public read or public write?
-            scene_opt = Scene.objects.get(name=scene)
-            if scene_opt.public_read:
-                subs.append(f"{realm}/s/{scene}/#")
-            if scene_opt.public_write:
-                pubs.append(f"{realm}/s/{scene}/#")
-        else:
-            # otherwise, use public access defaults
-            if SCENE_PUBLIC_READ_DEF:
-                subs.append(f"{realm}/s/{scene}/#")
-            if SCENE_PUBLIC_WRITE_DEF:
-                pubs.append(f"{realm}/s/{scene}/#")
-        if camid:  # probable web browser write
-            pubs.append(f"{realm}/s/{scene}/{camid}")
-            pubs.append(f"{realm}/s/{scene}/{camid}/#")
-        if ctrlid1:
-            pubs.append(f"{realm}/s/{scene}/{ctrlid1}")
-        if ctrlid2:
-            pubs.append(f"{realm}/s/{scene}/{ctrlid2}")
-    # chat messages
-    if userid:
-        userhandle = userid + base64.b64encode(userid.encode()).decode()
-        # receive private messages: Read
-        subs.append(f"{realm}/g/c/p/{userid}/#")
-        # receive open messages to everyone and/or scene: Read
-        subs.append(f"{realm}/g/c/o/#")
-        # send open messages (chat keepalive, messages to all/scene): Write
-        pubs.append(f"{realm}/g/c/o/{userhandle}")
-        # private messages to user: Write
-        pubs.append(f"{realm}/g/c/p/+/{userhandle}")
-    # runtime
-    subs.append(f"{realm}/proc/#")
-    pubs.append(f"{realm}/proc/#")
-    # network graph
-    subs.append("$NETWORK")
-    pubs.append("$NETWORK/latency")
-    if len(subs) > 0:
-        subs.sort()
-        payload['subs'] = subs
-    if len(pubs) > 0:
-        pubs.sort()
-        payload['publ'] = pubs
-    token = jwt.encode(payload, private_key, algorithm='RS256')
+    token = generate_mqtt_token(
+        user=user,
+        username=username,
+        realm=request.POST.get("realm", "realm"),
+        scene=request.POST.get("scene", None),
+        camid=request.POST.get("camid", None),
+        userid=request.POST.get("userid", None),
+        ctrlid1=request.POST.get("ctrlid1", None),
+        ctrlid2=request.POST.get("ctrlid2", None),
+    )
     response = HttpResponse(json.dumps({
         "username": username,
         "token": token.decode("utf-8"),
@@ -499,4 +419,3 @@ def mqtt_token(request):
     response.set_cookie('mqtt_token', token.decode("utf-8"), max_age=86400000,
                         httponly=True, secure=True)
     return response
-
