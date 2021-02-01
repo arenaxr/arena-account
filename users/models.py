@@ -5,7 +5,7 @@ from django.urls import reverse
 
 # Scene permissions defaults
 SCENE_PUBLIC_READ_DEF = True
-SCENE_PUBLIC_WRITE_DEF = True
+SCENE_PUBLIC_WRITE_DEF = False
 
 
 class Scene(models.Model):
