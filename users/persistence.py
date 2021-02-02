@@ -33,17 +33,19 @@ def get_persist_scenes(token: jwt):
 def scenes_read_token():
     config = settings.PUBSUB
     privkeyfile = settings.MQTT_TOKEN_PRIVKEY
-    if os.path.exists(privkeyfile):
-        print('Using keyfile at: ' + privkeyfile)
-        with open(privkeyfile) as privatefile:
-            private_key = privatefile.read()
-        payload = {
-            'sub': config['mqtt_username'],
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=5),
-            'subs': [f"{config['mqtt_realm']}/s/#"],
-        }
-        token = jwt.encode(payload, private_key, algorithm='RS256')
-        return token
+    if not os.path.exists(privkeyfile):
+        print('Error: keyfile not found' + privkeyfile)
+        return None
+    print('Using keyfile at: ' + privkeyfile)
+    with open(privkeyfile) as privatefile:
+        private_key = privatefile.read()
+    payload = {
+        'sub': config['mqtt_username'],
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=5),
+        'subs': [f"{config['mqtt_realm']}/s/#"],
+    }
+    token = jwt.encode(payload, private_key, algorithm='RS256')
+    return token
 
 
 def _urlopen(url, token: jwt, method):
