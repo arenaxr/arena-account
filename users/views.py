@@ -210,8 +210,9 @@ def profile_update_scene(request):
         scene.public_write = public_write
         scene.save()
     elif 'delete' in request.POST:
+        # delete account scene data
         scene.delete()
-        # TODO (mwfarb): this should also remove the objects from persist db
+        # delete persist scene data
         token = generate_mqtt_token(
             user=request.user,
             username=request.user.username,
