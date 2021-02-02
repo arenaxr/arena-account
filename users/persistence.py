@@ -9,7 +9,7 @@ import jwt
 from django.conf import settings
 
 
-def delete_scene_objects(scene, token):
+def delete_scene_objects(scene, token: jwt):
     # delete scene from persist
     config = settings.PUBSUB
     host = config['mqtt_server']['host']
@@ -19,7 +19,7 @@ def delete_scene_objects(scene, token):
     return result
 
 
-def get_persist_scenes(token):
+def get_persist_scenes(token: jwt):
     # request all _scenes from persist
     config = settings.PUBSUB
     host = config['mqtt_server']['host']
@@ -47,7 +47,7 @@ def scenes_read_token():
         return token
 
 
-def _urlopen(url, token, method):
+def _urlopen(url, token: jwt, method):
     try:
         req = request.Request(url)
         req.method = method
