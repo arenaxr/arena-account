@@ -214,6 +214,7 @@ def profile_update_scene(request):
 
 
 @api_view(['GET', 'POST', 'DELETE'])
+@permission_classes([permissions.IsAuthenticated])
 def scene_list(request):
     if request.method == 'GET':
         scenes = Scene.objects.all()
@@ -240,9 +241,10 @@ def scene_list(request):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([permissions.IsAuthenticated])
 def scene_detail(request, pk):
     try:
-        scene = Scene.objects.get(pk=pk)
+        scene = Scene.objects.get(name=pk)
     except Scene.DoesNotExist:
         return JsonResponse({'message': 'The scene does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -264,6 +266,7 @@ def scene_detail(request, pk):
 
 
 @api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
 def scene_list_published(request):
     scenes = Scene.objects.filter(published=True)
 
