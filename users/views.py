@@ -158,9 +158,9 @@ def _new_scene(request):
     # add new scene editor
     form = NewSceneForm(request.POST)
     if not request.user.is_authenticated:
-        return JsonResponse({'error': "Not authenticated."}, status=403)
+        return JsonResponse({'error': "Not authenticated."}, status=status.HTTP_403_FORBIDDEN)
     if not form.is_valid():
-        return JsonResponse({'error': "Invalid parameters"}, status=500)
+        return JsonResponse({'error': "Invalid parameters"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     username = request.user.username
     scene = form.cleaned_data['scene']
     print(f"_new_scene, is_public '{request.POST.get('is_public')}'")
@@ -170,7 +170,7 @@ def _new_scene(request):
     else:
         scene = f'{username}/{scene}'  # user namespace for normal users
     if Scene.objects.filter(name=scene).exists():
-        return JsonResponse({'error': f"Unable to claim existing scene: {scene}, use admin panel"}, status=400)
+        return JsonResponse({'error': f"Unable to claim existing scene: {scene}, use admin panel"}, status=status.HTTP_400_BAD_REQUEST)
     if User.objects.filter(username=username).exists():
         s = Scene(name=scene,
                   summary=f'User {username} adding new scene {scene} to account database.')
@@ -185,12 +185,12 @@ def profile_update_scene(request):
     Update existing scene permissions the user has access to.
     """
     if request.method != 'POST':
-        return JsonResponse({}, status=400)
+        return JsonResponse({}, status=status.HTTP_400)
     form = UpdateSceneForm(request.POST)
     if not request.user.is_authenticated:
-        return JsonResponse({'error': "Not authenticated."}, status=403)
+        return JsonResponse({'error': "Not authenticated."}, status=status.HTTP_403_FORBIDDEN)
     if not form.is_valid():
-        return JsonResponse({'error': "Invalid parameters"}, status=500)
+        return JsonResponse({'error': "Invalid parameters"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     username = request.user.username
     name = form.cleaned_data['save']
     if not name:
@@ -198,10 +198,10 @@ def profile_update_scene(request):
     public_read = form.cleaned_data['public_read']
     public_write = form.cleaned_data['public_write']
     if not Scene.objects.filter(name=name).exists():
-        return JsonResponse({'error': f"Unable to update existing scene: {name}, not found"}, status=500)
+        return JsonResponse({'error': f"Unable to update existing scene: {name}, not found"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     scene = Scene.objects.get(name=name)
     if scene not in user_scenes(request.user):
-        return JsonResponse({'error': f"User does not have permission for: {name}."}, status=400)
+        return JsonResponse({'error': f"User does not have permission for: {name}."}, status=status.HTTP_400_BAD_REQUEST)
     if 'save' in request.POST:
         scene.public_read = public_read
         scene.public_write = public_write
@@ -213,7 +213,7 @@ def profile_update_scene(request):
     return redirect("user_profile")
 
 
-@api_view(['GET', 'POST', 'DELETE'])
+@api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def scene_list(request):
     if request.method == 'GET':
@@ -226,18 +226,6 @@ def scene_list(request):
         scenes_serializer = SceneSerializer(scenes, many=True)
         return JsonResponse(scenes_serializer.data, safe=False)
         # 'safe=False' for objects serialization
-
-    elif request.method == 'POST':
-        scene_data = JSONParser().parse(request)
-        scene_serializer = SceneSerializer(data=scene_data)
-        if scene_serializer.is_valid():
-            scene_serializer.save()
-            return JsonResponse(scene_serializer.data, status=status.HTTP_201_CREATED)
-        return JsonResponse(scene_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    elif request.method == 'DELETE':
-        count = Scene.objects.all().delete()
-        return JsonResponse({'message': '{} Scenes were deleted successfully!'.format(count[0])}, status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
@@ -265,16 +253,6 @@ def scene_detail(request, pk):
         return JsonResponse({'message': 'Scene was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
 
 
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def scene_list_published(request):
-    scenes = Scene.objects.filter(published=True)
-
-    if request.method == 'GET':
-        scenes_serializer = SceneSerializer(scenes, many=True)
-        return JsonResponse(scenes_serializer.data, safe=False)
-
-
 @permission_classes([permissions.IsAdminUser])
 def profile_update_staff(request):
     """
@@ -282,12 +260,12 @@ def profile_update_staff(request):
     """
     # update staff status if allowed
     if request.method != 'POST':
-        return JsonResponse({}, status=400)
+        return JsonResponse({}, status=status.HTTP_400)
     form = UpdateStaffForm(request.POST)
     if not request.user.is_authenticated:
-        return JsonResponse({'error': "Not authenticated."}, status=403)
+        return JsonResponse({'error': "Not authenticated."}, status=status.HTTP_403_FORBIDDEN)
     if not form.is_valid():
-        return JsonResponse({'error': "Invalid parameters"}, status=500)
+        return JsonResponse({'error': "Invalid parameters"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     staff_username = form.cleaned_data['staff_username']
     is_staff = form.cleaned_data['is_staff']
     if request.user.is_superuser and User.objects.filter(username=staff_username).exists():
@@ -379,7 +357,7 @@ def user_state(request):
             try:
                 user = get_user_from_id_token(gid_token)
             except (ValueError, SocialAccount.DoesNotExist) as err:
-                return JsonResponse({"error": "{0}".format(err)}, status=403)
+                return JsonResponse({"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN)
 
     if user.is_authenticated:
         if user.username.startswith("admin"):
@@ -393,11 +371,11 @@ def user_state(request):
             "fullname": user.get_full_name(),
             "email": user.email,
             "type": authType,
-        }, status=200)
+        }, status=status.HTTP_200)
     else:  # AnonymousUser
         return JsonResponse({
             "authenticated": user.is_authenticated,
-        }, status=200)
+        }, status=status.HTTP_200)
 
 
 class MqttTokenSchema(AutoSchema):
@@ -458,7 +436,7 @@ def mqtt_token(request):
         try:
             user = get_user_from_id_token(gid_token)
         except (ValueError, SocialAccount.DoesNotExist) as err:
-            return JsonResponse({"error": "{0}".format(err)}, status=403)
+            return JsonResponse({"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN)
 
     if user.is_authenticated:
         username = user.username
