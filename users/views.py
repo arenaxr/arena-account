@@ -32,7 +32,7 @@ from .forms import (NewSceneForm, NewUserForm, SocialSignupForm,
 from .models import Scene
 from .mqtt import generate_mqtt_token
 from .persistence import get_persist_scenes, scenes_read_token
-from .serializers import SceneNameSerializer
+from .serializers import SceneNameSerializer, SceneSerializer
 
 STAFF_ACCTNAME = "public"
 
@@ -185,7 +185,7 @@ def profile_update_scene(request):
     Update existing scene permissions the user has access to.
     """
     if request.method != 'POST':
-        return JsonResponse({}, status=status.HTTP_400)
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
     form = UpdateSceneForm(request.POST)
     if not request.user.is_authenticated:
         return JsonResponse({'error': "Not authenticated."}, status=status.HTTP_403_FORBIDDEN)
@@ -220,6 +220,8 @@ def scene_detail(request, pk):
         scene = Scene.objects.get(name=pk)
     except Scene.DoesNotExist:
         return JsonResponse({'message': 'The scene does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    if scene not in user_scenes(request.user):
+        return JsonResponse({'error': f"User does not have permission for: {pk}."}, status=status.HTTP_400_BAD_REQUEST)
 
     if request.method == 'GET':
         scene_serializer = SceneSerializer(scene)
@@ -235,7 +237,7 @@ def scene_detail(request, pk):
 
     elif request.method == 'DELETE':
         scene.delete()
-        return JsonResponse({'message': 'Scene was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
+        return JsonResponse({'message': 'Scene was deleted successfully!'}, status=status.HTTP_200_OK)
 
 
 @permission_classes([permissions.IsAdminUser])
@@ -245,7 +247,7 @@ def profile_update_staff(request):
     """
     # update staff status if allowed
     if request.method != 'POST':
-        return JsonResponse({}, status=status.HTTP_400)
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
     form = UpdateStaffForm(request.POST)
     if not request.user.is_authenticated:
         return JsonResponse({'error': "Not authenticated."}, status=status.HTTP_403_FORBIDDEN)
@@ -356,11 +358,11 @@ def user_state(request):
             "fullname": user.get_full_name(),
             "email": user.email,
             "type": authType,
-        }, status=status.HTTP_200)
+        }, status=status.HTTP_200_OK)
     else:  # AnonymousUser
         return JsonResponse({
             "authenticated": user.is_authenticated,
-        }, status=status.HTTP_200)
+        }, status=status.HTTP_200_OK)
 
 
 class MqttTokenSchema(AutoSchema):
