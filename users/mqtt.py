@@ -1,5 +1,6 @@
 import base64
 import datetime
+import os
 
 import jwt
 from django.conf import settings
@@ -7,10 +8,25 @@ from django.conf import settings
 from .models import SCENE_PUBLIC_READ_DEF, SCENE_PUBLIC_WRITE_DEF, Scene
 
 
-def generate_mqtt_token(*, user, username, realm, scene, camid, userid, ctrlid1, ctrlid2):
+def generate_mqtt_token(
+    *,
+    user,
+    username,
+    realm='realm',
+    scene=None,
+    camid=None,
+    userid=None,
+    ctrlid1=None,
+    ctrlid2=None,
+):
     subs = []
     pubs = []
-    with open(settings.MQTT_TOKEN_PRIVKEY) as privatefile:
+    privkeyfile = settings.MQTT_TOKEN_PRIVKEY
+    if not os.path.exists(privkeyfile):
+        print('Error: keyfile not found')
+        return None
+    print('Using keyfile at: ' + privkeyfile)
+    with open(privkeyfile) as privatefile:
         private_key = privatefile.read()
     if user.is_authenticated:
         duration = datetime.timedelta(days=1)
