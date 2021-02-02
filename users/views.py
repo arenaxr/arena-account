@@ -11,6 +11,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import BadHeaderError, send_mail
 from django.db import transaction
 from django.db.models.query_utils import Q
@@ -31,7 +32,8 @@ from .forms import (NewSceneForm, NewUserForm, SocialSignupForm,
                     UpdateSceneForm, UpdateStaffForm)
 from .models import Scene
 from .mqtt import generate_mqtt_token
-from .persistence import get_persist_scenes, scenes_read_token
+from .persistence import (delete_scene_objects, get_persist_scenes,
+                          scenes_read_token)
 from .serializers import SceneNameSerializer, SceneSerializer
 
 STAFF_ACCTNAME = "public"
@@ -197,10 +199,11 @@ def profile_update_scene(request):
         name = form.cleaned_data['delete']
     public_read = form.cleaned_data['public_read']
     public_write = form.cleaned_data['public_write']
-    if not Scene.objects.filter(name=name).exists():
+    try:
+        scene = Scene.objects.get(name=name)
+    except Scene.DoesNotExist:
         return JsonResponse({'error': f"Unable to update existing scene: {name}, not found"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    scene = Scene.objects.get(name=name)
-    if scene not in user_scenes(request.user):
+    if not scene_permission(user=request.user, scene=name):
         return JsonResponse({'error': f"User does not have permission for: {name}."}, status=status.HTTP_400_BAD_REQUEST)
     if 'save' in request.POST:
         scene.public_read = public_read
@@ -209,6 +212,11 @@ def profile_update_scene(request):
     elif 'delete' in request.POST:
         scene.delete()
         # TODO (mwfarb): this should also remove the objects from persist db
+        token = generate_mqtt_token(
+            user=request.user,
+            username=request.user.username,
+        )
+        delete_scene_objects(name, token)
 
     return redirect("user_profile")
 
@@ -220,7 +228,7 @@ def scene_detail(request, pk):
         scene = Scene.objects.get(name=pk)
     except Scene.DoesNotExist:
         return JsonResponse({'message': 'The scene does not exist'}, status=status.HTTP_404_NOT_FOUND)
-    if scene not in user_scenes(request.user):
+    if not scene_permission(user=request.user, scene=pk):
         return JsonResponse({'error': f"User does not have permission for: {pk}."}, status=status.HTTP_400_BAD_REQUEST)
 
     if request.method == 'GET':
@@ -286,15 +294,30 @@ def user_scenes(user):
 
     # load list of scenes this user can edit
     scenes = Scene.objects.none()
-    ext_scenes = Scene.objects.none()
+    editor_scenes = Scene.objects.none()
     if user.is_authenticated:
         if user.is_staff:  # admin/staff
             scenes = Scene.objects.all()
         else:  # standard user
             scenes = Scene.objects.filter(name__startswith=f'{user.username}/')
-            ext_scenes = Scene.objects.filter(editors=user)
+            editor_scenes = Scene.objects.filter(editors=user)
             # merge 'my' namespaced scenes and extras scenes granted
-    return (scenes | ext_scenes).order_by('name')
+    return (scenes | editor_scenes).order_by('name')
+
+
+def scene_permission(user, scene):
+    if not user.is_authenticated:  # anon
+        return False
+    elif user.is_staff:  # admin/staff
+        return True
+    elif scene.startswith(f'{user.username}/'):  # owner
+        return True
+    else:
+        try:
+            editor_scene = Scene.objects.get(name=scene, editors=user)  # editor
+        except Scene.ObjectDoesNotExist:
+            return False
+        return True
 
 
 def user_profile(request):

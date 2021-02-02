@@ -7,7 +7,17 @@ from django.conf import settings
 from .models import SCENE_PUBLIC_READ_DEF, SCENE_PUBLIC_WRITE_DEF, Scene
 
 
-def generate_mqtt_token(*, user, username, realm, scene, camid, userid, ctrlid1, ctrlid2):
+def generate_mqtt_token(
+    *,
+    user,
+    username,
+    realm='realm',
+    scene=None,
+    camid=None,
+    userid=None,
+    ctrlid1=None,
+    ctrlid2=None
+):
     subs = []
     pubs = []
     with open(settings.MQTT_TOKEN_PRIVKEY) as privatefile:

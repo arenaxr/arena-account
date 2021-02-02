@@ -11,3 +11,4 @@ pyyaml
 uritemplate
 drf_yasg
 python-dotenv
+requests
