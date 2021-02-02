@@ -49,6 +49,6 @@ urlpatterns = [
          name="profile_update_scene"),
     path('new_scene', views.new_scene, name="new_scene"),
     path('my_scenes', views.my_scenes, name="my_scenes"),
-    re_path(r'^scenes$', views.scene_list),
-    re_path(r'^scenes/(?P<pk>[^\/]+\/[^\/]+)$', views.scene_detail),
+    re_path(r'^scenes/(?P<pk>[^\/]+\/[^\/]+)$',
+            views.scene_detail),  # namespace/scenename
 ]

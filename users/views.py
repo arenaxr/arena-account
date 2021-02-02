@@ -32,7 +32,7 @@ from .forms import (NewSceneForm, NewUserForm, SocialSignupForm,
 from .models import Scene
 from .mqtt import generate_mqtt_token
 from .persistence import get_persist_scenes, scenes_read_token
-from .serializers import SceneSerializer
+from .serializers import SceneNameSerializer
 
 STAFF_ACCTNAME = "public"
 
@@ -213,21 +213,6 @@ def profile_update_scene(request):
     return redirect("user_profile")
 
 
-@api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def scene_list(request):
-    if request.method == 'GET':
-        scenes = Scene.objects.all()
-
-        name = request.query_params.get('name', None)
-        if name is not None:
-            scenes = scenes.filter(name__icontains=name)
-
-        scenes_serializer = SceneSerializer(scenes, many=True)
-        return JsonResponse(scenes_serializer.data, safe=False)
-        # 'safe=False' for objects serialization
-
-
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([permissions.IsAuthenticated])
 def scene_detail(request, pk):
@@ -282,7 +267,7 @@ def my_scenes(request):
     """
     Request a list of scenes this user can write to.
     """
-    serializer = SceneSerializer(user_scenes(request.user), many=True)
+    serializer = SceneNameSerializer(user_scenes(request.user), many=True)
     return JsonResponse(serializer.data, safe=False)
 
 
