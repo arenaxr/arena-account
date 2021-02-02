@@ -1,15 +1,11 @@
-import base64
-import datetime
 import json
 import logging
 import os
 
 import coreapi
-import jwt
 from allauth.socialaccount import helpers
 from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.views import SignupView as SocialSignupViewDefault
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
@@ -25,16 +21,18 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from google.auth.transport import requests
 from google.oauth2 import id_token
-from rest_framework import permissions
+from rest_framework import permissions, status
 from rest_framework.compat import coreapi
 from rest_framework.decorators import api_view, permission_classes, schema
+from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
 
 from .forms import (NewSceneForm, NewUserForm, SocialSignupForm,
                     UpdateSceneForm, UpdateStaffForm)
-from .models import SCENE_PUBLIC_READ_DEF, SCENE_PUBLIC_WRITE_DEF, Scene
-from .serializers import SceneSerializer
-from .startup import get_persist_scenes
+from .models import Scene
+from .mqtt import generate_mqtt_token
+from .persistence import get_persist_scenes, scenes_read_token
+from .serializers import SceneNameSerializer, SceneSerializer
 
 STAFF_ACCTNAME = "public"
 
@@ -160,9 +158,9 @@ def _new_scene(request):
     # add new scene editor
     form = NewSceneForm(request.POST)
     if not request.user.is_authenticated:
-        return JsonResponse({'error': "Not authenticated."}, status=403)
+        return JsonResponse({'error': "Not authenticated."}, status=status.HTTP_403_FORBIDDEN)
     if not form.is_valid():
-        return JsonResponse({'error': "Invalid parameters"}, status=500)
+        return JsonResponse({'error': "Invalid parameters"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     username = request.user.username
     scene = form.cleaned_data['scene']
     print(f"_new_scene, is_public '{request.POST.get('is_public')}'")
@@ -172,7 +170,7 @@ def _new_scene(request):
     else:
         scene = f'{username}/{scene}'  # user namespace for normal users
     if Scene.objects.filter(name=scene).exists():
-        return JsonResponse({'error': f"Unable to claim existing scene: {scene}, use admin panel"}, status=400)
+        return JsonResponse({'error': f"Unable to claim existing scene: {scene}, use admin panel"}, status=status.HTTP_400_BAD_REQUEST)
     if User.objects.filter(username=username).exists():
         s = Scene(name=scene,
                   summary=f'User {username} adding new scene {scene} to account database.')
@@ -187,12 +185,12 @@ def profile_update_scene(request):
     Update existing scene permissions the user has access to.
     """
     if request.method != 'POST':
-        return JsonResponse({}, status=400)
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
     form = UpdateSceneForm(request.POST)
     if not request.user.is_authenticated:
-        return JsonResponse({'error': "Not authenticated."}, status=403)
+        return JsonResponse({'error': "Not authenticated."}, status=status.HTTP_403_FORBIDDEN)
     if not form.is_valid():
-        return JsonResponse({'error': "Invalid parameters"}, status=500)
+        return JsonResponse({'error': "Invalid parameters"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     username = request.user.username
     name = form.cleaned_data['save']
     if not name:
@@ -200,10 +198,10 @@ def profile_update_scene(request):
     public_read = form.cleaned_data['public_read']
     public_write = form.cleaned_data['public_write']
     if not Scene.objects.filter(name=name).exists():
-        return JsonResponse({'error': f"Unable to update existing scene: {name}, not found"}, status=500)
+        return JsonResponse({'error': f"Unable to update existing scene: {name}, not found"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     scene = Scene.objects.get(name=name)
     if scene not in user_scenes(request.user):
-        return JsonResponse({'error': f"User does not have permission for: {name}."}, status=400)
+        return JsonResponse({'error': f"User does not have permission for: {name}."}, status=status.HTTP_400_BAD_REQUEST)
     if 'save' in request.POST:
         scene.public_read = public_read
         scene.public_write = public_write
@@ -215,6 +213,33 @@ def profile_update_scene(request):
     return redirect("user_profile")
 
 
+@api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def scene_detail(request, pk):
+    try:
+        scene = Scene.objects.get(name=pk)
+    except Scene.DoesNotExist:
+        return JsonResponse({'message': 'The scene does not exist'}, status=status.HTTP_404_NOT_FOUND)
+    if scene not in user_scenes(request.user):
+        return JsonResponse({'error': f"User does not have permission for: {pk}."}, status=status.HTTP_400_BAD_REQUEST)
+
+    if request.method == 'GET':
+        scene_serializer = SceneSerializer(scene)
+        return JsonResponse(scene_serializer.data)
+
+    elif request.method == 'PUT':
+        scene_data = JSONParser().parse(request)
+        scene_serializer = SceneSerializer(scene, data=scene_data)
+        if scene_serializer.is_valid():
+            scene_serializer.save()
+            return JsonResponse(scene_serializer.data)
+        return JsonResponse(scene_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        scene.delete()
+        return JsonResponse({'message': 'Scene was deleted successfully!'}, status=status.HTTP_200_OK)
+
+
 @permission_classes([permissions.IsAdminUser])
 def profile_update_staff(request):
     """
@@ -222,12 +247,12 @@ def profile_update_staff(request):
     """
     # update staff status if allowed
     if request.method != 'POST':
-        return JsonResponse({}, status=400)
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
     form = UpdateStaffForm(request.POST)
     if not request.user.is_authenticated:
-        return JsonResponse({'error': "Not authenticated."}, status=403)
+        return JsonResponse({'error': "Not authenticated."}, status=status.HTTP_403_FORBIDDEN)
     if not form.is_valid():
-        return JsonResponse({'error': "Invalid parameters"}, status=500)
+        return JsonResponse({'error': "Invalid parameters"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     staff_username = form.cleaned_data['staff_username']
     is_staff = form.cleaned_data['is_staff']
     if request.user.is_superuser and User.objects.filter(username=staff_username).exists():
@@ -244,13 +269,14 @@ def my_scenes(request):
     """
     Request a list of scenes this user can write to.
     """
-    serializer = SceneSerializer(user_scenes(request.user), many=True)
+    serializer = SceneNameSerializer(user_scenes(request.user), many=True)
     return JsonResponse(serializer.data, safe=False)
 
 
 def user_scenes(user):
     # update scene list from object persistance db
-    p_scenes = get_persist_scenes()
+    token = scenes_read_token()
+    p_scenes = get_persist_scenes(token)
     a_scenes = Scene.objects.values_list('name', flat=True)
     for p_scene in p_scenes:
         if p_scene not in a_scenes:
@@ -318,7 +344,7 @@ def user_state(request):
             try:
                 user = get_user_from_id_token(gid_token)
             except (ValueError, SocialAccount.DoesNotExist) as err:
-                return JsonResponse({"error": "{0}".format(err)}, status=403)
+                return JsonResponse({"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN)
 
     if user.is_authenticated:
         if user.username.startswith("admin"):
@@ -332,11 +358,11 @@ def user_state(request):
             "fullname": user.get_full_name(),
             "email": user.email,
             "type": authType,
-        }, status=200)
+        }, status=status.HTTP_200_OK)
     else:  # AnonymousUser
         return JsonResponse({
             "authenticated": user.is_authenticated,
-        }, status=200)
+        }, status=status.HTTP_200_OK)
 
 
 class MqttTokenSchema(AutoSchema):
@@ -397,101 +423,23 @@ def mqtt_token(request):
         try:
             user = get_user_from_id_token(gid_token)
         except (ValueError, SocialAccount.DoesNotExist) as err:
-            return JsonResponse({"error": "{0}".format(err)}, status=403)
+            return JsonResponse({"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN)
 
     if user.is_authenticated:
         username = user.username
     else:  # AnonymousUser
         username = request.POST.get("username", None)
 
-    realm = request.POST.get("realm", "realm")
-    scene = request.POST.get("scene", None)
-    camid = request.POST.get("camid", None)
-    userid = request.POST.get("userid", None)
-    ctrlid1 = request.POST.get("ctrlid1", None)
-    ctrlid2 = request.POST.get("ctrlid2", None)
-    subs = []
-    pubs = []
-
-    privkeyfile = settings.MQTT_TOKEN_PRIVKEY
-    with open(privkeyfile) as privatefile:
-        private_key = privatefile.read()
-    if user.is_authenticated:
-        duration = datetime.timedelta(days=1)
-    else:
-        duration = datetime.timedelta(hours=6)
-    payload = {
-        'sub': username,
-        'exp': datetime.datetime.utcnow() + duration
-    }
-    # user presence objects
-    subs.append(f"{realm}/g/a/#")
-    if user.is_authenticated:
-        pubs.append(f"{realm}/g/a/#")
-        subs.append(f"{realm}/s/#")  # allows !allscenes for all auth users
-        if user.is_staff:
-            # staff/admin have rights to all scene objects
-            pubs.append(f"{realm}/s/#")
-        else:
-            # scene owners have rights to their scene objects only
-            subs.append(f"{realm}/s/{username}/#")
-            pubs.append(f"{realm}/s/{username}/#")
-            # add scenes that have granted by other owners
-            u_scenes = Scene.objects.filter(editors=user)
-            for u_scene in u_scenes:
-                subs.append(f"{realm}/s/{u_scene.name}/#")
-                pubs.append(f"{realm}/s/{u_scene.name}/#")
-    # vio or test cameras
-    if scene and camid:
-        pubs.append(f"{realm}/vio/{scene}/{camid}")
-        pubs.append(f"{realm}/g/a/{camid}")
-    # anon/non-owners have rights to view scene objects only
-    if scene and not user.is_staff:
-        scene_opt = Scene.objects.filter(name=scene)
-        if scene_opt.exists():
-            # did the user set specific public read or public write?
-            scene_opt = Scene.objects.get(name=scene)
-            if scene_opt.public_read:
-                subs.append(f"{realm}/s/{scene}/#")
-            if scene_opt.public_write:
-                pubs.append(f"{realm}/s/{scene}/#")
-        else:
-            # otherwise, use public access defaults
-            if SCENE_PUBLIC_READ_DEF:
-                subs.append(f"{realm}/s/{scene}/#")
-            if SCENE_PUBLIC_WRITE_DEF:
-                pubs.append(f"{realm}/s/{scene}/#")
-        if camid:  # probable web browser write
-            pubs.append(f"{realm}/s/{scene}/{camid}")
-            pubs.append(f"{realm}/s/{scene}/{camid}/#")
-        if ctrlid1:
-            pubs.append(f"{realm}/s/{scene}/{ctrlid1}")
-        if ctrlid2:
-            pubs.append(f"{realm}/s/{scene}/{ctrlid2}")
-    # chat messages
-    if userid:
-        userhandle = userid + base64.b64encode(userid.encode()).decode()
-        # receive private messages: Read
-        subs.append(f"{realm}/g/c/p/{userid}/#")
-        # receive open messages to everyone and/or scene: Read
-        subs.append(f"{realm}/g/c/o/#")
-        # send open messages (chat keepalive, messages to all/scene): Write
-        pubs.append(f"{realm}/g/c/o/{userhandle}")
-        # private messages to user: Write
-        pubs.append(f"{realm}/g/c/p/+/{userhandle}")
-    # runtime
-    subs.append(f"{realm}/proc/#")
-    pubs.append(f"{realm}/proc/#")
-    # network graph
-    subs.append("$NETWORK")
-    pubs.append("$NETWORK/latency")
-    if len(subs) > 0:
-        subs.sort()
-        payload['subs'] = subs
-    if len(pubs) > 0:
-        pubs.sort()
-        payload['publ'] = pubs
-    token = jwt.encode(payload, private_key, algorithm='RS256')
+    token = generate_mqtt_token(
+        user=user,
+        username=username,
+        realm=request.POST.get("realm", "realm"),
+        scene=request.POST.get("scene", None),
+        camid=request.POST.get("camid", None),
+        userid=request.POST.get("userid", None),
+        ctrlid1=request.POST.get("ctrlid1", None),
+        ctrlid2=request.POST.get("ctrlid2", None),
+    )
     response = HttpResponse(json.dumps({
         "username": username,
         "token": token.decode("utf-8"),
@@ -499,4 +447,3 @@ def mqtt_token(request):
     response.set_cookie('mqtt_token', token.decode("utf-8"), max_age=86400000,
                         httponly=True, secure=True)
     return response
-
