@@ -47,9 +47,12 @@ def scenes_read_token():
 
 
 def _urlopen(url, token: jwt, method):
+    if not token:
+        print("Error: mqtt_token for persist not available")
+        return None
     headers = {"Cookie": f"mqtt_token={token.decode('utf-8')}"}
-    verify = not settings.DEBUG
     cookies = {'mqtt_token': token.decode('utf-8')}
+    verify = not settings.DEBUG
     try:
         if method == 'GET':
             response = requests.get(
