@@ -495,6 +495,7 @@ def mqtt_auth(request):
 
     # produce nonce with 32-bits secure randomness
     nonce = str(secrets.randbits(32))
+    # define user object_ids server-side to prevent spoofing
     userid = camid = ctrlid1 = ctrlid2 = None
     if request.POST.get("userid", False):
         userid = f"{nonce}_{username}"
