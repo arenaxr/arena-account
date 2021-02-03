@@ -493,16 +493,17 @@ def mqtt_auth(request):
     else:  # AnonymousUser
         username = request.POST.get("username", None)
 
-    nonce = secrets.token_urlsafe(nbytes=32)
+    # produce nonce with 32-bits secure randomness
+    nonce = str(secrets.randbits(32))
     userid = camid = ctrlid1 = ctrlid2 = None
     if request.POST.get("userid", False):
         userid = f"{nonce}_{username}"
     if request.POST.get("camid", False):
         camid = f"camera_{nonce}_{username}"
     if request.POST.get("ctrlid1", False):
-        ctrlid1 = f"vive-left_{nonce}_{username}"
+        ctrlid1 = f"viveLeft_{nonce}_{username}"
     if request.POST.get("ctrlid2", False):
-        ctrlid2 = f"vive-left_{nonce}_{username}"
+        ctrlid2 = f"viveRight_{nonce}_{username}"
     token = generate_mqtt_token(
         user=user,
         username=username,
