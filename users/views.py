@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import secrets
 
 import coreapi
 from allauth.socialaccount import helpers
@@ -315,7 +316,8 @@ def scene_permission(user, scene):
         return True
     else:
         try:
-            editor_scene = Scene.objects.get(name=scene, editors=user)  # editor
+            editor_scene = Scene.objects.get(
+                name=scene, editors=user)  # editor
         except Scene.ObjectDoesNotExist:
             return False
         return True
@@ -472,3 +474,59 @@ def mqtt_token(request):
                         httponly=True, secure=True)
     return response
 
+
+@api_view(['POST'])
+def mqtt_auth(request):
+    """
+    Request a MQTT JWT token with permissions for an anonymous or authenticated user given incoming parameters.
+    """
+    user = request.user
+    gid_token = request.POST.get("id_token", None)
+    if gid_token:
+        try:
+            user = get_user_from_id_token(gid_token)
+        except (ValueError, SocialAccount.DoesNotExist) as err:
+            return JsonResponse({"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN)
+
+    if user.is_authenticated:
+        username = user.username
+    else:  # AnonymousUser
+        username = request.POST.get("username", None)
+
+    nonce = secrets.token_urlsafe(nbytes=32)
+    userid = camid = ctrlid1 = ctrlid2 = None
+    if request.POST.get("userid", False):
+        userid = f"{nonce}_{username}"
+    if request.POST.get("camid", False):
+        camid = f"camera_{nonce}_{username}"
+    if request.POST.get("ctrlid1", False):
+        ctrlid1 = f"vive-left_{nonce}_{username}"
+    if request.POST.get("ctrlid2", False):
+        ctrlid2 = f"vive-left_{nonce}_{username}"
+    token = generate_mqtt_token(
+        user=user,
+        username=username,
+        realm=request.POST.get("realm", "realm"),
+        scene=request.POST.get("scene", None),
+        camid=camid,
+        userid=userid,
+        ctrlid1=ctrlid1,
+        ctrlid2=ctrlid2,
+    )
+    data = {
+        "username": username,
+        "token": token.decode("utf-8"),
+        "user_ids": {},
+    }
+    if userid:
+        data["user_ids"]["userid"] = userid
+    if camid:
+        data["user_ids"]["camid"] = camid
+    if ctrlid1:
+        data["user_ids"]["ctrlid1"] = ctrlid1
+    if ctrlid2:
+        data["user_ids"]["ctrlid2"] = ctrlid2
+    response = HttpResponse(json.dumps(data), content_type='application/json')
+    response.set_cookie('mqtt_token', token.decode("utf-8"), max_age=86400000,
+                        httponly=True, secure=True)
+    return response

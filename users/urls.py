@@ -40,6 +40,7 @@ urlpatterns = [
     path("profile", views.user_profile, name="user_profile"),
     path("login_callback", views.login_callback, name="login_callback"),
     path('mqtt_auth', views.mqtt_token, name="mqtt_token"),
+    path('mqtt', views.mqtt_auth, name="mqtt_auth"),
     path('user_state', views.user_state, name="user_state"),
     path('profile_update_staff', views.profile_update_staff,
          name="profile_update_staff"),
