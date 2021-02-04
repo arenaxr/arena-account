@@ -11,6 +11,7 @@ HOSTNAME=localhost
 EMAIL=nouser@nomail.com
 GAUTH_CLIENTID=Google_OAuth_Web_Client_ID
 GAUTH_CLIENTSECRET=Google_OAuth_Web_Client_Secret
+MQTT_TOKEN_PRIVKEY=/path/to/your/test/key/file.pem
 ```
 3. Create db: ```make migrate```
 4. Create admin user: ```python3 manage.py createsuperuser --email admin@example.com --username admin```
