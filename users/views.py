@@ -437,46 +437,18 @@ def get_user_from_id_token(gid_token):
     return User.objects.get(username=g_user.user)
 
 
+def _field_requested(request, field):
+    # field value could vary: true/false, or another string
+    # only missing field should evaluate to False
+    value = request.POST.get(field, False)
+    if value:
+        return True
+    return False
+
+
 @api_view(['POST'])
-@schema(MqttTokenSchema())  # TODO: schema not working yet
+# @schema(MqttTokenSchema())  # TODO: schema not working yet
 def mqtt_token(request):
-    """
-    Request a MQTT JWT token with permissions for an anonymous or authenticated user given incoming parameters.
-    """
-    user = request.user
-    gid_token = request.POST.get("id_token", None)
-    if gid_token:
-        try:
-            user = get_user_from_id_token(gid_token)
-        except (ValueError, SocialAccount.DoesNotExist) as err:
-            return JsonResponse({"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN)
-
-    if user.is_authenticated:
-        username = user.username
-    else:  # AnonymousUser
-        username = request.POST.get("username", None)
-
-    token = generate_mqtt_token(
-        user=user,
-        username=username,
-        realm=request.POST.get("realm", "realm"),
-        scene=request.POST.get("scene", None),
-        camid=request.POST.get("camid", None),
-        userid=request.POST.get("userid", None),
-        ctrlid1=request.POST.get("ctrlid1", None),
-        ctrlid2=request.POST.get("ctrlid2", None),
-    )
-    response = HttpResponse(json.dumps({
-        "username": username,
-        "token": token.decode("utf-8"),
-    }), content_type='application/json')
-    response.set_cookie('mqtt_token', token.decode("utf-8"), max_age=86400000,
-                        httponly=True, secure=True)
-    return response
-
-
-@api_view(['POST'])
-def mqtt_auth(request):
     """
     Request a MQTT JWT token with permissions for an anonymous or authenticated user given incoming parameters.
     """
@@ -497,13 +469,13 @@ def mqtt_auth(request):
     nonce = str(secrets.randbits(32))
     # define user object_ids server-side to prevent spoofing
     userid = camid = ctrlid1 = ctrlid2 = None
-    if request.POST.get("userid", False):
+    if _field_requested(request, "userid"):
         userid = f"{nonce}_{username}"
-    if request.POST.get("camid", False):
+    if _field_requested(request, "camid"):
         camid = f"camera_{nonce}_{username}"
-    if request.POST.get("ctrlid1", False):
+    if _field_requested(request, "ctrlid1"):
         ctrlid1 = f"viveLeft_{nonce}_{username}"
-    if request.POST.get("ctrlid2", False):
+    if _field_requested(request, "ctrlid2"):
         ctrlid2 = f"viveRight_{nonce}_{username}"
     token = generate_mqtt_token(
         user=user,
