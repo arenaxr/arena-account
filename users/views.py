@@ -490,16 +490,16 @@ def mqtt_token(request):
     data = {
         "username": username,
         "token": token.decode("utf-8"),
-        "user_ids": {},
+        "ids": {},
     }
     if userid:
-        data["user_ids"]["userid"] = userid
+        data["ids"]["userid"] = userid
     if camid:
-        data["user_ids"]["camid"] = camid
+        data["ids"]["camid"] = camid
     if ctrlid1:
-        data["user_ids"]["ctrlid1"] = ctrlid1
+        data["ids"]["ctrlid1"] = ctrlid1
     if ctrlid2:
-        data["user_ids"]["ctrlid2"] = ctrlid2
+        data["ids"]["ctrlid2"] = ctrlid2
     response = HttpResponse(json.dumps(data), content_type='application/json')
     response.set_cookie('mqtt_token', token.decode("utf-8"), max_age=86400000,
                         httponly=True, secure=True)
