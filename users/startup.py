@@ -14,8 +14,9 @@ def setup_socialapps():
     hc = Site.objects.filter(id=settings.SITE_ID)
     if hc.exists():
         hc = Site.objects.get(id=settings.SITE_ID)
-        hc.name = host
-        hc.domain = host
+        if hc.domain != host:
+            hc.name = host
+            hc.domain = host
+            hc.save()
     else:
         hc = Site(id=settings.SITE_ID, name=host, domain=host)
-    hc.save()
