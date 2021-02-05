@@ -8,21 +8,18 @@
 body,
 html {
     height: 100%;
+    background-color: #32364d;
+    font-family: 'Roboto', sans-serif;
+}
+
+.top-logo {
+    max-height: 64px;
 }
 
 * {
     box-sizing: border-box;
 }
 
-.bg-img {
-    background-image: url("../img/intro_dialog_animation.gif");
-    height: 100%;
-    overflow: hidden;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
-    position: relative;
-}
 
 /*
 .login {
@@ -77,22 +74,27 @@ body {
     border-radius: 4px;
     cursor: pointer;
 }
+
 .login-form button:hover {
     opacity: 0.8;
 }
+
 .login-form input[type="checkbox"] {
     height: 16px;
     width: 16px;
     margin-right: 5px;
     float: left;
 }
+
 .login-form .forget-psw {
     float: right;
 }
+
 .login-form .forget-psw a {
     color: #2196f3;
     text-decoration: none;
 }
+
 .social-btn button.google-btn,
 .social-btn button.github-btn,
 .g-signin2 {
@@ -100,26 +102,32 @@ body {
     font-size: 15px;
     margin: 0px 0px 10px;
 }
+
 .social-btn button.google-btn {
     background-color: #4285f4;
 }
+
 .social-btn button.github-btn {
     background-color: #000000;
 }
+
 .social-btn {
     border-top: 1px solid #ddd;
     padding-top: 30px;
     margin-top: 30px;
 }
+
 .social-btn button i {
     margin-right: 5px;
     font-size: 20px;
 }
+
 @media (max-width: 767px) {
     .login-form form {
         width: 90%;
         padding: 20px 15px 20px;
     }
+
     .social-btn button.google-btn,
     .social-btn button.github-btn {
         font-size: 15px;
@@ -131,6 +139,7 @@ body {
     /* color: #404040;
     background: #000000; */
 }
+
 .login {
     position: relative;
     margin: 30px 30px;
@@ -140,9 +149,10 @@ body {
     background: white;
     border-radius: 3px;
     -webkit-box-shadow: 0 0 200px rgba(255, 255, 255, 0.5),
-        0 1px 2px rgba(0, 0, 0, 0.3);
+    0 1px 2px rgba(0, 0, 0, 0.3);
     box-shadow: 0 0 200px rgba(255, 255, 255, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3);
 }
+
 .login:before {
     content: "";
     position: absolute;
@@ -154,6 +164,7 @@ body {
     background: rgba(0, 0, 0, 0.08);
     border-radius: 4px;
 }
+
 .login h1 {
     margin: -20px -20px 21px;
     line-height: 40px;
@@ -172,35 +183,43 @@ body {
     -webkit-box-shadow: 0 1px whitesmoke;
     box-shadow: 0 1px whitesmoke;
 }
+
 .login p {
     margin: 20px 0 0;
 }
+
 .login p:first-child {
     margin-top: 0;
 }
+
 .login input[type="email"],
 .login input[type="text"],
 .login input[type="password"] {
     width: 90%;
 }
+
 .login p.remember_me {
     float: left;
     line-height: 31px;
 }
+
 .login p.remember_me label {
     font-size: 12px;
     color: #777;
     cursor: pointer;
 }
+
 .login p.remember_me input {
     position: relative;
     bottom: 1px;
     margin-right: 4px;
     vertical-align: middle;
 }
+
 .login p.submit {
     text-align: right;
 }
+
 .login-help {
     margin: 20px 0;
     font-size: 11px;
@@ -208,25 +227,31 @@ body {
     text-align: center;
     text-shadow: 0 1px #2a85a1;
 }
+
 .login-help a {
     color: #cce7fa;
     text-decoration: none;
 }
+
 .login-help a:hover {
     text-decoration: underline;
 }
+
 :-moz-placeholder {
     color: #c9c9c9 !important;
     font-size: 13px;
 }
+
 ::-webkit-input-placeholder {
     color: #ccc;
     font-size: 13px;
 }
+
 input {
     font-family: "Lucida Grande", Tahoma, Verdana, sans-serif;
     font-size: 14px;
 }
+
 input[type="email"],
 input[type="text"],
 input[type="password"] {
@@ -243,6 +268,7 @@ input[type="password"] {
     -webkit-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
 }
+
 input[type="email"]:focus,
 input[type="text"]:focus,
 input[type="password"]:focus {
@@ -250,6 +276,7 @@ input[type="password"]:focus {
     outline-color: #dceefc;
     outline-offset: 0;
 }
+
 input[type="submit"] {
     padding: 0 18px;
     height: 29px;
@@ -272,12 +299,14 @@ input[type="submit"] {
     -webkit-box-shadow: inset 0 1px white, 0 1px 2px rgba(0, 0, 0, 0.15);
     box-shadow: inset 0 1px white, 0 1px 2px rgba(0, 0, 0, 0.15);
 }
+
 input[type="submit"]:active {
     background: #cde5ef;
     border-color: #9eb9c2 #b3c0c8 #b4ccce;
     -webkit-box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.2);
     box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.2);
 }
+
 .lt-ie9 input[type="email"],
 .lt-ie9 input[type="text"],
 .lt-ie9 input[type="password"] {
@@ -295,18 +324,22 @@ input[type="submit"]:active {
     box-shadow: 1px 1px 1px grey;
     white-space: nowrap;
 }
+
 .customBtn:hover {
     cursor: pointer;
 }
+
 span.icon {
     display: inline-block;
     vertical-align: middle;
     width: 42px;
     height: 42px;
 }
+
 #customBtnGoogle span.icon {
     background: url('../img/g-normal.png') transparent 5px 50% no-repeat;
 }
+
 .fa-at,
 .fa-github,
 .fa-google,
@@ -315,6 +348,7 @@ span.icon {
     display: block !important;
     padding: 10px;
 }
+
 span.buttonText {
     display: inline-block;
     vertical-align: middle;

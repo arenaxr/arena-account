@@ -1,5 +1,5 @@
-PYTHON3=/usr/local/bin/python3 
-PIP3=/usr/local/bin/pip3
+PYTHON3=/usr/bin/env python3
+PIP3=/usr/bin/env pip3
 
 run: env
 	. env/bin/activate; ${PYTHON3} manage.py runserver

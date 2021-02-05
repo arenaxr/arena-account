@@ -2,39 +2,42 @@
 
 {% block content %}
 
-{% load crispy_forms_tags %}
+{% include 'users/includes/messages.html' %}
 
 <!--Profile-->
-<div class="container p-5">
-    {% include 'users/includes/messages.html' %}
-    {% if user.is_authenticated %}
-        <h1>User Profile</h1>
-        Username: {{ user.get_username }}<br>
-        Name: {{ user.first_name }} {{ user.last_name }}<br>
-        Email: {{ user.email }}<br>
-        Role:
-        {% if user.is_superuser %} Admin
-        {% elif user.is_staff %} Staff
-        {% elif user.is_authenticated %} User
-        {% else %} Anonymous
-        {% endif %}<br>
-        <br>
-        <!-- New Scene Request -->
-        <h5>New Scene Request:</h5>
-        <form action="profile_new_scene" method="POST">
-            <small style="color: grey">Do not include username or slash '/', it will be generated for you.</small><br>
-            {% csrf_token %}
-            {% if staff %}
+<div class="container-fluid">
+    <div class="row d-flex justify-content-center align-items-center">
+        <div class="col-lg-7 col-md-8 shadow rounded bg-white p-5">
+
+            {% if user.is_authenticated %}
+            <h1>User Profile</h1>
+            Username: {{ user.get_username }}<br>
+            Name: {{ user.first_name }} {{ user.last_name }}<br>
+            Email: {{ user.email }}<br>
+            Role:
+            {% if user.is_superuser %} Admin
+            {% elif user.is_staff %} Staff
+            {% elif user.is_authenticated %} User
+            {% else %} Anonymous
+            {% endif %}<br>
+            <br>
+            <!-- New Scene Request -->
+            <h5>New Scene Request:</h5>
+            <form action="profile_new_scene" method="POST">
+                <small style="color: grey">Do not include username or slash '/', it will be generated for
+                    you.</small><br>
+                {% csrf_token %}
+                {% if staff %}
                 <label for="is_public">Public:</label>
                 <input type="checkbox" name="is_public">
                 <br>
-            {% endif %}
-            <label for="scene">Scene Name:</label>
-            <input type="text" name="scene" pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,200}$">
-            <button type="submit" class="btn btn-primary btn-sm">Request Scene</button><br>
-        </form>
-        <br>
-        {% if user.is_superuser %}
+                {% endif %}
+                <label for="scene">Scene Name:</label>
+                <input type="text" name="scene" pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,200}$">
+                <button type="submit" class="btn btn-primary btn-sm">Request Scene</button><br>
+            </form>
+            <br>
+            {% if user.is_superuser %}
             <!-- Set or Remove user as Staff -->
             <h5>Admin Functions:</h5>
             <form action="profile_update_staff" method="POST">
@@ -47,80 +50,98 @@
             <br>
             <h5>Staff Users:</h5>
             {% if staff %}
-                <table>
+            <table>
                 <tr>
-                    <th>Username</th><th></th>
-                    <th>Email</th><th></th>
-                    <th>Full Name</th><th></th>
+                    <th>Username</th>
+                    <th></th>
+                    <th>Email</th>
+                    <th></th>
+                    <th>Full Name</th>
+                    <th></th>
                 </tr>
                 {% for staff_user in staff %}
                 <tr>
-                    <td>{{ staff_user.username }}</td><td></td>
-                    <td>{{ staff_user.email }}</td><td></td>
-                    <td>{{ staff_user.first_name }} {{ staff_user.last_name }}</td><td></td>
+                    <td>{{ staff_user.username }}</td>
+                    <td></td>
+                    <td>{{ staff_user.email }}</td>
+                    <td></td>
+                    <td>{{ staff_user.first_name }} {{ staff_user.last_name }}</td>
+                    <td></td>
                 </tr>
                 {% endfor %}
                 <table>
-            {% else %}
-            <ul><li>None</li></ul>
-            {% endif %}
-            <br>
-        {% endif %}
-        <!-- List scenes user can edit, and links -->
-        <h5>Scene Permissions:</h5>
-            {% if scenes %}
-                <table>
-                    <tr>
-                        <th></th><th></th>
-                        <th>Public</th><th></th>
-                        <th>Public</th><th></th>
-                        <!-- <th></th><th></th> -->
-                    </tr>
-                    <tr>
-                        <th>Scene</th><th></th>
-                        <th>Read</th><th></th>
-                        <th>Write</th><th></th>
-                        <!-- <th>Editors</th><th></th> -->
-                    </tr>
-                {% for scene in scenes %}
-                <form action="profile_update_scene" method="POST">
-                    {% csrf_token %}
-                    <tr>
-                    <td><a href="../../{{ scene.name }}">{{ scene.name }}</a></td><td></td>
-                    <!--public subscribe ok-->
-                    {% if scene.public_read %}
-                    <td><input name="public_read" type="checkbox" checked /></td><td></td>
                     {% else %}
-                    <td><input name="public_read" type="checkbox" /></td><td></td>
+                    <ul>
+                        <li>None</li>
+                    </ul>
                     {% endif %}
-                    <!--public publish objects ok-->
-                    {% if scene.public_write %}
-                    <td><input name="public_write" type="checkbox" checked /></td><td></td>
+                    <br>
+                    {% endif %}
+                    <!-- List scenes user can edit, and links -->
+                    <h5>Scene Permissions:</h5>
+                    {% if scenes %}
+                    <table>
+                        <tr>
+                            <th></th>
+                            <th></th>
+                            <th>Public</th>
+                            <th></th>
+                            <th>Public</th>
+                            <th></th>
+                            <!-- <th></th><th></th> -->
+                        </tr>
+                        <tr>
+                            <th>Scene</th>
+                            <th></th>
+                            <th>Read</th>
+                            <th></th>
+                            <th>Write</th>
+                            <th></th>
+                            <!-- <th>Editors</th><th></th> -->
+                        </tr>
+                        {% for scene in scenes %}
+                        <form action="profile_update_scene" method="POST">
+                            {% csrf_token %}
+                            <tr>
+                                <td><a href="../../{{ scene.name }}">{{ scene.name }}</a></td>
+                                <td></td>
+                                <!--public subscribe ok-->
+                                {% if scene.public_read %}
+                                <td><input name="public_read" type="checkbox" checked /></td>
+                                <td></td>
+                                {% else %}
+                                <td><input name="public_read" type="checkbox" /></td>
+                                <td></td>
+                                {% endif %}
+                                <!--public publish objects ok-->
+                                {% if scene.public_write %}
+                                <td><input name="public_write" type="checkbox" checked /></td>
+                                <td></td>
+                                {% else %}
+                                <td><input name="public_write" type="checkbox" /></td>
+                                <td></td>
+                                {% endif %}
+
+                                <td><button type="submit" class="btn btn-primary btn-sm" name="save"
+                                        value="{{ scene.name }}">Save</button></td>
+                                <td><button type="submit" class="btn btn-primary btn-sm" name="delete"
+                                        value="{{ scene.name }}"
+                                        onclick="return confirm('Are you sure you want to delete {{ scene.name }}?');">Delete</button>
+                                </td>
+                            </tr>
+                        </form>
+                        {% endfor %}
+                    </table>
                     {% else %}
-                    <td><input name="public_write" type="checkbox" /></td><td></td>
+                    None
                     {% endif %}
-                    <!--editors-->
-                    <!-- <td>
-                        <button class="dropdown-toggle" data-toggle="dropdown">Other editors<span
-                                class="caret"></span></button>
-                        <ul class="dropdown-menu">
-                            {{ scene.editors }}
-                        </ul>
-                    </td><td></td> -->
-                    <td><button type="submit" class="btn btn-primary btn-sm" name="save" value="{{ scene.name }}">Save</button></td>
-                    <td><button type="submit" class="btn btn-primary btn-sm" name="delete" value="{{ scene.name }}"
-                            onclick="return confirm('Are you sure you want to delete {{ scene.name }}?');">Delete</button></td>
-                    </tr>
-                </form>
-                {% endfor %}
-                </table>
-            {% else %}
-                None
-            {% endif %}
-        <br>
-        {% else %}
-        <h5>Anonymous users have no profile.</h5>
-    {% endif %}
+                    <br>
+                    {% else %}
+                    <h5>Anonymous users have no profile.</h5>
+                    {% endif %}
+
+        </div>
+    </div>
 </div>
 
 {% endblock content %}

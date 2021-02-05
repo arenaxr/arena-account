@@ -4,55 +4,74 @@
 
 {% block content %}
 
-{% load crispy_forms_tags %}
-{% load socialaccount %}
-{% load static %}
-<script type="text/javascript" src="{% static 'users/js/login.js' %}"></script>
+    {% load socialaccount %}
+    {% load static %}
 
-<!--Login-->
-<div class="bg-img">
+    <!--Login-->
+
     {% include 'users/includes/messages.html' %}
-    <form class="login login-form" id="login-form" method="post">
-        <h1>Sign In to the ARENA</h1>
-
-        <!-- TODO: temp remove <div id="emailSignInWrapper">
-            <div class="customBtn" id="customBtnEmail">
-                <span class="icon">
-                    <i class="fa fa-at"></i>
-                </span>
-                <span class="buttonText">Email</span>
+    <div class="d-none min-vh-100 routePage" id="landing">
+        <div class="container-xxl">
+            <div class="row pt-5 d-flex justify-content-between align-items-center">
+                <div class="col-lg-4">
+                    <img alt="CONIX Logo" class="top-logo" src="{% static 'users/img/xr-logo-white-v7.png' %}"/>
+                </div>
+                <div class="col-lg-4 text-end">
+                    <Button class="btn btn-white" id="loginPageBtn">Login</Button>
+                </div>
             </div>
-        </div> -->
-        <div id="gSignInWrapper" onclick="location.href='{% provider_login_url 'google' %}';">
-            <div class="customBtn" id="customBtnGoogle">
-                <span class="icon"></span>
-                <span class="buttonText">Google</span>
-            </div>
-        </div>
-        <div id="anonSignInWrapper">
-            <div class="customBtn" id="customBtnAnon">
-                <span class="icon">
-                    <i class="fa fa-user-secret"></i>
-                </span>
-                <span class="buttonText">Anonymously</span>
+            <div class="row my-5">
+                <div class="col px-0 bg-black">
+                    <div class="ratio ratio-16x9">
+                        <iframe src="https://www.youtube-nocookie.com/embed/nZM-uiAPkqc?autoplay=1" frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen></iframe>
+                    </div>
+                </div>
             </div>
         </div>
+    </div>
 
-        <div hidden id="emailLoginWrapper">
-            {% csrf_token %}
-            {{ login_form|crispy }}
-            <button class="btn btn-primary" type="submit">Login</button>
-            <!-- <label class="remember-me"><input type="checkbox" name="remember" />Remember me</label> -->
-            <p class="text-center"><a href="/user/register">Create</a> an account.</p>
-            <p class="forget-psw">Forgot <a href="/user/password_reset">password</a>?</p>
-        </div>
-        <div hidden id="anonNameWrapper">Great! Your preferred name is...
-            <input id="usernameInput" placeholder="Hi! My name is..." type="text"
-                pattern="^(?=[^A-Za-z]*[A-Za-z]{2,})[ -~]*$" />
-            <button id="btnAnonName" type="button">Enter</button>
-        </div>
+    <div class="d-none d-flex align-items-center min-vh-100 routePage" id="signIn">
+        <div class="container">
+            <div class="row d-flex justify-content-center align-items-center">
+                <div class="col-lg-4 col-md-6 shadow rounded bg-white p-5">
+                    <div class="row mb-3">
+                        <h3>Login</h3>
+                    </div>
+                    <div class="row mb-5 text-center">
+                        <div class="col">
+                            <img alt="conix face logo" src="{% static 'users/img/conix-face-white.jpg' %}"/>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <form id="loginForm">
+                            <div class="form-floating">
+                                <select aria-label="Provider Select" class="form-select mb-3" id="provider">
+                                    <option value="anon">Anonymous</option>
+                                    <option value="google">Google</option>
+                                </select>
+                                <label for="provider">Authentication Provider</label>
+                            </div>
+                            <div class="form-outline mb-3" id="usernameContainer">
+                                <input class="form-control" id="usernameInput" type="text">
+                                <label class="form-label" for="usernameInput">User Name</label>
+                            </div>
+                            <button class="btn btn-white" id="anonBtn" type="submit">Sign In</button>
 
-    </form>
-</div>
+                            <div class="d-none btn" id="googleBtn" onclick="location.href='{% provider_login_url 'google' %}';">
+                                <div id="customBtnGoogle">
+                                    <span class="icon"></span>
+                                    <span class="buttonText">Google Sign In</span>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="{% static 'users/js/login.js' %}"></script>
 
 {% endblock content %}
