@@ -223,15 +223,36 @@ def profile_update_scene(request):
     return redirect("user_profile")
 
 
-@api_view(['GET', 'PUT', 'DELETE'])
+@api_view(['POST', 'GET', 'PUT', 'DELETE'])
 @permission_classes([permissions.IsAuthenticated])
 def scene_detail(request, pk):
+    # check permissions model for namespace
+    if not scene_permission(user=request.user, scene=pk):
+        return JsonResponse({'error': f"User does not have permission for: {pk}."}, status=status.HTTP_400_BAD_REQUEST)
+
+    username = request.user.username
+
+    # try POST first, since it doesn't/shouldn't exist yet
+    if request.method == 'POST':
+        if Scene.objects.filter(name=pk).exists():
+            return JsonResponse({'error': f"Unable to claim existing scene: {pk}, use PUT."}, status=status.HTTP_400_BAD_REQUEST)
+        if request.body:
+            scene_serializer = SceneSerializer(data=scene_data)
+            if scene_serializer.is_valid():
+                scene_serializer.save()
+                return JsonResponse(scene_serializer.data, status=status.HTTP_201_CREATED)
+            return JsonResponse(scene_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            s = Scene(
+                name=pk, summary=f'User {username} adding new scene {pk} to account database.')
+            s.save()
+            return JsonResponse({'message': f'Scene {pk} added successfully!'}, status=status.HTTP_200_OK)
+
+    # now, make sure scene exists before the other commands are tried
     try:
         scene = Scene.objects.get(name=pk)
     except Scene.DoesNotExist:
         return JsonResponse({'message': 'The scene does not exist'}, status=status.HTTP_404_NOT_FOUND)
-    if not scene_permission(user=request.user, scene=pk):
-        return JsonResponse({'error': f"User does not have permission for: {pk}."}, status=status.HTTP_400_BAD_REQUEST)
 
     if request.method == 'GET':
         scene_serializer = SceneSerializer(scene)
