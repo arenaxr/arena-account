@@ -294,6 +294,14 @@ def scene_permission(user, scene):
             return False
         return True
 
+def scene_landing(request):
+    scenes = user_scenes(request.user)
+    staff = None
+    if request.user.is_staff:  # admin/staff
+        staff = User.objects.filter(is_staff=True)
+    return render(request=request, template_name="users/scene_landing.html",
+                  context={"user": request.user, "scenes": scenes, "staff": staff})
+
 
 def user_profile(request):
     # load updated list of staff users

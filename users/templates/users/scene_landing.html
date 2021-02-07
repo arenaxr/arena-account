@@ -1,0 +1,182 @@
+{% extends "users/header.html" %}
+
+{% block content %}
+
+    {% include 'users/includes/messages.html' %}
+    {% load static %}
+
+
+    <div class="d-flex align-items-center min-vh-75" id="sceneSelect">
+        <div class="container">
+            <div class="row d-flex justify-content-center align-items-center">
+                <div class="col-lg-6 p-5 col-md-8 shadow rounded bg-white">
+                    {% if not user.is_authenticated %}
+                        <h5>Anonymous users have no profile.</h5>
+                    {% else %}
+                        <div class="row mb-3">
+                            <div class="col">
+                                <h3><img alt="conix xr logo" style="max-height: 32px" src="{% static 'users/img/xr-logo-v7.png' %}"/>
+                                    Welcome {{ user.get_username }}
+                                </h3>
+                            </div>
+                        </div>
+                        <hr/>
+                        <h3 class="mb-3">My Scenes</h3>
+                        <div class="row text-center">
+                            <div class="col">
+                                <label aria-hidden="true" class="form-label d-none" for="userSceneInput">Search My
+                                    Scenes</label>
+                                <div class="input-group">
+                                    <input class="form-control" id="userSceneInput" list="userSceneDatalist"
+                                           placeholder="Search Scene Names" autocomplete="off">
+                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                </div>
+                                <datalist aria-label="Scene Select" id="userSceneDatalist">
+                                    {% for scene in scenes %}
+                                        {% if not scene.public_read %}
+                                            <option value="{{ scene.name }}"></option>
+                                        {% endif %}
+                                    {%  endfor %}
+                                </datalist>
+                            </div>
+                        </div>
+                        <div class="row g-1 mb-3">
+                            <div class="col-4">
+                                <button class="btn btn-primary w-100 disabled" id="enterUserSceneBtn"><i
+                                        class="fas fa-sign-in-alt"></i> Enter Scene
+                                </button>
+                            </div>
+                            <div class="col-4">
+                                <button class="btn btn-info w-100 disabled" id="cloneUserSceneBtn">
+                                    <i class="far fa-clone"></i> Clone Scene
+                                </button>
+                            </div>
+                            <div class="col-4">
+                                <button class="btn btn-danger w-100 disabled" id="deleteUserSceneBtn">
+                                    <i class="far fa-trash-alt"></i> Delete Scene
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text">Scene URL</span>
+                                    <input
+                                            aria-label="Scene URL"
+                                            class="form-control form-control-sm"
+                                            id="userSceneUrl"
+                                            readonly
+                                            type="text"
+                                            value=""
+                                    />
+                                    <button class="btn btn-primary disabled" id="copyUserSceneUrlBtn">Copy Link</button>
+                                </div>
+                            </div>
+                        </div>
+                        <hr/>
+                        <h3 class="mb-3">Discover Public Scenes</h3>
+                        <div class="row text-center">
+                            <div class="col">
+                                <label aria-hidden="true" class="form-label d-none" for="publicSceneInput">Search Public
+                                    Scenes</label>
+                                <datalist aria-label="Scene Select" id="publicSceneDatalist">
+                                    {% for scene in scenes %}
+                                        {% if scene.public_read %}
+                                            <option value="{{ scene.name }}"></option>
+                                        {% endif %}
+                                    {%  endfor %}
+                                </datalist>
+                                <div class="input-group">
+                                    <input class="form-control" id="publicSceneInput" list="publicSceneDatalist"
+                                           placeholder="Search Scene Names" autocomplete="off">
+                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-1 mb-3">
+                            <div class="col-6">
+                                <button class="btn btn-primary w-100 disabled" id="enterPublicSceneBtn">
+                                    <i class="fas fa-sign-in-alt"></i> Enter Scene
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button class="btn btn-info w-100 disabled" id="clonePublicSceneBtn">
+                                    <i class="far fa-clone"></i> Clone Scene
+                                </button>
+                            </div>
+                            <input aria-hidden="true" class="d-none" id="publicSceneUrl" type="hidden" value=""/>
+                        </div>
+                        <hr/>
+                        <h4 class="mb-3">Advanced</h4>
+                        <div class="row">
+                            <div class="col">
+                                <a class="btn btn-primary" href="/build">Builder</a>
+                                <a class="btn btn-primary" href="#">File Store</a>
+                            </div>
+                        </div>
+                        </div>
+                    {% endif %}
+            </div>
+        </div>
+    </div>
+
+
+    <div class="d-none d-flex align-items-center min-vh-75" id="cloneScene">
+        <div class="container">
+            <div class="row d-flex justify-content-center align-items-center">
+                <div class="col-lg-5 p-5 col-md-8 shadow rounded bg-white">
+                    <div class="row mb-3">
+                        <div class="col">
+                            <h3>
+                                <img alt="CONIX Logo" class="title-logo" src="../images/xr-logo-v7.png"/> Clone a
+                                Scene
+                            </h3>
+                        </div>
+                    </div>
+                    <hr/>
+                    <div class="row mb-3">
+                        <div class="col-12 mb-3">
+                            <div class="input-group">
+                                <label class="d-none" aria-hidden="true" for="sourceSceneId">Source Scene</label>
+                                <span class="input-group-text">Source Scene</span>
+                                <input class="form-control" id="sourceSceneId" readonly type="text">
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-outline mb-3">
+                                <input class="form-control" id="newSceneNameInput" type="text">
+                                <label class="form-label" for="newSceneNameInput">New Scene Name</label>
+                            </div>
+                            <button class="d-none btn btn-warning float-end"><i class="fas fa-lock"></i> Protect
+                            </button>
+                        </div>
+                        <div class="col-12" id="doCloneSceneContainer">
+                            <button class="btn btn-primary w-100 disabled" id="doCloneSceneBtn">
+                                <i class="far fa-clone"></i> Clone Scene
+                            </button>
+                        </div>
+                        <div class="col-12 d-none" id="cloneSceneCreated">
+                            <label class="form-label" for="cloneSceneUrl">New Scene URL</label>
+                            <div class="input-group mb-3">
+                                <input
+                                        aria-label="Scene URL"
+                                        class="form-control form-control-sm"
+                                        id="cloneSceneUrl"
+                                        readonly
+                                        type="text"
+                                        value=""
+                                />
+                                <button class="btn btn-primary" id="copyCloneSceneUrlBtn">Copy Link</button>
+                            </div>
+                            <button class="btn btn-primary w-100" id="enterCloneSceneBtn">
+                                <i class="fas fa-sign-in-alt"></i> Enter Scene
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock content %}
