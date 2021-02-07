@@ -125,6 +125,9 @@
         <div class="container">
             <div class="row d-flex justify-content-center align-items-center">
                 <div class="col-lg-5 p-5 col-md-8 shadow rounded bg-white">
+                    <button type="button" class="close float-end" id="closeCloneScene" aria-label="Close">
+                        <span aria-hidden="true"><i class="far fa-times-circle"></i></span>
+                    </button>
                     <div class="row mb-3">
                         <div class="col">
                             <h3>
@@ -177,6 +180,10 @@
             </div>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script type="text/javascript" src="{% static 'users/js/scenes.js' %}"></script>
+    <script>
+        window.username = '{{ user.get_username }}';
+    </script>
 
 {% endblock content %}

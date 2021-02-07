@@ -15,6 +15,10 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
         pageEl.dispatchEvent(new Event('routePageLoaded'));
     }, false);
 
+    document.getElementById('closeCloneScene').addEventListener('click', () => {
+        changePage('#sceneSelect');
+    })
+
     function showEl(el, flex = false) {
         const showClass = flex ? 'd-flex' : 'd-block';
         el.classList.add(showClass);
@@ -152,11 +156,21 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
     })
 
     document.getElementById('doCloneSceneBtn').addEventListener('click', () => {
-        // DO AJAX REQUEST
-        cloneSceneUrl.value = `${window.location.protocol}//${window.location.hostname}/${newSceneNameInput.value}`
-        document.getElementById('doCloneSceneContainer').classList.add('d-none');
-        document.getElementById('cloneSceneCreated').classList.remove('d-none');
-        newSceneNameInput.setAttribute('readonly', 'readonly')
+        const [sourceNamespace, sourceSceneId] = newSceneNameInput.value.split("/")
+        axios.post(`/persist/${window.username}/newSceneNameInput.value`, {
+            action: 'clone',
+            sourceNamespace,
+            sourceSceneId,
+        }).then((res) => {
+            Swal.fire('Clone success!', `${res.data.objectsCloned} objects cloned into new scene`, 'success');
+            cloneSceneUrl.value = `${window.location.protocol}//${window.location.hostname}/${newSceneNameInput.value}`
+            document.getElementById('doCloneSceneContainer').classList.add('d-none');
+            document.getElementById('cloneSceneCreated').classList.remove('d-none');
+            newSceneNameInput.setAttribute('readonly', 'readonly')
+        }).catch((err) => {
+            Swal.fire('Scene Clone Failed!', `Something went wrong!`, 'warning');
+            console.log(err);
+        });
     })
 
     const copyCloneSceneUrlBtn = document.getElementById('copyCloneSceneUrlBtn')
