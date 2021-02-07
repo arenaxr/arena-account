@@ -6,7 +6,7 @@
     {% load static %}
 
 
-    <div class="d-flex align-items-center min-vh-75" id="sceneSelect">
+    <div class="d-flex align-items-center min-vh-75 routePage" id="sceneSelect">
         <div class="container">
             <div class="row d-flex justify-content-center align-items-center">
                 <div class="col-lg-6 p-5 col-md-8 shadow rounded bg-white">
@@ -121,15 +121,15 @@
     </div>
 
 
-    <div class="d-none d-flex align-items-center min-vh-75" id="cloneScene">
+    <div class="d-none d-flex align-items-center min-vh-75 routePage" id="cloneScene">
         <div class="container">
             <div class="row d-flex justify-content-center align-items-center">
                 <div class="col-lg-5 p-5 col-md-8 shadow rounded bg-white">
                     <div class="row mb-3">
                         <div class="col">
                             <h3>
-                                <img alt="CONIX Logo" class="title-logo" src="../images/xr-logo-v7.png"/> Clone a
-                                Scene
+                                <img alt="conix xr logo" style="max-height: 32px" src="{% static 'users/img/xr-logo-v7.png' %}"/>
+                                Clone a Scene
                             </h3>
                         </div>
                     </div>
@@ -177,6 +177,6 @@
             </div>
         </div>
     </div>
-
+    <script type="text/javascript" src="{% static 'users/js/scenes.js' %}"></script>
 
 {% endblock content %}
