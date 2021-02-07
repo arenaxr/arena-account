@@ -29,7 +29,7 @@
                 {% csrf_token %}
                 {% if staff %}
                 <label for="is_public">Public:</label>
-                <input type="checkbox" name="is_public">
+                <input type="checkbox" class="form-check-input" name="is_public">
                 <br>
                 {% endif %}
                 <label for="scene">Scene Name:</label>
@@ -107,18 +107,18 @@
                                 <td></td>
                                 <!--public subscribe ok-->
                                 {% if scene.public_read %}
-                                <td><input name="public_read" type="checkbox" checked /></td>
+                                <td><input name="public_read" class="form-check-input" type="checkbox" checked /></td>
                                 <td></td>
                                 {% else %}
-                                <td><input name="public_read" type="checkbox" /></td>
+                                <td><input name="public_read" class="form-check-input" type="checkbox" /></td>
                                 <td></td>
                                 {% endif %}
                                 <!--public publish objects ok-->
                                 {% if scene.public_write %}
-                                <td><input name="public_write" type="checkbox" checked /></td>
+                                <td><input name="public_write" class="form-check-input" type="checkbox" checked /></td>
                                 <td></td>
                                 {% else %}
-                                <td><input name="public_write" type="checkbox" /></td>
+                                <td><input name="public_write" class="form-check-input" type="checkbox" /></td>
                                 <td></td>
                                 {% endif %}
 
