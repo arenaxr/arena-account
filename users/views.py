@@ -48,24 +48,6 @@ def index(request):
     return redirect("login")
 
 
-def register_request(request):
-    if request.method == "POST":
-        form = NewUserForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password1')
-            messages.success(request, f"New account created: {username}")
-            user = authenticate(username=username, password=password)
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            return redirect("login_callback")
-        else:
-            messages.error(request, "Account creation failed")
-
-    form = NewUserForm()
-    return render(request, "users/register.html", {"form": form})
-
-
 def login_request(request):
     if request.method == "POST":
         form = AuthenticationForm(request, data=request.POST)
@@ -89,39 +71,6 @@ def logout_request(request):
     logout(request)
     messages.info(request, "You have successfully logged out.")
     return redirect("login")
-
-
-def password_reset_request(request):
-    if request.method == "POST":
-        password_reset_form = PasswordResetForm(request.POST)
-        if password_reset_form.is_valid():
-            data = password_reset_form.cleaned_data['email']
-            associated_users = User.objects.filter(Q(email=data))
-            if associated_users.exists():
-                for user in associated_users:
-                    subject = "Password Reset Requested"
-                    email_template_name = "users/password/password_reset_email.txt"
-                    c = {
-                        "email": user.email,
-                        'domain': os.environ['HOSTNAME'],
-                        'site_name': 'ARENA Website',
-                        "uid": urlsafe_base64_encode(force_bytes(user.pk)),
-                        "user": user,
-                        'token': default_token_generator.make_token(user),
-                        'protocol': 'https',
-                    }
-                    email = render_to_string(email_template_name, c)
-                    try:
-                        send_mail(subject, email, os.environ['EMAIL'],
-                                  [user.email], fail_silently=False)
-                    except BadHeaderError:
-                        return HttpResponse('Invalid header found.')
-                    return redirect("/password_reset/done/")
-                    # messages.success(
-                    #     request, 'A message with reset password instructions has been sent to your inbox.')
-                    # return redirect("/")
-    password_reset_form = PasswordResetForm()
-    return render(request=request, template_name="users/password/password_reset.html", context={"password_reset_form": password_reset_form})
 
 
 class NewSceneSchema(AutoSchema):

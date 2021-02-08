@@ -19,7 +19,6 @@
             <form class="signup" id="signup_form" method="post" action="{% url 'socialaccount_signup' %}"
                 enctype="multipart/form-data">
                 {% csrf_token %}
-                {{ crispy }}
                 {% for field in form %}
                 <p>
                     {{ field.label_tag }}<br>

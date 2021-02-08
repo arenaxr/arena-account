@@ -145,9 +145,6 @@ MESSAGE_TAGS = {
     messages.ERROR: 'alert-danger',
 }
 
-# TODO (mwfarb): For production, change backend to an email sending service.
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

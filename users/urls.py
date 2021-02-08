@@ -24,21 +24,16 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    re_path(r'^doc(?P<format>\.json|\.yaml)$',
-            schema_view.without_ui(cache_timeout=0), name='schema-json'),
-    path('doc/', schema_view.with_ui('swagger', cache_timeout=0),
-         name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0),
-         name='schema-redoc'),
+    # pages
     path("", views.index, name="index"),
-    # path("register", views.register_request, name="register"),
     path("login", views.login_request, name="login"),
     path("logout", views.logout_request, name="logout"),
-    # path("password_reset", views.password_reset_request, name="password_reset"),
     path('accounts/social/signup/', views.SocialSignupView.as_view(),
          name='socialaccount_signup'),
     path("profile", views.user_profile, name="user_profile"),
     path("login_callback", views.login_callback, name="login_callback"),
+
+    # endpoints
     path('mqtt_auth', views.mqtt_token, name="mqtt_token"),
     path('user_state', views.user_state, name="user_state"),
     path('profile_update_staff', views.profile_update_staff,
@@ -51,4 +46,12 @@ urlpatterns = [
     path('my_scenes', views.my_scenes, name="my_scenes"),
     re_path(r'^scenes/(?P<pk>[^\/]+\/[^\/]+)$',
             views.scene_detail),  # namespace/scenename
+
+    # docs
+    re_path(r'^doc(?P<format>\.json|\.yaml)$',
+            schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    path('doc/', schema_view.with_ui('swagger', cache_timeout=0),
+         name='schema-swagger-ui'),
+    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0),
+         name='schema-redoc'),
 ]
