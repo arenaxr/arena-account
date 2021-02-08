@@ -30,8 +30,9 @@ urlpatterns = [
     path("logout", views.logout_request, name="logout"),
     path('accounts/social/signup/', views.SocialSignupView.as_view(),
          name='socialaccount_signup'),
-    path("profile", views.user_profile, name="user_profile"),
     path("login_callback", views.login_callback, name="login_callback"),
+    path("profile", views.user_profile, name="user_profile"),
+    re_path(r'^profile/scenes/(?P<pk>[^\/]+\/[^\/]+)$', views.scene_profile),
 
     # endpoints
     path('mqtt_auth', views.mqtt_token, name="mqtt_token"),
@@ -44,8 +45,7 @@ urlpatterns = [
          name="profile_update_scene"),
     path('new_scene', views.new_scene, name="new_scene"),
     path('my_scenes', views.my_scenes, name="my_scenes"),
-    re_path(r'^scenes/(?P<pk>[^\/]+\/[^\/]+)$',
-            views.scene_detail),  # namespace/scenename
+    re_path(r'^scenes/(?P<pk>[^\/]+\/[^\/]+)$', views.scene_detail),
 
     # docs
     re_path(r'^doc(?P<format>\.json|\.yaml)$',

@@ -1,0 +1,27 @@
+{% extends "users/header.html" %}
+
+{% block content %}
+
+{% include 'users/includes/messages.html' %}
+
+<!--Profile-->
+<div class="container-fluid">
+    <div class="row d-flex justify-content-center align-items-center">
+        <div class="col-lg-7 col-md-8 shadow rounded bg-white p-5">
+
+            <form method="post">
+                {{ formset.management_form }}
+                {% for form in formset %}
+                {% for field in form %}
+                {{ field.label_tag }} {{ field }}
+                <br>
+                {% endfor %}
+                <p></p>
+                {% endfor %}
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

@@ -16,6 +16,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import BadHeaderError, send_mail
 from django.db import transaction
 from django.db.models.query_utils import Q
+from django.forms import modelformset_factory, inlineformset_factory
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
@@ -29,8 +30,8 @@ from rest_framework.decorators import api_view, permission_classes, schema
 from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
 
-from .forms import (NewSceneForm, NewUserForm, SocialSignupForm,
-                    UpdateSceneForm, UpdateStaffForm)
+from .forms import (NewSceneForm, SceneForm, SocialSignupForm, UpdateSceneForm,
+                    UpdateStaffForm)
 from .models import Scene
 from .mqtt import generate_mqtt_token
 from .persistence import (delete_scene_objects, get_persist_scenes,
@@ -148,6 +149,8 @@ def profile_update_scene(request):
     username = request.user.username
     name = form.cleaned_data['save']
     if not name:
+        name = form.cleaned_data['edit']
+    elif not name:
         name = form.cleaned_data['delete']
     public_read = form.cleaned_data['public_read']
     public_write = form.cleaned_data['public_write']
@@ -161,6 +164,8 @@ def profile_update_scene(request):
         scene.public_read = public_read
         scene.public_write = public_write
         scene.save()
+    elif 'edit' in request.POST:
+        return redirect(f"profile/scenes/{name}")
     elif 'delete' in request.POST:
         # delete account scene data
         scene.delete()
@@ -303,6 +308,21 @@ def user_profile(request):
         staff = User.objects.filter(is_staff=True)
     return render(request=request, template_name="users/user_profile.html",
                   context={"user": request.user, "scenes": scenes, "staff": staff})
+
+
+def scene_profile(request, pk):
+    if not scene_permission(user=request.user, scene=pk):
+        return JsonResponse({'error': f"User does not have permission for: {pk}."}, status=status.HTTP_400_BAD_REQUEST)
+    # now, make sure scene exists before the other commands are tried
+    try:
+        scene = Scene.objects.get(name=pk)
+    except Scene.DoesNotExist:
+        return JsonResponse({'message': 'The scene does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+    SceneFormSet = modelformset_factory(Scene, exclude=('id', 'summary'))
+    formset = SceneFormSet(queryset=Scene.objects.filter(name=pk))
+    return render(request=request, template_name="users/scene_profile.html",
+                  context={"user": request.user, 'formset': formset})
 
 
 def login_callback(request):

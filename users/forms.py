@@ -3,6 +3,9 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.forms import ModelForm
+
+from .models import Scene
 
 
 class SocialSignupForm(_SocialSignupForm):
@@ -22,15 +25,6 @@ class SocialSignupForm(_SocialSignupForm):
         if username in settings.USERNAME_RESERVED:
             msg = f"Sorry, {username} is a reserved word for usernames."
             self.add_error('username', msg)
-
-
-class NewUserForm(UserCreationForm):
-    email = forms.EmailField(required=True)
-
-    class Meta:
-        model = User
-        fields = ('first_name', 'last_name', 'email',
-                  'username', 'password1', 'password2')
 
 
 class UpdateStaffForm(forms.Form):
@@ -57,6 +51,9 @@ class UpdateSceneForm(forms.Form):
     save = forms.CharField(
         label='save',
         required=False)
+    edit = forms.CharField(
+        label='edit',
+        required=False)
     delete = forms.CharField(
         label='delete',
         required=False)
@@ -68,3 +65,10 @@ class UpdateSceneForm(forms.Form):
         label='public_write',
         required=False,
         initial=True)
+
+
+class SceneForm(ModelForm):
+    class Meta:
+        model = Scene
+        #fields = ['name', 'editors']
+        fields = '__all__'

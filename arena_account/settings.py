@@ -76,7 +76,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'crispy_forms',
     'django.contrib.sites',
     'allauth',
     'allauth.account',
@@ -134,8 +133,6 @@ SOCIALACCOUNT_PROVIDERS = {
         }
     }
 }
-
-CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 MESSAGE_TAGS = {
     messages.DEBUG: 'alert-secondary',
