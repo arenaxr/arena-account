@@ -88,7 +88,8 @@
                             <th></th>
                             <th>Public</th>
                             <th></th>
-                            <!-- <th></th><th></th> -->
+                            <th>Other</th>
+                            <th></th>
                         </tr>
                         <tr>
                             <th>Scene</th>
@@ -97,7 +98,8 @@
                             <th></th>
                             <th>Write</th>
                             <th></th>
-                            <!-- <th>Editors</th><th></th> -->
+                            <th>Editors</th>
+                            <th></th>
                         </tr>
                         {% for scene in scenes %}
                         <form action="profile_update_scene" method="POST">
@@ -121,6 +123,8 @@
                                 <td><input name="public_write" type="checkbox" /></td>
                                 <td></td>
                                 {% endif %}
+                                <!--number of editors-->
+                                <td>{{ scene.editors.count }}</td>
 
                                 <td><button type="submit" class="btn btn-primary btn-sm" name="save"
                                         value="{{ scene.name }}">Save</button></td>
