@@ -15,7 +15,7 @@ test: env
 	. env/bin/activate; ${PYTHON3} manage.py test
 
 migrate: env
-	. env/bin/activate; ${PYTHON3} manage.py makemigrations; ${PYTHON3} manage.py migrate; 
+	. env/bin/activate; ${PYTHON3} manage.py makemigrations; ${PYTHON3} manage.py migrate;
 
 clean:
 	rm -rf env

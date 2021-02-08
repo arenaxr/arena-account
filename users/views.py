@@ -172,6 +172,8 @@ def _new_scene(request):
         scene = f'{STAFF_ACCTNAME}/{scene}'  # public namespace
     else:
         scene = f'{username}/{scene}'  # user namespace for normal users
+    if not scene_permission(user=request.user, scene=scene):
+        return JsonResponse({'error': f"User does not have permission for: {name}."}, status=status.HTTP_400_BAD_REQUEST)
     if Scene.objects.filter(name=scene).exists():
         return JsonResponse({'error': f"Unable to claim existing scene: {scene}, use admin panel"}, status=status.HTTP_400_BAD_REQUEST)
     if User.objects.filter(username=username).exists():
