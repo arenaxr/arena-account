@@ -103,4 +103,5 @@ def generate_mqtt_token(
     if len(pubs) > 0:
         pubs.sort()
         payload['publ'] = pubs
+
     return jwt.encode(payload, private_key, algorithm='RS256')
