@@ -21,22 +21,6 @@
             {% else %} Anonymous
             {% endif %}<br>
             <br>
-            <!-- New Scene Request -->
-            <h5>New Scene Request:</h5>
-            <form action="profile_new_scene" method="POST">
-                <small style="color: grey">Do not include username or slash '/', it will be generated for
-                    you.</small><br>
-                {% csrf_token %}
-                {% if staff %}
-                <label for="is_public">Public:</label>
-                <input type="checkbox" name="is_public">
-                <br>
-                {% endif %}
-                <label for="scene">Scene Name:</label>
-                <input type="text" name="scene" pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,200}$">
-                <button type="submit" class="btn btn-primary btn-sm">Request Scene</button><br>
-            </form>
-            <br>
             {% if user.is_superuser %}
             <!-- Set or Remove user as Staff -->
             <h5>Admin Functions:</h5>
@@ -50,7 +34,7 @@
             <br>
             <h5>Staff Users:</h5>
             {% if staff %}
-            <table>
+            <table class="table table-sm table-hover">
                 <tr>
                     <th>Username</th>
                     <th></th>
@@ -69,64 +53,64 @@
                     <td></td>
                 </tr>
                 {% endfor %}
-                <table>
-                    {% else %}
-                    <ul>
-                        <li>None</li>
-                    </ul>
-                    {% endif %}
-                    <br>
-                    {% endif %}
-                    <!-- List scenes user can edit, and links -->
-                    <h5>Scene Permissions:</h5>
-                    {% if scenes %}
-                    <table class="table table-sm table-hover">
-                        <thead class="thead-light">
-                            <th>Scene</th>
-                            <th>Public Read</th>
-                            <th>Public Write</th>
-                            <th>Other Editors</th>
-                            <th></th>
-                        </thead>
-                        {% for scene in scenes %}
-                        <form action="profile_update_scene" method="POST">
-                            {% csrf_token %}
-                            <tr>
-                                <td><a href="../../{{ scene.name }}">{{ scene.name }}</a></td>
-                                <!--public subscribe ok-->
-                                <td>
-                                    {% if scene.public_read %}
-                                    Allow
-                                    {% else %}
-                                    Deny
-                                    {% endif %}
-                                </td>
-                                <!--public publish objects ok-->
-                                <td>
-                                    {% if scene.public_write %}
-                                    Allow
-                                    {% else %}
-                                    Deny
-                                    {% endif %}
-                                </td>
-                                <!--number of editors-->
-                                <td>
-                                    {{ scene.editors.all|join:", " }}
-                                </td>
-                                <td><button type="submit" class="btn btn-primary btn-sm" name="edit"
-                                        value="{{ scene.name }}">Edit</button></td>
-                                </td>
-                            </tr>
-                        </form>
-                        {% endfor %}
-                    </table>
-                    {% else %}
-                    None
-                    {% endif %}
-                    <br>
-                    {% else %}
-                    <h5>Anonymous users have no profile.</h5>
-                    {% endif %}
+            </table>
+            {% else %}
+            <ul>
+                <li>None</li>
+            </ul>
+            {% endif %}
+            <br>
+            {% endif %}
+            <!-- List scenes user can edit, and links -->
+            <h5>Scene Permissions:</h5>
+            {% if scenes %}
+            <table class="table table-sm table-hover">
+                <thead class="thead-light">
+                    <th>Scene</th>
+                    <th>Public Read</th>
+                    <th>Public Write</th>
+                    <th>Other Editors</th>
+                    <th></th>
+                </thead>
+                {% for scene in scenes %}
+                <form action="profile_update_scene" method="POST">
+                    {% csrf_token %}
+                    <tr>
+                        <td><a href="../../{{ scene.name }}">{{ scene.name }}</a></td>
+                        <!--public subscribe ok-->
+                        <td>
+                            {% if scene.public_read %}
+                            Allow
+                            {% else %}
+                            Deny
+                            {% endif %}
+                        </td>
+                        <!--public publish objects ok-->
+                        <td>
+                            {% if scene.public_write %}
+                            Allow
+                            {% else %}
+                            Deny
+                            {% endif %}
+                        </td>
+                        <!--number of editors-->
+                        <td>
+                            {{ scene.editors.all|join:", " }}
+                        </td>
+                        <td><button type="submit" class="btn btn-primary btn-sm" name="edit"
+                                value="{{ scene.name }}">Edit</button></td>
+                        </td>
+                    </tr>
+                </form>
+                {% endfor %}
+            </table>
+            {% else %}
+            None
+            {% endif %}
+            <br>
+            {% else %}
+            <h5>Anonymous users have no profile.</h5>
+            {% endif %}
 
         </div>
     </div>
