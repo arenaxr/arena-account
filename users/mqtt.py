@@ -37,13 +37,14 @@ def generate_mqtt_token(
         'exp': datetime.datetime.utcnow() + duration
     }
     # user presence objects
-    subs.append(f"{realm}/g/a/#")
     if user.is_authenticated:
-        pubs.append(f"{realm}/g/a/#")
         if user.is_staff:
             # staff/admin have rights to all scene objects
             subs.append(f"{realm}/s/#")
             pubs.append(f"{realm}/s/#")
+            # vio experiments, staff only
+            if scene:
+                pubs.append(f"{realm}/vio/{scene}/#")
         else:
             # scene owners have rights to their scene objects only
             subs.append(f"{realm}/s/{username}/#")
@@ -53,10 +54,6 @@ def generate_mqtt_token(
             for u_scene in u_scenes:
                 subs.append(f"{realm}/s/{u_scene.name}/#")
                 pubs.append(f"{realm}/s/{u_scene.name}/#")
-    # vio or test cameras
-    if scene and camid:
-        pubs.append(f"{realm}/vio/{scene}/{camid}")
-        pubs.append(f"{realm}/g/a/{camid}")
     # anon/non-owners have rights to view scene objects only
     if scene and not user.is_staff:
         scene_opt = Scene.objects.filter(name=scene)
@@ -91,6 +88,9 @@ def generate_mqtt_token(
         pubs.append(f"{realm}/g/c/o/{userhandle}")
         # private messages to user: Write
         pubs.append(f"{realm}/g/c/p/+/{userhandle}")
+    # apriltags
+    subs.append(f"{realm}/g/a/#")
+    pubs.append(f"{realm}/g/a/#")
     # runtime
     subs.append(f"{realm}/proc/#")
     pubs.append(f"{realm}/proc/#")
@@ -103,4 +103,5 @@ def generate_mqtt_token(
     if len(pubs) > 0:
         pubs.sort()
         payload['publ'] = pubs
+
     return jwt.encode(payload, private_key, algorithm='RS256')
