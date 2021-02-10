@@ -33,7 +33,7 @@
                                 </div>
                                 <datalist aria-label="Scene Select" id="userSceneDatalist">
                                     {% for scene in scenes %}
-                                        {% if not scene.public_read %}
+                                        {% if scene.namespace == user.get_username %}
                                             <option value="{{ scene.name }}"></option>
                                         {% endif %}
                                     {%  endfor %}
@@ -81,7 +81,7 @@
                                     Scenes</label>
                                 <datalist aria-label="Scene Select" id="publicSceneDatalist">
                                     {% for scene in scenes %}
-                                        {% if scene.public_read %}
+                                        {% if scene.namespace == "public" %}
                                             <option value="{{ scene.name }}"></option>
                                         {% endif %}
                                     {%  endfor %}
@@ -140,9 +140,9 @@
                     <div class="row mb-3">
                         <div class="col-12 mb-3">
                             <div class="input-group">
-                                <label class="d-none" aria-hidden="true" for="sourceSceneId">Source Scene</label>
+                                <label class="d-none" aria-hidden="true" for="sourceScene">Source Scene</label>
                                 <span class="input-group-text">Source Scene</span>
-                                <input class="form-control" id="sourceSceneId" readonly type="text">
+                                <input class="form-control" id="sourceScene" readonly type="text">
                             </div>
                         </div>
                         <div class="col-12">
