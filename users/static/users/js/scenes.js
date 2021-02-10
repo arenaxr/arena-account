@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
             [...document.getElementById('userSceneDatalist').options].findIndex((o) => o.value === e.target.value) !== -1) {
             window.userSceneId = e.target.value;
             userSceneUrl.value = `${window.location.protocol}//${window.location.hostname}/${e.target.value}`
+            deleteUserSceneBtn.value = e.target.value;
             toggleUserSceneButtons(true);
         } else {
             window.userSceneId = '';
@@ -120,6 +121,10 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
     enterPublicSceneBtn.addEventListener('click', () =>
         window.location = publicSceneUrl.value
     )
+
+    deleteUserSceneBtn.addEventListener('click', (e) => {
+        return confirm(`Are you sure you want to delete ${e.target.value}?`);
+    })
 
     cloneUserSceneBtn.addEventListener('click', () => {
         window.cloneSceneId = window.userSceneId;

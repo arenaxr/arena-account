@@ -52,9 +52,12 @@
                                 </button>
                             </div>
                             <div class="col-4">
-                                <button class="btn btn-danger w-100 disabled" id="deleteUserSceneBtn">
-                                    <i class="far fa-trash-alt"></i> Delete Scene
-                                </button>
+                                <form action="profile_update_scene" method="POST">
+                                    {% csrf_token %}
+                                    <button class="btn btn-danger w-100 disabled" name="delete" id="deleteUserSceneBtn">
+                                        <i class="far fa-trash-alt"></i> Delete Scene
+                                    </button>
+                                </form>
                             </div>
                         </div>
                         <div class="row">
