@@ -123,7 +123,29 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
     )
 
     deleteUserSceneBtn.addEventListener('click', (e) => {
-        return confirm(`Are you sure you want to delete ${e.target.value}?`);
+        const csrfmiddlewaretoken = document.getElementsByName("csrfmiddlewaretoken")[0].value
+        const params = new URLSearchParams();
+        params.append('csrfmiddlewaretoken', csrfmiddlewaretoken);
+        params.append('delete', deleteUserSceneBtn.value);
+        if (confirm(`Are you sure you want to delete ${e.target.value}?`)) {
+            axios.post(`profile_update_scene`, params, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            }).then(() => {
+                Swal.fire({
+                    title: 'Delete success!',
+                    html: `${deleteUserSceneBtn.value} has been deleted.`,
+                    icon: 'info',
+                    willClose: () => {
+                        location.reload();
+                    }
+                });
+            }).catch((err) => {
+                Swal.fire('Scene Delete Failed!', `Something went wrong!`, 'warning');
+                console.log(err);
+            });
+        }
     })
 
     cloneUserSceneBtn.addEventListener('click', () => {
