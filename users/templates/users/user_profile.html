@@ -10,135 +10,137 @@
         <div class="col-lg-7 col-md-8 shadow rounded bg-white p-5">
 
             {% if user.is_authenticated %}
-            <h1>User Profile</h1>
-            Username: {{ user.get_username }}<br>
-            Name: {{ user.first_name }} {{ user.last_name }}<br>
-            Email: {{ user.email }}<br>
-            Role:
-            {% if user.is_superuser %} Admin
-            {% elif user.is_staff %} Staff
-            {% elif user.is_authenticated %} User
-            {% else %} Anonymous
-            {% endif %}<br>
-            <br>
-            <!-- New Scene Request -->
-            <h5>New Scene Request:</h5>
-            <form action="profile_new_scene" method="POST">
-                <small style="color: grey">Do not include username or slash '/', it will be generated for
-                    you.</small><br>
-                {% csrf_token %}
-                {% if staff %}
-                <label for="is_public">Public:</label>
-                <input type="checkbox" name="is_public">
+                <h1>User Profile</h1>
+                Username: {{ user.get_username }}<br>
+                Name: {{ user.first_name }} {{ user.last_name }}<br>
+                Email: {{ user.email }}<br>
+                Role:
+                {% if user.is_superuser %} Admin
+                {% elif user.is_staff %} Staff
+                {% elif user.is_authenticated %} User
+                {% else %} Anonymous
+                {% endif %}<br>
                 <br>
-                {% endif %}
-                <label for="scene">Scene Name:</label>
-                <input type="text" name="scene" pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,200}$">
-                <button type="submit" class="btn btn-primary btn-sm">Request Scene</button><br>
-            </form>
-            <br>
-            {% if user.is_superuser %}
-            <!-- Set or Remove user as Staff -->
-            <h5>Admin Functions:</h5>
-            <form action="profile_update_staff" method="POST">
-                {% csrf_token %}
-                <label for="username">Username:</label>
-                <input type="text" name="staff_username" pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$">
-                <button type="submit" class="btn btn-primary btn-sm" name="is_staff" value="true">Add Staff</button>
-                <button type="submit" class="btn btn-primary btn-sm" name="is_staff" value="false">Remove Staff</button>
-            </form>
-            <br>
-            <h5>Staff Users:</h5>
-            {% if staff %}
-            <table>
-                <tr>
-                    <th>Username</th>
-                    <th></th>
-                    <th>Email</th>
-                    <th></th>
-                    <th>Full Name</th>
-                    <th></th>
-                </tr>
-                {% for staff_user in staff %}
-                <tr>
-                    <td>{{ staff_user.username }}</td>
-                    <td></td>
-                    <td>{{ staff_user.email }}</td>
-                    <td></td>
-                    <td>{{ staff_user.first_name }} {{ staff_user.last_name }}</td>
-                    <td></td>
-                </tr>
-                {% endfor %}
-                <table>
+                <!-- New Scene Request -->
+                <h5>New Scene Request:</h5>
+                <form action="profile_new_scene" method="POST">
+                    <small style="color: grey">Do not include username or slash '/', it will be generated for
+                        you.</small><br>
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <div class="form-outline">
+                            <input class="form-control" type="text" name="scene"
+                                   pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,200}$">
+                            <label class="form-label" for="scene">Scene Name:</label>
+                        </div>
+                        <button type="submit" class="btn btn-primary ">Request Scene</button>
+                    </div>
+                    {% if staff %}
+                        <div class="form-check form-switch">
+                            <input type="checkbox" class="form-check-input" name="is_public">
+                            <label for="is_public" class="form-check-label">Make Scene Public</label>
+                        </div>
+                    {% endif %}
+
+                </form>
+                <br>
+                {% if user.is_superuser %}
+                    <!-- Set or Remove user as Staff -->
+                    <h5>Admin Functions:</h5>
+                    <form action="profile_update_staff" method="POST">
+                        {% csrf_token %}
+                        <label for="username">Username:</label>
+                        <input class="form-control" type="text" name="staff_username" pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$">
+                        <button type="submit" class="btn btn-primary btn-sm" name="is_staff" value="true">
+                            Add Staff
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-sm" name="is_staff" value="false">
+                            Remove Staff
+                        </button>
+                    </form>
+                    <br>
+                    <h5>Staff Users:</h5>
+                    {% if staff %}
+                        <table class="table table-hover table-sm">
+                            <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Full Name</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for staff_user in staff %}
+                                <tr>
+                                    <td>{{ staff_user.username }}</td>
+                                    <td>{{ staff_user.email }}</td>
+                                    <td>{{ staff_user.first_name }} {{ staff_user.last_name }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
                     {% else %}
-                    <ul>
-                        <li>None</li>
-                    </ul>
+                        <ul>
+                            <li>None</li>
+                        </ul>
                     {% endif %}
                     <br>
-                    {% endif %}
-                    <!-- List scenes user can edit, and links -->
-                    <h5>Scene Permissions:</h5>
-                    {% if scenes %}
-                    <table>
-                        <tr>
-                            <th></th>
-                            <th></th>
-                            <th>Public</th>
-                            <th></th>
-                            <th>Public</th>
-                            <th></th>
-                            <!-- <th></th><th></th> -->
-                        </tr>
+                {% endif %}
+                <!-- List scenes user can edit, and links -->
+                <h5>Scene Permissions:</h5>
+                {% if scenes %}
+                    <table class="table table-hover table-sm">
+                        <thead>
                         <tr>
                             <th>Scene</th>
-                            <th></th>
-                            <th>Read</th>
-                            <th></th>
-                            <th>Write</th>
-                            <th></th>
-                            <!-- <th>Editors</th><th></th> -->
+                            <th>Public Read</th>
+                            <th>Public Write</th>
+                            <th>Actions</th>
                         </tr>
+                        </thead>
+                        <tbody>
                         {% for scene in scenes %}
-                        <form action="profile_update_scene" method="POST">
-                            {% csrf_token %}
-                            <tr>
-                                <td><a href="../../{{ scene.name }}">{{ scene.name }}</a></td>
-                                <td></td>
-                                <!--public subscribe ok-->
-                                {% if scene.public_read %}
-                                <td><input name="public_read" type="checkbox" checked /></td>
-                                <td></td>
-                                {% else %}
-                                <td><input name="public_read" type="checkbox" /></td>
-                                <td></td>
-                                {% endif %}
-                                <!--public publish objects ok-->
-                                {% if scene.public_write %}
-                                <td><input name="public_write" type="checkbox" checked /></td>
-                                <td></td>
-                                {% else %}
-                                <td><input name="public_write" type="checkbox" /></td>
-                                <td></td>
-                                {% endif %}
+                            <form action="profile_update_scene" method="POST">
+                                {% csrf_token %}
+                                <tr>
+                                    <td><a href="../../{{ scene.name }}">{{ scene.name }}</a></td>
+                                    <!--public subscribe ok-->
+                                    {% if scene.public_read %}
+                                        <td><input name="public_read" class="form-check-input" type="checkbox" checked/></td>
+                                    {% else %}
+                                        <td><input name="public_read" class="form-check-input" type="checkbox"/></td>
+                                    {% endif %}
+                                    <!--public publish objects ok-->
+                                    {% if scene.public_write %}
+                                        <td><input name="public_write" class="form-check-input" type="checkbox" checked/></td>
+                                    {% else %}
+                                        <td><input name="public_write" class="form-check-input" type="checkbox"/></td>
+                                    {% endif %}
 
-                                <td><button type="submit" class="btn btn-primary btn-sm" name="save"
-                                        value="{{ scene.name }}">Save</button></td>
-                                <td><button type="submit" class="btn btn-primary btn-sm" name="delete"
-                                        value="{{ scene.name }}"
-                                        onclick="return confirm('Are you sure you want to delete {{ scene.name }}?');">Delete</button>
-                                </td>
-                            </tr>
-                        </form>
+                                    <td>
+                                        <button type="submit" class="btn btn-primary btn-sm" name="save" value="{{ scene.name }}">
+                                            Save
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button type="submit" class="btn btn-primary btn-sm" name="delete"
+                                                value="{{ scene.name }}"
+                                                onclick="return confirm('Are you sure you want to delete {{ scene.name }}?');">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            </form>
                         {% endfor %}
+                        </tbody>
                     </table>
-                    {% else %}
+                {% else %}
                     None
-                    {% endif %}
-                    <br>
-                    {% else %}
-                    <h5>Anonymous users have no profile.</h5>
-                    {% endif %}
+                {% endif %}
+                <br>
+            {% else %}
+                <h5>Anonymous users have no profile.</h5>
+            {% endif %}
 
         </div>
     </div>

@@ -31,6 +31,7 @@ urlpatterns = [
     path('accounts/social/signup/', views.SocialSignupView.as_view(),
          name='socialaccount_signup'),
     path("profile", views.user_profile, name="user_profile"),
+    path('scenes', views.scene_landing, name="scenes"),
     path("login_callback", views.login_callback, name="login_callback"),
 
     # endpoints

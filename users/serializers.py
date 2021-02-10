@@ -12,6 +12,7 @@ class SceneSerializer(serializers.ModelSerializer):
             'creation_date',
             'public_read',
             'public_write',
+            'namespace',
         ]
 
 
