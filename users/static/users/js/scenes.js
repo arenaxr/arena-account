@@ -139,9 +139,10 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
     const newSceneNameInput = document.getElementById('newSceneNameInput');
     const doCloneSceneBtn = document.getElementById('doCloneSceneBtn');
     const cloneSceneUrl = document.getElementById('cloneSceneUrl');
+    const sourceScene = document.getElementById('sourceScene');
 
     function resetCloneScene() {
-        document.getElementById('sourceSceneId').value = window.cloneSceneId;
+        sourceScene.value = window.cloneSceneId;
         newSceneNameInput.value = "";
         document.getElementById('cloneSceneCreated').classList.add('d-none');
         document.getElementById('doCloneSceneContainer').classList.remove('d-none');
@@ -156,11 +157,11 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
     })
 
     document.getElementById('doCloneSceneBtn').addEventListener('click', () => {
-        const [sourceNamespace, sourceSceneId] = newSceneNameInput.value.split("/")
-        axios.post(`/persist/${window.username}/newSceneNameInput.value`, {
+        const [namespace, sceneId] = sourceScene.value.split("/")
+        axios.post(`/persist/${window.username}/${newSceneNameInput.value}`, {
             action: 'clone',
-            sourceNamespace,
-            sourceSceneId,
+            namespace,
+            sceneId,
         }).then((res) => {
             Swal.fire('Clone success!', `${res.data.objectsCloned} objects cloned into new scene`, 'success');
             cloneSceneUrl.value = `${window.location.protocol}//${window.location.hostname}/${newSceneNameInput.value}`
