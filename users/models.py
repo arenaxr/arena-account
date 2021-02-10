@@ -33,3 +33,7 @@ class Scene(models.Model):
     def get_absolute_url(self):
         """Returns the url to access a detail record for this scene."""
         return reverse('scene-detail', args=[str(self.name)])
+
+    @property
+    def namespace(self):
+        return self.name.split('/')[0]
