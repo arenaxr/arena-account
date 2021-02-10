@@ -12,10 +12,12 @@
             <form method="post">
                 {{ formset.management_form }}
                 {% for form in formset %}
-                {% for field in form %}
-                {{ field.label_tag }} {{ field }}
-                <br>
-                {% endfor %}
+
+                <b>{{ form.name }}</b><br>
+                {{ form.public_read.label_tag }} {{ form.public_read }} <br>
+                {{ form.public_write.label_tag }} {{ form.public_write }} <br>
+                {{ form.editors.label_tag }} {{ form.editors }} <br>
+
                 <p></p>
                 {% endfor %}
                 <td><button type="submit" class="btn btn-primary btn-sm" name="save"
