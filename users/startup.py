@@ -10,7 +10,7 @@ logger.info("startup.py load test...")
 
 def setup_socialapps():
     # add host to Sites if not there already
-    host = os.getenv('HOSTNAME')
+    host = os.getenv("HOSTNAME")
     hc = Site.objects.filter(id=settings.SITE_ID)
     if hc.exists():
         hc = Site.objects.get(id=settings.SITE_ID)

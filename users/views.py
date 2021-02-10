@@ -29,12 +29,16 @@ from rest_framework.decorators import api_view, permission_classes, schema
 from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
 
-from .forms import (NewSceneForm, NewUserForm, SocialSignupForm,
-                    UpdateSceneForm, UpdateStaffForm)
+from .forms import (
+    NewSceneForm,
+    NewUserForm,
+    SocialSignupForm,
+    UpdateSceneForm,
+    UpdateStaffForm,
+)
 from .models import Scene
 from .mqtt import generate_mqtt_token
-from .persistence import (delete_scene_objects, get_persist_scenes,
-                          scenes_read_token)
+from .persistence import delete_scene_objects, get_persist_scenes, scenes_read_token
 from .serializers import SceneNameSerializer, SceneSerializer
 
 STAFF_ACCTNAME = "public"
@@ -55,8 +59,8 @@ def login_request(request):
     if request.method == "POST":
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
+            username = form.cleaned_data.get("username")
+            password = form.cleaned_data.get("password")
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
@@ -67,7 +71,9 @@ def login_request(request):
         else:
             messages.error(request, "Invalid username or password.")
     form = AuthenticationForm()
-    return render(request=request, template_name="users/login.html", context={"login_form": form})
+    return render(
+        request=request, template_name="users/login.html", context={"login_form": form}
+    )
 
 
 def logout_request(request):
@@ -82,16 +88,26 @@ class NewSceneSchema(AutoSchema):
 
     def get_manual_fields(self, path, method):
         extra_fields = [
-            coreapi.Field("scene", required=True, location="form", type="string",
-                          description="The scene name, without slash '/' or namespace."),
-            coreapi.Field("is_public", required=False, location="form", type="boolean",
-                          description="True to use 'public' namespace, False for user namespace."),
+            coreapi.Field(
+                "scene",
+                required=True,
+                location="form",
+                type="string",
+                description="The scene name, without slash '/' or namespace.",
+            ),
+            coreapi.Field(
+                "is_public",
+                required=False,
+                location="form",
+                type="boolean",
+                description="True to use 'public' namespace, False for user namespace.",
+            ),
         ]
         manual_fields = super().get_manual_fields(path, method)
         return manual_fields + extra_fields
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
 @schema(NewSceneSchema())  # TODO: schema not working yet
 def new_scene(request):
@@ -113,24 +129,37 @@ def _new_scene(request):
     # add new scene editor
     form = NewSceneForm(request.POST)
     if not request.user.is_authenticated:
-        return JsonResponse({'error': "Not authenticated."}, status=status.HTTP_403_FORBIDDEN)
+        return JsonResponse(
+            {"error": "Not authenticated."}, status=status.HTTP_403_FORBIDDEN
+        )
     if not form.is_valid():
-        return JsonResponse({'error': "Invalid parameters"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse(
+            {"error": "Invalid parameters"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
     username = request.user.username
-    scene = form.cleaned_data['scene']
+    scene = form.cleaned_data["scene"]
     print(f"_new_scene, is_public '{request.POST.get('is_public')}'")
-    is_public = form.cleaned_data['is_public']
+    is_public = form.cleaned_data["is_public"]
     if is_public and request.user.is_staff:
-        scene = f'{STAFF_ACCTNAME}/{scene}'  # public namespace
+        scene = f"{STAFF_ACCTNAME}/{scene}"  # public namespace
     else:
-        scene = f'{username}/{scene}'  # user namespace for normal users
+        scene = f"{username}/{scene}"  # user namespace for normal users
     if not scene_permission(user=request.user, scene=scene):
-        return JsonResponse({'error': f"User does not have permission for: {name}."}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse(
+            {"error": f"User does not have permission for: {name}."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     if Scene.objects.filter(name=scene).exists():
-        return JsonResponse({'error': f"Unable to claim existing scene: {scene}, use admin panel"}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse(
+            {"error": f"Unable to claim existing scene: {scene}, use admin panel"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     if User.objects.filter(username=username).exists():
-        s = Scene(name=scene,
-                  summary=f'User {username} adding new scene {scene} to account database.')
+        s = Scene(
+            name=scene,
+            summary=f"User {username} adding new scene {scene} to account database.",
+        )
         s.save()
 
     return JsonResponse({})
@@ -141,78 +170,103 @@ def profile_update_scene(request):
     """
     Update existing scene permissions the user has access to.
     """
-    if request.method != 'POST':
+    if request.method != "POST":
         return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
     form = UpdateSceneForm(request.POST)
     if not request.user.is_authenticated:
-        return JsonResponse({'error': "Not authenticated."}, status=status.HTTP_403_FORBIDDEN)
+        return JsonResponse(
+            {"error": "Not authenticated."}, status=status.HTTP_403_FORBIDDEN
+        )
     if not form.is_valid():
-        return JsonResponse({'error': "Invalid parameters"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse(
+            {"error": "Invalid parameters"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
     username = request.user.username
-    name = form.cleaned_data['save']
+    name = form.cleaned_data["save"]
     if not name:
-        name = form.cleaned_data['delete']
-    public_read = form.cleaned_data['public_read']
-    public_write = form.cleaned_data['public_write']
+        name = form.cleaned_data["delete"]
+    public_read = form.cleaned_data["public_read"]
+    public_write = form.cleaned_data["public_write"]
     try:
         scene = Scene.objects.get(name=name)
     except Scene.DoesNotExist:
-        return JsonResponse({'error': f"Unable to update existing scene: {name}, not found"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse(
+            {"error": f"Unable to update existing scene: {name}, not found"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
     if not scene_permission(user=request.user, scene=name):
-        return JsonResponse({'error': f"User does not have permission for: {name}."}, status=status.HTTP_400_BAD_REQUEST)
-    if 'save' in request.POST:
+        return JsonResponse(
+            {"error": f"User does not have permission for: {name}."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if "save" in request.POST:
         scene.public_read = public_read
         scene.public_write = public_write
         scene.save()
-    elif 'delete' in request.POST:
+    elif "delete" in request.POST:
         # delete account scene data
         scene.delete()
         # delete persist scene data
-        token = generate_mqtt_token(
-            user=request.user,
-            username=request.user.username,
-        )
+        token = generate_mqtt_token(user=request.user, username=request.user.username,)
         delete_scene_objects(name, token)
 
     return redirect("user_profile")
 
 
-@api_view(['POST', 'GET', 'PUT', 'DELETE'])
+@api_view(["POST", "GET", "PUT", "DELETE"])
 @permission_classes([permissions.IsAuthenticated])
 def scene_detail(request, pk):
     # check permissions model for namespace
     if not scene_permission(user=request.user, scene=pk):
-        return JsonResponse({'error': f"User does not have permission for: {pk}."}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse(
+            {"error": f"User does not have permission for: {pk}."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     username = request.user.username
 
     # try POST first, since it doesn't/shouldn't exist yet
-    if request.method == 'POST':
+    if request.method == "POST":
         if Scene.objects.filter(name=pk).exists():
-            return JsonResponse({'error': f"Unable to claim existing scene: {pk}, use PUT."}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(
+                {"error": f"Unable to claim existing scene: {pk}, use PUT."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if request.body:
             scene_serializer = SceneSerializer(data=scene_data)
             if scene_serializer.is_valid():
                 scene_serializer.save()
-                return JsonResponse(scene_serializer.data, status=status.HTTP_201_CREATED)
-            return JsonResponse(scene_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return JsonResponse(
+                    scene_serializer.data, status=status.HTTP_201_CREATED
+                )
+            return JsonResponse(
+                scene_serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
         else:
             s = Scene(
-                name=pk, summary=f'User {username} adding new scene {pk} to account database.')
+                name=pk,
+                summary=f"User {username} adding new scene {pk} to account database.",
+            )
             s.save()
-            return JsonResponse({'message': f'Scene {pk} added successfully!'}, status=status.HTTP_200_OK)
+            return JsonResponse(
+                {"message": f"Scene {pk} added successfully!"},
+                status=status.HTTP_200_OK,
+            )
 
     # now, make sure scene exists before the other commands are tried
     try:
         scene = Scene.objects.get(name=pk)
     except Scene.DoesNotExist:
-        return JsonResponse({'message': 'The scene does not exist'}, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(
+            {"message": "The scene does not exist"}, status=status.HTTP_404_NOT_FOUND
+        )
 
-    if request.method == 'GET':
+    if request.method == "GET":
         scene_serializer = SceneSerializer(scene)
         return JsonResponse(scene_serializer.data)
 
-    elif request.method == 'PUT':
+    elif request.method == "PUT":
         scene_data = JSONParser().parse(request)
         scene_serializer = SceneSerializer(scene, data=scene_data)
         if scene_serializer.is_valid():
@@ -220,9 +274,11 @@ def scene_detail(request, pk):
             return JsonResponse(scene_serializer.data)
         return JsonResponse(scene_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    elif request.method == 'DELETE':
+    elif request.method == "DELETE":
         scene.delete()
-        return JsonResponse({'message': 'Scene was deleted successfully!'}, status=status.HTTP_200_OK)
+        return JsonResponse(
+            {"message": "Scene was deleted successfully!"}, status=status.HTTP_200_OK
+        )
 
 
 @permission_classes([permissions.IsAdminUser])
@@ -231,16 +287,24 @@ def profile_update_staff(request):
     Toggle the user's is_staff true/false status.
     """
     # update staff status if allowed
-    if request.method != 'POST':
+    if request.method != "POST":
         return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
     form = UpdateStaffForm(request.POST)
     if not request.user.is_authenticated:
-        return JsonResponse({'error': "Not authenticated."}, status=status.HTTP_403_FORBIDDEN)
+        return JsonResponse(
+            {"error": "Not authenticated."}, status=status.HTTP_403_FORBIDDEN
+        )
     if not form.is_valid():
-        return JsonResponse({'error': "Invalid parameters"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    staff_username = form.cleaned_data['staff_username']
-    is_staff = form.cleaned_data['is_staff']
-    if request.user.is_superuser and User.objects.filter(username=staff_username).exists():
+        return JsonResponse(
+            {"error": "Invalid parameters"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+    staff_username = form.cleaned_data["staff_username"]
+    is_staff = form.cleaned_data["is_staff"]
+    if (
+        request.user.is_superuser
+        and User.objects.filter(username=staff_username).exists()
+    ):
         print(f"Setting user {staff_username}, is_staff={is_staff}")
         user = User.objects.get(username=staff_username)
         user.is_staff = is_staff
@@ -249,7 +313,7 @@ def profile_update_staff(request):
     return redirect("user_profile")
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 def my_scenes(request):
     """
     Request a list of scenes this user can write to.
@@ -262,11 +326,13 @@ def user_scenes(user):
     # update scene list from object persistance db
     token = scenes_read_token()
     p_scenes = get_persist_scenes(token)
-    a_scenes = Scene.objects.values_list('name', flat=True)
+    a_scenes = Scene.objects.values_list("name", flat=True)
     for p_scene in p_scenes:
         if p_scene not in a_scenes:
-            s = Scene(name=p_scene,
-                      summary='Existing scene name migrated from persistence database.')
+            s = Scene(
+                name=p_scene,
+                summary="Existing scene name migrated from persistence database.",
+            )
             s.save()
 
     # load list of scenes this user can edit
@@ -276,10 +342,10 @@ def user_scenes(user):
         if user.is_staff:  # admin/staff
             scenes = Scene.objects.all()
         else:  # standard user
-            scenes = Scene.objects.filter(name__startswith=f'{user.username}/')
+            scenes = Scene.objects.filter(name__startswith=f"{user.username}/")
             editor_scenes = Scene.objects.filter(editors=user)
             # merge 'my' namespaced scenes and extras scenes granted
-    return (scenes | editor_scenes).order_by('name')
+    return (scenes | editor_scenes).order_by("name")
 
 
 def scene_permission(user, scene):
@@ -287,23 +353,26 @@ def scene_permission(user, scene):
         return False
     elif user.is_staff:  # admin/staff
         return True
-    elif scene.startswith(f'{user.username}/'):  # owner
+    elif scene.startswith(f"{user.username}/"):  # owner
         return True
     else:
         try:
-            editor_scene = Scene.objects.get(
-                name=scene, editors=user)  # editor
+            editor_scene = Scene.objects.get(name=scene, editors=user)  # editor
         except Scene.ObjectDoesNotExist:
             return False
         return True
+
 
 def scene_landing(request):
     scenes = user_scenes(request.user)
     staff = None
     if request.user.is_staff:  # admin/staff
         staff = User.objects.filter(is_staff=True)
-    return render(request=request, template_name="users/scene_landing.html",
-                  context={"user": request.user, "scenes": scenes, "staff": staff})
+    return render(
+        request=request,
+        template_name="users/scene_landing.html",
+        context={"user": request.user, "scenes": scenes, "staff": staff},
+    )
 
 
 def user_profile(request):
@@ -312,8 +381,11 @@ def user_profile(request):
     staff = None
     if request.user.is_staff:  # admin/staff
         staff = User.objects.filter(is_staff=True)
-    return render(request=request, template_name="users/user_profile.html",
-                  context={"user": request.user, "scenes": scenes, "staff": staff})
+    return render(
+        request=request,
+        template_name="users/user_profile.html",
+        context={"user": request.user, "scenes": scenes, "staff": staff},
+    )
 
 
 def login_callback(request):
@@ -321,39 +393,48 @@ def login_callback(request):
 
 
 class SocialSignupView(SocialSignupViewDefault):
-
     def get(self, request, *args, **kwargs):
         social_form = SocialSignupForm(sociallogin=self.sociallogin)
-        return render(request, "users/social_signup.html", {"form": social_form, 'account': self.sociallogin.account})
+        return render(
+            request,
+            "users/social_signup.html",
+            {"form": social_form, "account": self.sociallogin.account},
+        )
 
     def post(self, request, *args, **kwargs):
         form_class = self.get_form_class()
         social_form = self.get_form(form_class)
         if social_form.is_valid():
             return self.form_valid(social_form)
-        return render(request, "users/social_signup.html", {"form": social_form, 'account': self.sociallogin.account})
+        return render(
+            request,
+            "users/social_signup.html",
+            {"form": social_form, "account": self.sociallogin.account},
+        )
 
     @transaction.atomic
     def form_valid(self, social_form):
-        self.request.session.pop('socialaccount_sociallogin', None)
+        self.request.session.pop("socialaccount_sociallogin", None)
         user = social_form.save(self.request)
-        name = self.sociallogin.account.extra_data.get('name', '')
+        name = self.sociallogin.account.extra_data.get("name", "")
         return helpers.complete_social_signup(self.request, self.sociallogin)
 
 
-@api_view(['GET', 'POST'])
+@api_view(["GET", "POST"])
 def user_state(request):
     """
     Request the user's authenticated status, username, name, email.
     """
     user = request.user
-    if request.method == 'POST':
+    if request.method == "POST":
         gid_token = request.POST.get("id_token", None)
         if gid_token:
             try:
                 user = get_user_from_id_token(gid_token)
             except (ValueError, SocialAccount.DoesNotExist) as err:
-                return JsonResponse({"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN)
+                return JsonResponse(
+                    {"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN
+                )
 
     if user.is_authenticated:
         if user.username.startswith("admin"):
@@ -361,17 +442,20 @@ def user_state(request):
         else:
             authType = "google"
 
-        return JsonResponse({
-            "authenticated": user.is_authenticated,
-            "username": user.username,
-            "fullname": user.get_full_name(),
-            "email": user.email,
-            "type": authType,
-        }, status=status.HTTP_200_OK)
+        return JsonResponse(
+            {
+                "authenticated": user.is_authenticated,
+                "username": user.username,
+                "fullname": user.get_full_name(),
+                "email": user.email,
+                "type": authType,
+            },
+            status=status.HTTP_200_OK,
+        )
     else:  # AnonymousUser
-        return JsonResponse({
-            "authenticated": user.is_authenticated,
-        }, status=status.HTTP_200_OK)
+        return JsonResponse(
+            {"authenticated": user.is_authenticated,}, status=status.HTTP_200_OK
+        )
 
 
 class MqttTokenSchema(AutoSchema):
@@ -380,23 +464,63 @@ class MqttTokenSchema(AutoSchema):
 
     def get_manual_fields(self, path, method):
         extra_fields = [
-            coreapi.Field("username", required=True, location="body", type="string",
-                          description="ARENA user database username, or like 'anonymous-[name]'."),
-            coreapi.Field("id_token", required=False, location="body", type="string",
-                          description="JWT id_token from social account authentication service, \
-                                    if forwarding from remote client like arena-py."),
-            coreapi.Field("realm", required=False, location="body", type="string",
-                          description="Name of the ARENA realm used in the topic string (default: 'realm')."),
-            coreapi.Field("scene", required=False, location="body", type="string",
-                          description="Name of the ARENA scene: '[namespace]/[scene]'."),
-            coreapi.Field("userid", required=False, location="body", type="string",
-                          description="Name of the user's ARENA web client id."),
-            coreapi.Field("camid", required=False, location="body", type="string",
-                          description="Name of the user's ARENA camera object id."),
-            coreapi.Field("ctrlid1", required=False, location="body", type="string",
-                          description="Name of the user's ARENA controller object 1, like vive left."),
-            coreapi.Field("ctrlid2", required=False, location="body", type="string",
-                          description="Name of the user's ARENA controller object 2, like vive right."),
+            coreapi.Field(
+                "username",
+                required=True,
+                location="body",
+                type="string",
+                description="ARENA user database username, or like 'anonymous-[name]'.",
+            ),
+            coreapi.Field(
+                "id_token",
+                required=False,
+                location="body",
+                type="string",
+                description="JWT id_token from social account authentication service, \
+                                    if forwarding from remote client like arena-py.",
+            ),
+            coreapi.Field(
+                "realm",
+                required=False,
+                location="body",
+                type="string",
+                description="Name of the ARENA realm used in the topic string (default: 'realm').",
+            ),
+            coreapi.Field(
+                "scene",
+                required=False,
+                location="body",
+                type="string",
+                description="Name of the ARENA scene: '[namespace]/[scene]'.",
+            ),
+            coreapi.Field(
+                "userid",
+                required=False,
+                location="body",
+                type="string",
+                description="Name of the user's ARENA web client id.",
+            ),
+            coreapi.Field(
+                "camid",
+                required=False,
+                location="body",
+                type="string",
+                description="Name of the user's ARENA camera object id.",
+            ),
+            coreapi.Field(
+                "ctrlid1",
+                required=False,
+                location="body",
+                type="string",
+                description="Name of the user's ARENA controller object 1, like vive left.",
+            ),
+            coreapi.Field(
+                "ctrlid2",
+                required=False,
+                location="body",
+                type="string",
+                description="Name of the user's ARENA controller object 2, like vive right.",
+            ),
         ]
         manual_fields = super().get_manual_fields(path, method)
         return manual_fields + extra_fields
@@ -404,18 +528,16 @@ class MqttTokenSchema(AutoSchema):
 
 def get_user_from_id_token(gid_token):
     if not gid_token:
-        raise ValueError('Missing token.')
-    gclient_ids = [os.environ['GAUTH_CLIENTID'],
-                   os.environ['GAUTH_INSTALLED_CLIENTID']]
-    idinfo = id_token.verify_oauth2_token(
-        gid_token, requests.Request())
-    if idinfo['aud'] not in gclient_ids:
-        raise ValueError('Could not verify audience.')
+        raise ValueError("Missing token.")
+    gclient_ids = [os.environ["GAUTH_CLIENTID"], os.environ["GAUTH_INSTALLED_CLIENTID"]]
+    idinfo = id_token.verify_oauth2_token(gid_token, requests.Request())
+    if idinfo["aud"] not in gclient_ids:
+        raise ValueError("Could not verify audience.")
     # ID token is valid. Get the user's Google Account ID from the decoded token.
-    userid = idinfo['sub']
+    userid = idinfo["sub"]
     g_user = SocialAccount.objects.get(uid=userid)
     if not g_user:
-        raise ValueError('Database error.')
+        raise ValueError("Database error.")
 
     return User.objects.get(username=g_user.user)
 
@@ -429,7 +551,7 @@ def _field_requested(request, field):
     return False
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 # @schema(MqttTokenSchema())  # TODO: schema not working yet
 def mqtt_token(request):
     """
@@ -441,7 +563,9 @@ def mqtt_token(request):
         try:
             user = get_user_from_id_token(gid_token)
         except (ValueError, SocialAccount.DoesNotExist) as err:
-            return JsonResponse({"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN)
+            return JsonResponse(
+                {"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN
+            )
 
     if user.is_authenticated:
         username = user.username
@@ -483,7 +607,12 @@ def mqtt_token(request):
         data["ids"]["ctrlid1"] = ctrlid1
     if ctrlid2:
         data["ids"]["ctrlid2"] = ctrlid2
-    response = HttpResponse(json.dumps(data), content_type='application/json')
-    response.set_cookie('mqtt_token', token.decode("utf-8"), max_age=86400000,
-                        httponly=True, secure=True)
+    response = HttpResponse(json.dumps(data), content_type="application/json")
+    response.set_cookie(
+        "mqtt_token",
+        token.decode("utf-8"),
+        max_age=86400000,
+        httponly=True,
+        secure=True,
+    )
     return response
