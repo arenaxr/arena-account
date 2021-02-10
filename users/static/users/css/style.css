@@ -41,6 +41,17 @@ html {
     line-height: 34px;
 }
 
+span.icon {
+    display: inline-block;
+    vertical-align: middle;
+    width: 42px;
+    height: 42px;
+}
+
+#customBtnGoogle span.icon {
+    background: url('../img/g-normal.png') transparent 5px 50% no-repeat;
+}
+
 .min-vh-75 {
     min-height: 75vh
 }
