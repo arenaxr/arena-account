@@ -10,6 +10,7 @@ SCENE_PUBLIC_WRITE_DEF = False
 
 class Scene(models.Model):
     """Model representing a scene (but not a specific copy of a scene)."""
+
     name = models.CharField(max_length=200, blank=False, unique=True)
     summary = models.TextField(max_length=1000)
     editors = models.ManyToManyField(User)
@@ -22,8 +23,8 @@ class Scene(models.Model):
         super(Scene, self).save(*args, **kwargs)
 
     def clean(self):
-        if self.name == '':
-            raise ValidationError('Empty scene name!')
+        if self.name == "":
+            raise ValidationError("Empty scene name!")
         self.name = self.name.strip()
 
     def __str__(self):
@@ -32,4 +33,8 @@ class Scene(models.Model):
 
     def get_absolute_url(self):
         """Returns the url to access a detail record for this scene."""
-        return reverse('scene-detail', args=[str(self.name)])
+        return reverse("scene-detail", args=[str(self.name)])
+
+    @property
+    def namespace(self):
+        return self.name.split("/")[0]

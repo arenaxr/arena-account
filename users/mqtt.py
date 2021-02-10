@@ -12,7 +12,7 @@ def generate_mqtt_token(
     *,
     user,
     username,
-    realm='realm',
+    realm="realm",
     scene=None,
     camid=None,
     userid=None,
@@ -23,19 +23,16 @@ def generate_mqtt_token(
     pubs = []
     privkeyfile = settings.MQTT_TOKEN_PRIVKEY
     if not os.path.exists(privkeyfile):
-        print('Error: keyfile not found')
+        print("Error: keyfile not found")
         return None
-    print('Using keyfile at: ' + privkeyfile)
+    print("Using keyfile at: " + privkeyfile)
     with open(privkeyfile) as privatefile:
         private_key = privatefile.read()
     if user.is_authenticated:
         duration = datetime.timedelta(days=1)
     else:
         duration = datetime.timedelta(hours=6)
-    payload = {
-        'sub': username,
-        'exp': datetime.datetime.utcnow() + duration
-    }
+    payload = {"sub": username, "exp": datetime.datetime.utcnow() + duration}
     # user presence objects
     if user.is_authenticated:
         if user.is_staff:
@@ -99,9 +96,9 @@ def generate_mqtt_token(
     pubs.append("$NETWORK/latency")
     if len(subs) > 0:
         subs.sort()
-        payload['subs'] = subs
+        payload["subs"] = subs
     if len(pubs) > 0:
         pubs.sort()
-        payload['publ'] = pubs
+        payload["publ"] = pubs
 
-    return jwt.encode(payload, private_key, algorithm='RS256')
+    return jwt.encode(payload, private_key, algorithm="RS256")

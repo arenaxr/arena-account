@@ -47,7 +47,9 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
     const usernameContainer = document.getElementById('usernameContainer');
     const anonBtn = document.getElementById('anonBtn');
     const googleBtn = document.getElementById('googleBtn');
-    document.getElementById('loginForm').addEventListener('change', ({target}) => {
+    const providerSelect = document.getElementById('provider');
+    providerSelect.selectedIndex = 0; // Reset for history-nav
+    providerSelect.addEventListener('change', ({target}) => {
         switch (target.value) {
             case 'google':
                 hideEls([usernameContainer, anonBtn]);
