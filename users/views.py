@@ -45,7 +45,10 @@ logger.info("views.py load test...")
 
 def index(request):
     # index is treated as login
-    return redirect("login")
+    if request.user.is_authenticated:
+        return redirect("scenes")
+    else:
+        return redirect("login")
 
 
 def login_request(request):
