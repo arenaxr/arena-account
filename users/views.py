@@ -106,7 +106,7 @@ def profile_update_scene(request):
     return redirect("user_profile")
 
 
-def scene_profile(request, pk):
+def scene_perm_detail(request, pk):
     if not scene_permission(user=request.user, scene=pk):
         return JsonResponse({"error": f"User does not have permission for: {pk}."}, status=status.HTTP_400_BAD_REQUEST)
     # now, make sure scene exists before the other commands are tried
@@ -132,7 +132,7 @@ def scene_profile(request, pk):
     else:
         form = SceneForm(instance=scene)
 
-    return render(request=request, template_name="users/scene_profile.html",
+    return render(request=request, template_name="users/scene_perm_detail.html",
                   context={"scene": scene, "form": form})
 
 
