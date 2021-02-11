@@ -60,7 +60,7 @@
                 </tr>
                 {% for staff_user in staff %}
                 <tr>
-                    <td>{{ staff_user.username }}</td>
+                    <td><b>{{ staff_user.username }}</b></td>
                     <td></td>
                     <td>{{ staff_user.email }}</td>
                     <td></td>
@@ -91,7 +91,7 @@
                 <form action="profile_update_scene" method="POST">
                     {% csrf_token %}
                     <tr>
-                        <td><a href="../../{{ scene.name }}">{{ scene.name }}</a></td>
+                        <td><a href="../../{{ scene.name }}"><b>{{ scene.name }}</b></a></td>
                         <!--public subscribe ok-->
                         <td>
                             {% if scene.public_read %}

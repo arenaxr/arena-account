@@ -31,32 +31,19 @@ class UpdateStaffForm(forms.Form):
         label="is_staff", required=False, initial=False)
 
 
-class NewSceneForm(forms.Form):
-    scene = forms.CharField(label="scene", required=True)
-    is_public = forms.BooleanField(
-        label="is_public", required=False, initial=False)
-
-
 class UpdateSceneForm(forms.Form):
-    save = forms.CharField(label="save", required=False)
     edit = forms.CharField(label="edit", required=False)
-    delete = forms.CharField(label="delete", required=False)
-    public_read = forms.BooleanField(
-        label="public_read", required=False, initial=True)
-    public_write = forms.BooleanField(
-        label="public_write", required=False, initial=True
-    )
 
 
 class SceneForm(forms.ModelForm):
     editors = forms.ModelMultipleChoiceField(
         queryset=User.objects.all(),
-        widget=forms.SelectMultiple(attrs={"class": "form-select"}))
+        widget=forms.SelectMultiple(attrs={"class": "form-select"}), required=False)
     public_read = forms.BooleanField(
-        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}))
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}), required=False)
     public_write = forms.BooleanField(
-        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}))
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}), required=False)
 
     class Meta:
         model = Scene
-        fields = ('public_read', 'public_write', 'editors')
+        fields = ("public_read", "public_write", "editors")

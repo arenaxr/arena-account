@@ -16,7 +16,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import BadHeaderError, send_mail
 from django.db import transaction
 from django.db.models.query_utils import Q
-from django.forms import modelformset_factory, inlineformset_factory
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
@@ -31,14 +30,15 @@ from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
 
 from .forms import (
-    NewSceneForm,
+    SceneForm,
     SocialSignupForm,
     UpdateSceneForm,
-    UpdateStaffForm, SceneForm
+    UpdateStaffForm
 )
 from .models import Scene
 from .mqtt import generate_mqtt_token
-from .persistence import delete_scene_objects, get_persist_scenes, scenes_read_token
+from .persistence import (delete_scene_objects, get_persist_scenes,
+                          scenes_read_token)
 from .serializers import SceneNameSerializer, SceneSerializer
 
 STAFF_ACCTNAME = "public"
