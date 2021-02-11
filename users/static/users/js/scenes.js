@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
         }).then((res) => {
             Swal.fire('Clone success!', `${res.data.objectsCloned} objects cloned into new scene`, 'success');
             const port = (location.port ? ':' + location.port : '');
-            cloneSceneUrl.value = `${window.location.protocol}//${window.location.hostname}${port}/${newSceneNameInput.value}`
+            cloneSceneUrl.value = `${window.location.protocol}//${window.location.hostname}${port}/${window.username}/${newSceneNameInput.value}`
             document.getElementById('doCloneSceneContainer').classList.add('d-none');
             document.getElementById('cloneSceneCreated').classList.remove('d-none');
             newSceneNameInput.setAttribute('readonly', 'readonly')
