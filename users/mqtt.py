@@ -5,7 +5,8 @@ import os
 import jwt
 from django.conf import settings
 
-from .models import SCENE_PUBLIC_READ_DEF, SCENE_PUBLIC_WRITE_DEF, Scene
+from .models import (SCENE_ANON_USERS_DEF, SCENE_PUBLIC_READ_DEF,
+                     SCENE_PUBLIC_WRITE_DEF, Scene)
 
 
 def generate_mqtt_token(
@@ -57,12 +58,16 @@ def generate_mqtt_token(
         if scene_opt.exists():
             # did the user set specific public read or public write?
             scene_opt = Scene.objects.get(name=scene)
+            if not scene_opt.anonymous_users:
+                return None  # anonymous not permitted
             if scene_opt.public_read:
                 subs.append(f"{realm}/s/{scene}/#")
             if scene_opt.public_write:
                 pubs.append(f"{realm}/s/{scene}/#")
         else:
             # otherwise, use public access defaults
+            if not SCENE_ANON_USERS_DEF:
+                return None  # anonymous not permitted
             if SCENE_PUBLIC_READ_DEF:
                 subs.append(f"{realm}/s/{scene}/#")
             if SCENE_PUBLIC_WRITE_DEF:
@@ -75,7 +80,7 @@ def generate_mqtt_token(
         if ctrlid2:
             pubs.append(f"{realm}/s/{scene}/{ctrlid2}")
     # chat messages
-    if userid:
+    if scene and userid:
         userhandle = userid + base64.b64encode(userid.encode()).decode()
         # receive private messages: Read
         subs.append(f"{realm}/g/c/p/{userid}/#")

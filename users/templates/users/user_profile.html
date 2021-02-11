@@ -84,6 +84,7 @@
                     <th>Scene</th>
                     <th>Public Read</th>
                     <th>Public Write</th>
+                    <th>Anonymous Users</th>
                     <th>Other Editors</th>
                     <th></th>
                 </thead>
@@ -95,7 +96,7 @@
                         <!--public subscribe ok-->
                         <td>
                             {% if scene.public_read %}
-                            Allow
+                            <b>Allow</b>
                             {% else %}
                             Deny
                             {% endif %}
@@ -103,7 +104,15 @@
                         <!--public publish objects ok-->
                         <td>
                             {% if scene.public_write %}
-                            Allow
+                            <b>Allow</b>
+                            {% else %}
+                            Deny
+                            {% endif %}
+                        </td>
+                        <!--anonymous users ok-->
+                        <td>
+                            {% if scene.anonymous_users %}
+                            <b>Allow</b>
                             {% else %}
                             Deny
                             {% endif %}
