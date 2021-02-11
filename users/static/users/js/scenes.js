@@ -77,7 +77,8 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
         if (e.target.value &&
             [...document.getElementById('userSceneDatalist').options].findIndex((o) => o.value === e.target.value) !== -1) {
             window.userSceneId = e.target.value;
-            userSceneUrl.value = `${window.location.protocol}//${window.location.hostname}${window.location.port}/${e.target.value}`
+            const port = (location.port ? ':' + location.port : '');
+            userSceneUrl.value = `${window.location.protocol}//${window.location.hostname}${port}/${e.target.value}`
             deleteUserSceneBtn.value = e.target.value;
             toggleUserSceneButtons(true);
         } else {
@@ -91,7 +92,8 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
         if (e.target.value &&
             [...document.getElementById('publicSceneDatalist').options].findIndex((o) => o.value === e.target.value) !== -1) {
             window.publicSceneId = e.target.value;
-            publicSceneUrl.value = `${window.location.protocol}//${window.location.hostname}${window.location.port}/${e.target.value}`
+            const port = (location.port ? ':' + location.port : '');
+            publicSceneUrl.value = `${window.location.protocol}//${window.location.hostname}${port}/${e.target.value}`
             togglePublicSceneButtons(true);
             console.log("valid public", e.target.value)
         } else {
@@ -105,7 +107,8 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
 
     publicSceneInput.addEventListener('change', (e) => {
         if (e.target.value) {
-            publicSceneUrl.value = `${window.location.protocol}//${window.location.hostname}${window.location.port}/${e.target.value}`
+            const port = (location.port ? ':' + location.port : '');
+            publicSceneUrl.value = `${window.location.protocol}//${window.location.hostname}${port}/${e.target.value}`
         } else {
             publicSceneUrl.value = "";
         }
@@ -191,7 +194,8 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
             sceneId,
         }).then((res) => {
             Swal.fire('Clone success!', `${res.data.objectsCloned} objects cloned into new scene`, 'success');
-            cloneSceneUrl.value = `${window.location.protocol}//${window.location.hostname}${window.location.port}/${newSceneNameInput.value}`
+            const port = (location.port ? ':' + location.port : '');
+            cloneSceneUrl.value = `${window.location.protocol}//${window.location.hostname}${port}/${newSceneNameInput.value}`
             document.getElementById('doCloneSceneContainer').classList.add('d-none');
             document.getElementById('cloneSceneCreated').classList.remove('d-none');
             newSceneNameInput.setAttribute('readonly', 'readonly')
