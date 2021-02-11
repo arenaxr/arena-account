@@ -53,7 +53,7 @@
         <!-- Container wrapper -->
         <div class="container-fluid">
             <!-- Navbar brand -->
-            <a class="navbar-brand" href="{{request.scheme}}://{{request.get_host}}">ARENA</a>
+            <a class="navbar-brand" href="{{request.scheme}}://{{request.get_host}}/user/scenes">ARENA</a>
 
             <!-- Toggle button -->
             <button class="navbar-toggler" type="button" data-mdb-toggle="collapse"
@@ -127,12 +127,12 @@
     {% endblock content %}
 
     <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
-        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
-        crossorigin="anonymous"></script>
+        integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous">
+    </script>
     <script type="text/javascript" src="{% static 'users/vendor/mdb/mdb.min.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
-        crossorigin="anonymous"></script>
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous">
+    </script>
     <script type="text/javascript" src="{% static 'users/vendor/sweetalert2.min.js' %}"></script>
 
     <script>
@@ -142,7 +142,8 @@
                 location.href = localStorage.getItem("request_uri");
             } else {
                 //redirect user to root page
-                location.href = `${window.location.protocol}//${window.location.host}`;
+                location.href =
+                    `${window.location.protocol}//${window.location.host}${window.location.port}/user/scenes`;
             }
         }
     </script>
