@@ -12,11 +12,13 @@ class Scene(models.Model):
     """Model representing a scene (but not a specific copy of a scene)."""
 
     name = models.CharField(max_length=200, blank=False, unique=True)
-    summary = models.TextField(max_length=1000)
-    editors = models.ManyToManyField(User)
+    summary = models.TextField(max_length=1000, blank=True)
+    editors = models.ManyToManyField(User, blank=True)
     creation_date = models.DateTimeField(auto_now_add=True)
-    public_read = models.BooleanField(default=SCENE_PUBLIC_READ_DEF)
-    public_write = models.BooleanField(default=SCENE_PUBLIC_WRITE_DEF)
+    public_read = models.BooleanField(
+        default=SCENE_PUBLIC_READ_DEF, blank=True)
+    public_write = models.BooleanField(
+        default=SCENE_PUBLIC_WRITE_DEF, blank=True)
 
     def save(self, *args, **kwargs):
         self.full_clean()  # performs regular validation then clean()

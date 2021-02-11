@@ -34,7 +34,7 @@ from .forms import (
     NewSceneForm,
     SocialSignupForm,
     UpdateSceneForm,
-    UpdateStaffForm,
+    UpdateStaffForm, SceneForm
 )
 from .models import Scene
 from .mqtt import generate_mqtt_token
@@ -172,51 +172,51 @@ def profile_update_scene(request):
     """
     if request.method != "POST":
         return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
-    form = UpdateSceneForm(request.POST)
     if not request.user.is_authenticated:
         return JsonResponse(
             {"error": "Not authenticated."}, status=status.HTTP_403_FORBIDDEN
         )
+    form = UpdateSceneForm(request.POST)
     if not form.is_valid():
         return JsonResponse(
             {"error": "Invalid parameters"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
-    username = request.user.username
-    name = form.cleaned_data["save"]
-    if not name:
-        name = form.cleaned_data['edit']
-    elif not name:
-        name = form.cleaned_data['delete']
-    public_read = form.cleaned_data['public_read']
-    public_write = form.cleaned_data['public_write']
-    try:
-        scene = Scene.objects.get(name=name)
-    except Scene.DoesNotExist:
-        return JsonResponse(
-            {"error": f"Unable to update existing scene: {name}, not found"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
-    if not scene_permission(user=request.user, scene=name):
-        return JsonResponse(
-            {"error": f"User does not have permission for: {name}."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-    if "save" in request.POST:
-        scene.public_read = public_read
-        scene.public_write = public_write
-        scene.save()
-    elif 'edit' in request.POST:
+    if "edit" in request.POST:
+        name = form.cleaned_data["edit"]
         return redirect(f"profile/scenes/{name}")
-    elif 'delete' in request.POST:
-        # delete account scene data
-        scene.delete()
-        # delete persist scene data
-        token = generate_mqtt_token(
-            user=request.user, username=request.user.username,)
-        delete_scene_objects(name, token)
 
     return redirect("user_profile")
+
+
+def scene_profile(request, pk):
+    if not scene_permission(user=request.user, scene=pk):
+        return JsonResponse({"error": f"User does not have permission for: {pk}."}, status=status.HTTP_400_BAD_REQUEST)
+    # now, make sure scene exists before the other commands are tried
+    try:
+        scene = Scene.objects.get(name=pk)
+    except Scene.DoesNotExist:
+        return JsonResponse({"message": "The scene does not exist"}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'POST':
+        if "save" in request.POST:
+            form = SceneForm(instance=scene, data=request.POST)
+            if form.is_valid():
+                form.save()
+                return redirect("user_profile")
+        elif "delete" in request.POST:
+            # delete account scene data
+            scene.delete()
+            # delete persist scene data
+            token = generate_mqtt_token(
+                user=request.user, username=request.user.username)
+            delete_scene_objects(pk, token)
+            return redirect("user_profile")
+    else:
+        form = SceneForm(instance=scene)
+
+    return render(request=request, template_name="users/scene_profile.html",
+                  context={"scene": scene, "form": form})
 
 
 @api_view(["POST", "GET", "PUT", "DELETE"])
@@ -392,21 +392,6 @@ def user_profile(request):
         template_name="users/user_profile.html",
         context={"user": request.user, "scenes": scenes, "staff": staff},
     )
-
-
-def scene_profile(request, pk):
-    if not scene_permission(user=request.user, scene=pk):
-        return JsonResponse({'error': f"User does not have permission for: {pk}."}, status=status.HTTP_400_BAD_REQUEST)
-    # now, make sure scene exists before the other commands are tried
-    try:
-        scene = Scene.objects.get(name=pk)
-    except Scene.DoesNotExist:
-        return JsonResponse({'message': 'The scene does not exist'}, status=status.HTTP_404_NOT_FOUND)
-
-    SceneFormSet = modelformset_factory(Scene, exclude=('id', 'summary'))
-    formset = SceneFormSet(queryset=Scene.objects.filter(name=pk))
-    return render(request=request, template_name="users/scene_profile.html",
-                  context={"user": request.user, 'formset': formset})
 
 
 def login_callback(request):

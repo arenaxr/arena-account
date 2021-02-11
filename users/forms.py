@@ -48,8 +48,17 @@ class UpdateSceneForm(forms.Form):
     )
 
 
-class SceneForm(ModelForm):
+class SceneForm(forms.ModelForm):
+    # editors = forms.SelectMultiple(widget=forms.SelectMultiple(
+    #     attrs={"class": "selectpicker",  "data-live-search": "true"}))
+    editors = forms.ModelMultipleChoiceField(
+        queryset=User.objects.all(),
+        widget=forms.SelectMultiple(attrs={"class": "form-select"}))
+    public_read = forms.BooleanField(
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}))
+    public_write = forms.BooleanField(
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}))
+
     class Meta:
         model = Scene
-        #fields = ['name', 'editors']
-        fields = '__all__'
+        fields = ('public_read', 'public_write', 'editors')
