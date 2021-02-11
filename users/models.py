@@ -6,6 +6,7 @@ from django.urls import reverse
 # Scene permissions defaults
 SCENE_PUBLIC_READ_DEF = True
 SCENE_PUBLIC_WRITE_DEF = False
+SCENE_ANON_USERS_DEF = True
 
 
 class Scene(models.Model):
@@ -19,6 +20,8 @@ class Scene(models.Model):
         default=SCENE_PUBLIC_READ_DEF, blank=True)
     public_write = models.BooleanField(
         default=SCENE_PUBLIC_WRITE_DEF, blank=True)
+    anonymous_users = models.BooleanField(
+        default=SCENE_ANON_USERS_DEF, blank=True)
 
     def save(self, *args, **kwargs):
         self.full_clean()  # performs regular validation then clean()

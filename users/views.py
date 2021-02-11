@@ -518,6 +518,10 @@ def mqtt_token(request):
         ctrlid1=ctrlid1,
         ctrlid2=ctrlid2,
     )
+    if not token:
+        return JsonResponse(
+            {"error": "Authentication required for this scene."}, status=status.HTTP_403_FORBIDDEN
+        )
     data = {
         "username": username,
         "token": token.decode("utf-8"),
