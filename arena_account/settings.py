@@ -125,12 +125,10 @@ SOCIALACCOUNT_PROVIDERS = {
             "secret": os.getenv("GAUTH_CLIENTSECRET"),
             "key": "",
         },
-        "SCOPE": ["profile", "email",],
-        "AUTH_PARAMS": {"access_type": "online",},
+        "SCOPE": ["profile", "email", ],
+        "AUTH_PARAMS": {"access_type": "online", },
     }
 }
-
-CRISPY_TEMPLATE_PACK = "bootstrap4"
 
 MESSAGE_TAGS = {
     messages.DEBUG: "alert-secondary",
@@ -143,8 +141,8 @@ MESSAGE_TAGS = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler",},},
-    "root": {"handlers": ["console"], "level": "WARNING",},
+    "handlers": {"console": {"class": "logging.StreamHandler", }, },
+    "root": {"handlers": ["console"], "level": "WARNING", },
     "loggers": {
         "*": {
             "handlers": ["console"],
@@ -203,9 +201,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", },
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator", },
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator", },
 ]
 
 

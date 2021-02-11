@@ -1,0 +1,47 @@
+{% extends "users/header.html" %}
+
+{% block content %}
+
+{% include 'users/includes/messages.html' %}
+
+<!-- Scene Permissions Detail-->
+<div class="container-fluid">
+    <div class="row d-flex justify-content-center align-items-center">
+        <div class="col-lg-7 col-md-8 shadow rounded bg-white p-5">
+
+            <h1>Edit Scene Permissions</h1>
+            <form action="" method="post">
+                {% csrf_token %}
+                <table class="table">
+                    <tr>
+                        <td><b>Scene:</b></td>
+                        <td><b>{{ scene.name }}</b></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td><b>Public Read:</b></td>
+                        <td>{{ form.public_read }}</td>
+                        <td>Allow any user to view the scene (default: on).</td>
+                    </tr>
+                    <tr>
+                        <td><b>Public Write:</b></td>
+                        <td>{{ form.public_write }}</td>
+                        <td>Allow any user to edit the scene (default: off).</td>
+                    </tr>
+                    <tr>
+                        <td><b>Editors:</b></td>
+                        <td>{{ form.editors }}</td>
+                        <td>Select/deselect specific editors.<br>Windows: Hold down the control (ctrl) button.<br>
+                            Mac: Hold down the command button.</td>
+                    </tr>
+                </table>
+                <button type="submit" class="btn btn-primary btn-sm" name="save">Save</button>
+                <button type="submit" class="btn btn-primary btn-sm" name="delete"
+                    onclick="return confirm('Are you sure you want to delete {{ scene.name }}?');">Delete</button>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock content %}

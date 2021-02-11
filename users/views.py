@@ -30,15 +30,15 @@ from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
 
 from .forms import (
-    NewSceneForm,
-    NewUserForm,
+    SceneForm,
     SocialSignupForm,
     UpdateSceneForm,
-    UpdateStaffForm,
+    UpdateStaffForm
 )
 from .models import Scene
 from .mqtt import generate_mqtt_token
-from .persistence import delete_scene_objects, get_persist_scenes, scenes_read_token
+from .persistence import (delete_scene_objects, get_persist_scenes,
+                          scenes_read_token)
 from .serializers import SceneNameSerializer, SceneSerializer
 
 STAFF_ACCTNAME = "public"
@@ -82,89 +82,6 @@ def logout_request(request):
     return redirect("login")
 
 
-class NewSceneSchema(AutoSchema):
-    def __init__(self):
-        super(NewSceneSchema, self).__init__()
-
-    def get_manual_fields(self, path, method):
-        extra_fields = [
-            coreapi.Field(
-                "scene",
-                required=True,
-                location="form",
-                type="string",
-                description="The scene name, without slash '/' or namespace.",
-            ),
-            coreapi.Field(
-                "is_public",
-                required=False,
-                location="form",
-                type="boolean",
-                description="True to use 'public' namespace, False for user namespace.",
-            ),
-        ]
-        manual_fields = super().get_manual_fields(path, method)
-        return manual_fields + extra_fields
-
-
-@api_view(["POST"])
-@permission_classes([permissions.IsAuthenticated])
-@schema(NewSceneSchema())  # TODO: schema not working yet
-def new_scene(request):
-    """
-    Add a new scene to the known scenes table, either 'public' or user namespaced.
-    """
-    return _new_scene(request)
-
-
-@permission_classes([permissions.IsAuthenticated])
-def profile_new_scene(request):
-    response = _new_scene(request)
-    if response.status_code != 200:
-        return response
-    return redirect("user_profile")
-
-
-def _new_scene(request):
-    # add new scene editor
-    form = NewSceneForm(request.POST)
-    if not request.user.is_authenticated:
-        return JsonResponse(
-            {"error": "Not authenticated."}, status=status.HTTP_403_FORBIDDEN
-        )
-    if not form.is_valid():
-        return JsonResponse(
-            {"error": "Invalid parameters"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
-    username = request.user.username
-    scene = form.cleaned_data["scene"]
-    print(f"_new_scene, is_public '{request.POST.get('is_public')}'")
-    is_public = form.cleaned_data["is_public"]
-    if is_public and request.user.is_staff:
-        scene = f"{STAFF_ACCTNAME}/{scene}"  # public namespace
-    else:
-        scene = f"{username}/{scene}"  # user namespace for normal users
-    if not scene_permission(user=request.user, scene=scene):
-        return JsonResponse(
-            {"error": f"User does not have permission for: {name}."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-    if Scene.objects.filter(name=scene).exists():
-        return JsonResponse(
-            {"error": f"Unable to claim existing scene: {scene}, use admin panel"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-    if User.objects.filter(username=username).exists():
-        s = Scene(
-            name=scene,
-            summary=f"User {username} adding new scene {scene} to account database.",
-        )
-        s.save()
-
-    return JsonResponse({})
-
-
 @permission_classes([permissions.IsAuthenticated])
 def profile_update_scene(request):
     """
@@ -172,46 +89,51 @@ def profile_update_scene(request):
     """
     if request.method != "POST":
         return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
-    form = UpdateSceneForm(request.POST)
     if not request.user.is_authenticated:
         return JsonResponse(
             {"error": "Not authenticated."}, status=status.HTTP_403_FORBIDDEN
         )
+    form = UpdateSceneForm(request.POST)
     if not form.is_valid():
         return JsonResponse(
             {"error": "Invalid parameters"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
-    username = request.user.username
-    name = form.cleaned_data["save"]
-    if not name:
-        name = form.cleaned_data["delete"]
-    public_read = form.cleaned_data["public_read"]
-    public_write = form.cleaned_data["public_write"]
-    try:
-        scene = Scene.objects.get(name=name)
-    except Scene.DoesNotExist:
-        return JsonResponse(
-            {"error": f"Unable to update existing scene: {name}, not found"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
-    if not scene_permission(user=request.user, scene=name):
-        return JsonResponse(
-            {"error": f"User does not have permission for: {name}."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-    if "save" in request.POST:
-        scene.public_read = public_read
-        scene.public_write = public_write
-        scene.save()
-    elif "delete" in request.POST:
-        # delete account scene data
-        scene.delete()
-        # delete persist scene data
-        token = generate_mqtt_token(user=request.user, username=request.user.username,)
-        delete_scene_objects(name, token)
+    if "edit" in request.POST:
+        name = form.cleaned_data["edit"]
+        return redirect(f"profile/scenes/{name}")
 
     return redirect("user_profile")
+
+
+def scene_perm_detail(request, pk):
+    if not scene_permission(user=request.user, scene=pk):
+        return JsonResponse({"error": f"User does not have permission for: {pk}."}, status=status.HTTP_400_BAD_REQUEST)
+    # now, make sure scene exists before the other commands are tried
+    try:
+        scene = Scene.objects.get(name=pk)
+    except Scene.DoesNotExist:
+        return JsonResponse({"message": "The scene does not exist"}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'POST':
+        if "save" in request.POST:
+            form = SceneForm(instance=scene, data=request.POST)
+            if form.is_valid():
+                form.save()
+                return redirect("user_profile")
+        elif "delete" in request.POST:
+            # delete account scene data
+            scene.delete()
+            # delete persist scene data
+            token = generate_mqtt_token(
+                user=request.user, username=request.user.username)
+            delete_scene_objects(pk, token)
+            return redirect("user_profile")
+    else:
+        form = SceneForm(instance=scene)
+
+    return render(request=request, template_name="users/scene_perm_detail.html",
+                  context={"scene": scene, "form": form})
 
 
 @api_view(["POST", "GET", "PUT", "DELETE"])
@@ -357,7 +279,8 @@ def scene_permission(user, scene):
         return True
     else:
         try:
-            editor_scene = Scene.objects.get(name=scene, editors=user)  # editor
+            editor_scene = Scene.objects.get(
+                name=scene, editors=user)  # editor
         except Scene.ObjectDoesNotExist:
             return False
         return True
@@ -454,7 +377,7 @@ def user_state(request):
         )
     else:  # AnonymousUser
         return JsonResponse(
-            {"authenticated": user.is_authenticated,}, status=status.HTTP_200_OK
+            {"authenticated": user.is_authenticated, }, status=status.HTTP_200_OK
         )
 
 
@@ -529,7 +452,8 @@ class MqttTokenSchema(AutoSchema):
 def get_user_from_id_token(gid_token):
     if not gid_token:
         raise ValueError("Missing token.")
-    gclient_ids = [os.environ["GAUTH_CLIENTID"], os.environ["GAUTH_INSTALLED_CLIENTID"]]
+    gclient_ids = [os.environ["GAUTH_CLIENTID"],
+                   os.environ["GAUTH_INSTALLED_CLIENTID"]]
     idinfo = id_token.verify_oauth2_token(gid_token, requests.Request())
     if idinfo["aud"] not in gclient_ids:
         raise ValueError("Could not verify audience.")

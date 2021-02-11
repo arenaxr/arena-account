@@ -37,17 +37,17 @@ urlpatterns = [
     path("profile", views.user_profile, name="user_profile"),
     path("scenes", views.scene_landing, name="scenes"),
     path("login_callback", views.login_callback, name="login_callback"),
+    re_path(
+        r'^profile/scenes/(?P<pk>[^\/]+\/[^\/]+)$', views.scene_perm_detail),
     # endpoints
     path("mqtt_auth", views.mqtt_token, name="mqtt_token"),
     path("user_state", views.user_state, name="user_state"),
     path(
         "profile_update_staff", views.profile_update_staff, name="profile_update_staff"
     ),
-    path("profile_new_scene", views.profile_new_scene, name="profile_new_scene"),
     path(
         "profile_update_scene", views.profile_update_scene, name="profile_update_scene"
     ),
-    path("new_scene", views.new_scene, name="new_scene"),
     path("my_scenes", views.my_scenes, name="my_scenes"),
     re_path(
         r"^scenes/(?P<pk>[^\/]+\/[^\/]+)$", views.scene_detail
@@ -63,5 +63,6 @@ urlpatterns = [
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
-    path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
+    path("redoc/", schema_view.with_ui("redoc",
+                                       cache_timeout=0), name="schema-redoc"),
 ]

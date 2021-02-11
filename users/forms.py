@@ -3,6 +3,9 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.forms import ModelForm
+
+from .models import Scene
 
 
 class SocialSignupForm(_SocialSignupForm):
@@ -22,35 +25,25 @@ class SocialSignupForm(_SocialSignupForm):
             self.add_error("username", msg)
 
 
-class NewUserForm(UserCreationForm):
-    email = forms.EmailField(required=True)
-
-    class Meta:
-        model = User
-        fields = (
-            "first_name",
-            "last_name",
-            "email",
-            "username",
-            "password1",
-            "password2",
-        )
-
-
 class UpdateStaffForm(forms.Form):
     staff_username = forms.CharField(label="staff_username", required=True)
-    is_staff = forms.BooleanField(label="is_staff", required=False, initial=False)
-
-
-class NewSceneForm(forms.Form):
-    scene = forms.CharField(label="scene", required=True)
-    is_public = forms.BooleanField(label="is_public", required=False, initial=False)
+    is_staff = forms.BooleanField(
+        label="is_staff", required=False, initial=False)
 
 
 class UpdateSceneForm(forms.Form):
-    save = forms.CharField(label="save", required=False)
-    delete = forms.CharField(label="delete", required=False)
-    public_read = forms.BooleanField(label="public_read", required=False, initial=True)
+    edit = forms.CharField(label="edit", required=False)
+
+
+class SceneForm(forms.ModelForm):
+    editors = forms.ModelMultipleChoiceField(
+        queryset=User.objects.all(),
+        widget=forms.SelectMultiple(attrs={"class": "form-select"}), required=False)
+    public_read = forms.BooleanField(
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}), required=False)
     public_write = forms.BooleanField(
-        label="public_write", required=False, initial=True
-    )
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}), required=False)
+
+    class Meta:
+        model = Scene
+        fields = ("public_read", "public_write", "editors")
