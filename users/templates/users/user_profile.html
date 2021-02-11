@@ -11,15 +11,30 @@
 
             {% if user.is_authenticated %}
             <h1>User Profile</h1>
-            Username: {{ user.get_username }}<br>
-            Name: {{ user.first_name }} {{ user.last_name }}<br>
-            Email: {{ user.email }}<br>
-            Role:
-            {% if user.is_superuser %} Admin
-            {% elif user.is_staff %} Staff
-            {% elif user.is_authenticated %} User
-            {% else %} Anonymous
-            {% endif %}<br>
+            <table>
+                <tr>
+                    <td><b>Username: </b></td>
+                    <td>{{ user.get_username }}</td>
+                </tr>
+                <tr>
+                    <td><b>Name: </b></td>
+                    <td>{{ user.first_name }} {{ user.last_name }}</td>
+                </tr>
+                <tr>
+                    <td><b>Email: </b></td>
+                    <td>{{ user.email }}</td>
+                </tr>
+                <tr>
+                    <td><b>Role: </b></td>
+                    <td>
+                        {% if user.is_superuser %} Admin
+                        {% elif user.is_staff %} Staff
+                        {% elif user.is_authenticated %} User
+                        {% else %} Anonymous
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
             <br>
             {% if user.is_superuser %}
             <!-- Set or Remove user as Staff -->
