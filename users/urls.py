@@ -41,6 +41,7 @@ urlpatterns = [
         r'^profile/scenes/(?P<pk>[^\/]+\/[^\/]+)$', views.scene_perm_detail),
     # endpoints
     path("mqtt_auth", views.mqtt_token, name="mqtt_token"),
+    path("jitsi_auth", views.jitsi_token, name="jitsi_token"),
     path("user_state", views.user_state, name="user_state"),
     path(
         "profile_update_staff", views.profile_update_staff, name="profile_update_staff"

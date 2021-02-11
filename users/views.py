@@ -1,12 +1,15 @@
+import datetime
 import json
 import logging
 import os
 import secrets
 
 import coreapi
+import jwt
 from allauth.socialaccount import helpers
 from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.views import SignupView as SocialSignupViewDefault
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
@@ -29,12 +32,8 @@ from rest_framework.decorators import api_view, permission_classes, schema
 from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
 
-from .forms import (
-    SceneForm,
-    SocialSignupForm,
-    UpdateSceneForm,
-    UpdateStaffForm
-)
+from .forms import (SceneForm, SocialSignupForm, UpdateSceneForm,
+                    UpdateStaffForm)
 from .models import Scene
 from .mqtt import generate_mqtt_token
 from .persistence import (delete_scene_objects, get_persist_scenes,
@@ -534,6 +533,66 @@ def mqtt_token(request):
     response = HttpResponse(json.dumps(data), content_type="application/json")
     response.set_cookie(
         "mqtt_token",
+        token.decode("utf-8"),
+        max_age=86400000,
+        httponly=True,
+        secure=True,
+    )
+    return response
+
+
+@api_view(["POST"])
+def jitsi_token(request):
+    """
+    Request a Jitsi JWT token with permissions for an anonymous or authenticated user given incoming parameters.
+    https://github.com/jitsi/lib-jitsi-meet/blob/master/doc/tokens.md
+    """
+    user = request.user
+    if user.is_authenticated:
+        username = user.username
+    else:  # AnonymousUser
+        username = request.POST.get("username", None)
+
+    scene = request.POST.get("scene", None)
+    service_id = request.POST.get("service_id", None)
+    app_id = request.POST.get("app_id", None)
+
+    if not username or not scene or not service_id or not app_id:
+        return JsonResponse(
+            {"error": "Invalid parameters"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    privkeyfile = settings.MQTT_TOKEN_PRIVKEY  # TODO: use new key
+    if not os.path.exists(privkeyfile):
+        print("Error: keyfile not found")
+        return None
+    with open(privkeyfile) as privatefile:
+        private_key = privatefile.read()
+
+    if user.is_authenticated:
+        duration = datetime.timedelta(days=1)
+    else:
+        duration = datetime.timedelta(hours=6)
+
+    user_data = {"id": username}
+    if user.is_authenticated:
+        user_data["name"] = user.get_full_name()
+        user_data["email"] = user.email
+    payload = {
+        "context": {"user": user_data},
+        "aud": service_id,
+        "iss": app_id,
+        # TODO: determine proper "sub": "meet.jit.si",
+        "sub": username,
+        "room": f"{scene}",  # TODO: format room name
+        "exp": datetime.datetime.utcnow() + duration
+    }
+    token = jwt.encode(payload, private_key, algorithm="RS256")
+    data = {"token": token.decode("utf-8")}
+    response = HttpResponse(json.dumps(data), content_type="application/json")
+    response.set_cookie(
+        "jitsi_token",
         token.decode("utf-8"),
         max_age=86400000,
         httponly=True,
