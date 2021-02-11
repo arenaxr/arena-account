@@ -49,8 +49,6 @@ class UpdateSceneForm(forms.Form):
 
 
 class SceneForm(forms.ModelForm):
-    # editors = forms.SelectMultiple(widget=forms.SelectMultiple(
-    #     attrs={"class": "selectpicker",  "data-live-search": "true"}))
     editors = forms.ModelMultipleChoiceField(
         queryset=User.objects.all(),
         widget=forms.SelectMultiple(attrs={"class": "form-select"}))

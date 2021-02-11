@@ -44,11 +44,9 @@ urlpatterns = [
     path(
         "profile_update_staff", views.profile_update_staff, name="profile_update_staff"
     ),
-    path("profile_new_scene", views.profile_new_scene, name="profile_new_scene"),
     path(
         "profile_update_scene", views.profile_update_scene, name="profile_update_scene"
     ),
-    path("new_scene", views.new_scene, name="new_scene"),
     path("my_scenes", views.my_scenes, name="my_scenes"),
     re_path(
         r"^scenes/(?P<pk>[^\/]+\/[^\/]+)$", views.scene_detail
