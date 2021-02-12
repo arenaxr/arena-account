@@ -37,7 +37,7 @@ class UpdateSceneForm(forms.Form):
 
 class SceneForm(forms.ModelForm):
     editors = forms.ModelMultipleChoiceField(
-        queryset=User.objects.all(),
+        queryset=User.objects.all().order_by('username'),
         widget=forms.SelectMultiple(attrs={"class": "form-select"}), required=False)
     public_read = forms.BooleanField(
         widget=forms.CheckboxInput(attrs={"class": "form-check-input"}), required=False)

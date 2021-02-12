@@ -491,6 +491,11 @@ def mqtt_token(request):
                 {"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN
             )
 
+    if not username:
+        return JsonResponse(
+            {"error": "Invalid parameters"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
     if user.is_authenticated:
         username = user.username
     else:  # AnonymousUser
