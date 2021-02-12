@@ -132,10 +132,8 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
         params.append('delete', deleteUserSceneBtn.value);
         if (confirm(`Are you sure you want to delete ${e.target.value}?`)) {
             const deletes = [
-                axios.post(`profile_update_scene`, params, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}),
-                axios.delete(`/persist/${deleteUserSceneBtn.value}`, params, {
-                    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-                })
+                axios.delete(`scenes/${deleteUserSceneBtn.value}`),
+                axios.delete(`/persist/${deleteUserSceneBtn.value}`)
             ]
             axios.all(deletes).then(() => {
                 Swal.fire({
