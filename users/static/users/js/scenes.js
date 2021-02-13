@@ -127,12 +127,11 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
 
     deleteUserSceneBtn.addEventListener('click', (e) => {
         const csrfmiddlewaretoken = document.getElementsByName("csrfmiddlewaretoken")[0].value
-        const params = new URLSearchParams();
-        params.append('csrfmiddlewaretoken', csrfmiddlewaretoken);
-        params.append('delete', deleteUserSceneBtn.value);
         if (confirm(`Are you sure you want to delete ${e.target.value}?`)) {
             const deletes = [
-                axios.delete(`scenes/${deleteUserSceneBtn.value}`),
+                axios.delete(`scenes/${deleteUserSceneBtn.value}`, {
+                     headers: {'X-CSRFToken': csrfmiddlewaretoken},
+                }),
                 axios.delete(`/persist/${deleteUserSceneBtn.value}`)
             ]
             axios.all(deletes).then(() => {
