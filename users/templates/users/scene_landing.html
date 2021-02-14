@@ -35,6 +35,7 @@
                                     </label>
                                     <select aria-label="Scene Select" id="userSceneSelect"
                                             data-placeholder="Search My Scene Names" data-allow-clear="1">
+                                        <option></option>
                                         {% for scene in scenes %}
                                             {% if scene.namespace == user.get_username %}
                                                 <option value="{{ scene.name }}">{{ scene.name }}</option>
@@ -88,6 +89,7 @@
                                     </label>
                                     <select aria-label="Scene Select" id="publicSceneSelect"
                                             data-placeholder="Search Public Scene Names" data-allow-clear="1">
+                                        <option></option>
                                         {% for scene in scenes %}
                                             {% if scene.namespace == "public" %}
                                                 <option value="{{ scene.name }}">{{ scene.name }}</option>
