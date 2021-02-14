@@ -29,9 +29,10 @@
                         <h3 class="mb-3">My Scenes</h3>
                         <div class="row text-center">
                             <div class="col">
-                                <label aria-hidden="true" class="form-label d-none" for="userSceneSelect">Search My
-                                    Scenes</label>
-                                <div class="input-group">
+                                <div class="form-group">
+                                    <label aria-hidden="true" class="form-label d-none" for="userSceneSelect">
+                                        Search My Scenes
+                                    </label>
                                     <select aria-label="Scene Select" id="userSceneSelect"
                                             data-placeholder="Search My Scene Names">
                                         {% for scene in scenes %}
@@ -40,7 +41,6 @@
                                             {% endif %}
                                         {% endfor %}
                                     </select>
-                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
                                 </div>
                             </div>
                         </div>
@@ -82,9 +82,10 @@
                         <h3 class="mb-3">Discover Public Scenes</h3>
                         <div class="row text-center">
                             <div class="col">
-                                <label aria-hidden="true" class="form-label d-none" for="publicSceneSelect">Search Public
-                                    Scenes</label>
-                                <div class="input-group">
+                                <div class="form-group">
+                                    <label aria-hidden="true" class="form-label d-none" for="publicSceneSelect">
+                                        Search Public Scenes
+                                    </label>
                                     <select aria-label="Scene Select" id="publicSceneSelect"
                                             data-placeholder="Search Public Scene Names">
                                         {% for scene in scenes %}
@@ -93,7 +94,6 @@
                                             {% endif %}
                                         {% endfor %}
                                     </select>
-                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
                                 </div>
                             </div>
                         </div>
