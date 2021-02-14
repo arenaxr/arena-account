@@ -38,6 +38,16 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
             window.location.hash = page;
         }
     }
+     $('select').each(function () {
+            $(this).select2({
+              theme: 'bootstrap4',
+              width: $(this).data('width') ? $(this).data('width') : $(this).hasClass('w-100') ? '100%' : 'style',
+              placeholder: $(this).data('placeholder'),
+              allowClear: Boolean($(this).data('allow-clear')),
+              closeOnSelect: !$(this).attr('multiple'),
+            });
+      });
+
 
     const userSceneSelect = document.getElementById('userSceneSelect');
     const userSceneUrl = document.getElementById('userSceneUrl');
@@ -68,8 +78,8 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
         })
     }
 
-    userSceneSelect.addEventListener('change', checkUserSceneSelect)
-    publicSceneSelect.addEventListener('change', checkPublicSceneSelect)
+    $(userSceneSelect).on('select2:select', checkUserSceneSelect);
+    $(publicSceneSelect).on('select2:select', checkPublicSceneSelect);
 
     function checkUserSceneSelect(e) {
         if (e.target.value) {
@@ -204,14 +214,4 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
 
 
     window.dispatchEvent(new Event('hashchange')); // Manually trigger initial hash routing
-
-    $('select').each(function () {
-        $(this).select2({
-          theme: 'bootstrap4',
-          width: $(this).data('width') ? $(this).data('width') : $(this).hasClass('w-100') ? '100%' : 'style',
-          placeholder: $(this).data('placeholder'),
-          allowClear: Boolean($(this).data('allow-clear')),
-          closeOnSelect: !$(this).attr('multiple'),
-        });
-  });
 });
