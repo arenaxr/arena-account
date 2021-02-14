@@ -29,20 +29,19 @@
                         <h3 class="mb-3">My Scenes</h3>
                         <div class="row text-center">
                             <div class="col">
-                                <label aria-hidden="true" class="form-label d-none" for="userSceneInput">Search My
+                                <label aria-hidden="true" class="form-label d-none" for="userSceneSelect">Search My
                                     Scenes</label>
                                 <div class="input-group">
-                                    <input class="form-control" id="userSceneInput" list="userSceneDatalist"
-                                           placeholder="Search Scene Names" autocomplete="off">
+                                    <select aria-label="Scene Select" id="userSceneSelect"
+                                            data-placeholder="Search My Scene Names">
+                                        {% for scene in scenes %}
+                                            {% if scene.namespace == user.get_username %}
+                                                <option value="{{ scene.name }}">{{ scene.name }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
                                     <span class="input-group-text"><i class="fas fa-search"></i></span>
                                 </div>
-                                <datalist aria-label="Scene Select" id="userSceneDatalist">
-                                    {% for scene in scenes %}
-                                        {% if scene.namespace == user.get_username %}
-                                            <option value="{{ scene.name }}"></option>
-                                        {% endif %}
-                                    {%  endfor %}
-                                </datalist>
                             </div>
                         </div>
                         <div class="row g-1 mb-3">
@@ -83,18 +82,17 @@
                         <h3 class="mb-3">Discover Public Scenes</h3>
                         <div class="row text-center">
                             <div class="col">
-                                <label aria-hidden="true" class="form-label d-none" for="publicSceneInput">Search Public
+                                <label aria-hidden="true" class="form-label d-none" for="publicSceneSelect">Search Public
                                     Scenes</label>
-                                <datalist aria-label="Scene Select" id="publicSceneDatalist">
-                                    {% for scene in scenes %}
-                                        {% if scene.namespace == "public" %}
-                                            <option value="{{ scene.name }}"></option>
-                                        {% endif %}
-                                    {%  endfor %}
-                                </datalist>
                                 <div class="input-group">
-                                    <input class="form-control" id="publicSceneInput" list="publicSceneDatalist"
-                                           placeholder="Search Scene Names" autocomplete="off">
+                                    <select aria-label="Scene Select" id="publicSceneSelect"
+                                            data-placeholder="Search Public Scene Names">
+                                        {% for scene in scenes %}
+                                            {% if scene.namespace == "public" %}
+                                                <option value="{{ scene.name }}">{{ scene.name }}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
                                     <span class="input-group-text"><i class="fas fa-search"></i></span>
                                 </div>
                             </div>

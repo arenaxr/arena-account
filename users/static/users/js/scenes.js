@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
         }
     }
 
-    const userSceneInput = document.getElementById('userSceneInput');
+    const userSceneSelect = document.getElementById('userSceneSelect');
     const userSceneUrl = document.getElementById('userSceneUrl');
 
     const enterUserSceneBtn = document.getElementById('enterUserSceneBtn');
@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
     const deleteUserSceneBtn = document.getElementById('deleteUserSceneBtn');
     const copyUserSceneUrlBtn = document.getElementById('copyUserSceneUrlBtn')
 
-    const publicSceneInput = document.getElementById('publicSceneInput');
+    const publicSceneSelect = document.getElementById('publicSceneSelect');
     const publicSceneUrl = document.getElementById('publicSceneUrl');
 
     const enterPublicSceneBtn = document.getElementById('enterPublicSceneBtn');
@@ -68,14 +68,11 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
         })
     }
 
-    userSceneInput.addEventListener('change', checkUserSceneInput)
-    userSceneInput.addEventListener('keyup', checkUserSceneInput)
-    publicSceneInput.addEventListener('change', checkPublicSceneInput)
-    publicSceneInput.addEventListener('keyup', checkPublicSceneInput)
+    userSceneSelect.addEventListener('change', checkUserSceneSelect)
+    publicSceneSelect.addEventListener('change', checkPublicSceneSelect)
 
-    function checkUserSceneInput(e) {
-        if (e.target.value &&
-            [...document.getElementById('userSceneDatalist').options].findIndex((o) => o.value === e.target.value) !== -1) {
+    function checkUserSceneSelect(e) {
+        if (e.target.value) {
             window.userSceneId = e.target.value;
             const port = (location.port ? ':' + location.port : '');
             userSceneUrl.value = `${window.location.protocol}//${window.location.hostname}${port}/${e.target.value}`
@@ -88,9 +85,8 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
         }
     }
 
-    function checkPublicSceneInput(e) {
-        if (e.target.value &&
-            [...document.getElementById('publicSceneDatalist').options].findIndex((o) => o.value === e.target.value) !== -1) {
+    function checkPublicSceneSelect(e) {
+        if (e.target.value ) {
             window.publicSceneId = e.target.value;
             const port = (location.port ? ':' + location.port : '');
             publicSceneUrl.value = `${window.location.protocol}//${window.location.hostname}${port}/${e.target.value}`
@@ -104,15 +100,6 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
         }
     }
 
-
-    publicSceneInput.addEventListener('change', (e) => {
-        if (e.target.value) {
-            const port = (location.port ? ':' + location.port : '');
-            publicSceneUrl.value = `${window.location.protocol}//${window.location.hostname}${port}/${e.target.value}`
-        } else {
-            publicSceneUrl.value = "";
-        }
-    });
     copyUserSceneUrlBtn.addEventListener('click', () => {
         userSceneUrl.select();
         userSceneUrl.setSelectionRange(0, 99999); /* For mobile devices */
