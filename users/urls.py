@@ -49,6 +49,7 @@ urlpatterns = [
         "profile_update_scene", views.profile_update_scene, name="profile_update_scene"
     ),
     path("my_scenes", views.my_scenes, name="my_scenes"),
+    path("my_namespaces", views.my_namespaces, name="my_namespaces"),
     re_path(
         r"^scenes/(?P<pk>[^\/]+\/[^\/]+)$", views.scene_detail
     ),  # namespace/scenename

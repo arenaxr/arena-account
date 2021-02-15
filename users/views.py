@@ -41,7 +41,7 @@ from .persistence import (delete_scene_objects, get_persist_scenes,
                           scenes_read_token)
 from .serializers import SceneNameSerializer, SceneSerializer
 
-STAFF_ACCTNAME = "public"
+STAFF_NAMESPACE = "public"
 
 logger = logging.getLogger(__name__)
 logger.info("views.py load test...")
@@ -252,12 +252,27 @@ def profile_update_staff(request):
 
 
 @api_view(["GET"])
+def my_namespaces(request):
+    """
+    Editable entire namespaces headless endpoint for requesting a list of namespaces this user can write to: GET.
+    """
+    namespaces = []
+    if request.user.is_authenticated:
+        namespaces.append(request.user.username)
+    if request.user.is_staff:  # admin/staff
+        namespaces.append(STAFF_NAMESPACE)
+    # TODO: when entire namespaces are shared, they should be added here
+    namespaces.sort()
+    return JsonResponse({"namespaces": namespaces})
+
+
+@api_view(["GET"])
 def my_scenes(request):
     """
     Editable scenes headless endpoint for requesting a list of scenes this user can write to: GET.
     """
     serializer = SceneNameSerializer(get_my_scenes(request.user), many=True)
-    return JsonResponse(serializer.data, safe=False)
+    return JsonResponse(serializer.data, safe=False) # TODO: fix response to remove csrf risk
 
 
 def get_my_scenes(user):
@@ -319,7 +334,7 @@ def scene_landing(request):
     3. Loads the page with 2 lists of scenes: my_scenes and public_scenes.
     """
     my_scenes = get_my_scenes(request.user)
-    public_scenes = Scene.objects.filter(name__startswith=f"public/")
+    public_scenes = Scene.objects.filter(name__startswith=f"{STAFF_NAMESPACE}/")
     return render(
         request=request,
         template_name="users/scene_landing.html",
