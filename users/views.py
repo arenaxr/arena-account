@@ -48,7 +48,9 @@ logger.info("views.py load test...")
 
 
 def index(request):
-    # index is treated as login
+    """
+    Root page load, index is treated as Login page.
+    """
     if request.user.is_authenticated:
         return redirect("scenes")
     else:
@@ -56,6 +58,9 @@ def index(request):
 
 
 def login_request(request):
+    """
+    Login page load, handles user/pass login if required.
+    """
     if request.user.is_authenticated:
         return redirect("scenes")
     else:
@@ -80,6 +85,9 @@ def login_request(request):
 
 
 def logout_request(request):
+    """
+    Removes ID and flushes session data, shows login page.
+    """
     logout(request)
     return redirect("login")
 
@@ -87,7 +95,7 @@ def logout_request(request):
 @permission_classes([permissions.IsAuthenticated])
 def profile_update_scene(request):
     """
-    Update existing scene permissions the user has access to.
+    Handle User Profile page, get page load and post submit requests.
     """
     if request.method != "POST":
         return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
@@ -109,6 +117,9 @@ def profile_update_scene(request):
 
 
 def scene_perm_detail(request, pk):
+    """
+    Handle Scene Permissions Edit page, get page load and post submit requests.
+    """
     if not scene_permission(user=request.user, scene=pk):
         return JsonResponse({"error": f"User does not have permission for: {pk}."}, status=status.HTTP_400_BAD_REQUEST)
     # now, make sure scene exists before the other commands are tried
@@ -141,6 +152,9 @@ def scene_perm_detail(request, pk):
 @api_view(["POST", "GET", "PUT", "DELETE"])
 @permission_classes([permissions.IsAuthenticated])
 def scene_detail(request, pk):
+    """
+    Scene Permissions headless endpoint for editing permission: POST, GET, PUT, DELETE.
+    """
     # check permissions model for namespace
     if not scene_permission(user=request.user, scene=pk):
         return JsonResponse(
@@ -208,7 +222,7 @@ def scene_detail(request, pk):
 @permission_classes([permissions.IsAdminUser])
 def profile_update_staff(request):
     """
-    Toggle the user's is_staff true/false status.
+    Profile page GET/POST handler for editing Staff permissions.
     """
     # update staff status if allowed
     if request.method != "POST":
@@ -240,13 +254,18 @@ def profile_update_staff(request):
 @api_view(["GET"])
 def my_scenes(request):
     """
-    Request a list of scenes this user can write to.
+    Editable scenes headless endpoint for requesting a list of scenes this user can write to: GET.
     """
     serializer = SceneNameSerializer(get_my_scenes(request.user), many=True)
     return JsonResponse(serializer.data, safe=False)
 
 
 def get_my_scenes(user):
+    """
+    Internal method to update scene permissions table:
+    1. Requests list of any scenes with objects saved from /persist/!allscenes to add to scene permissions table.
+    2. Requests and returns list of user's editable scenes from scene permissions table.
+    """
     # update scene list from object persistance db
     token = scenes_read_token()
     p_scenes = get_persist_scenes(token)
@@ -274,6 +293,9 @@ def get_my_scenes(user):
 
 
 def scene_permission(user, scene):
+    """
+    Internal method to check if 'user' can edit 'scene'.
+    """
     if not user.is_authenticated:  # anon
         return False
     elif user.is_staff:  # admin/staff
@@ -290,6 +312,12 @@ def scene_permission(user, scene):
 
 
 def scene_landing(request):
+    """
+    Scene landing/listing page GET handler for user's editable 'my' scenes and viewable 'public' scenes.
+    1. Requests updated scenes in permissions db from get_my_scenes() call to persistance db, filtered by permissions.
+    2. Requests known public scenes from the permissions db.
+    3. Loads the page with 2 lists of scenes: my_scenes and public_scenes.
+    """
     my_scenes = get_my_scenes(request.user)
     public_scenes = Scene.objects.filter(name__startswith=f"public/")
     return render(
@@ -301,7 +329,11 @@ def scene_landing(request):
 
 
 def user_profile(request):
-    # load updated list of staff users
+    """
+    User Profile listing page GET handler.
+    - Shows Admin functions, based on superuser status.
+    - Shows scenes that the user has permissions to edit and a button to edit them.
+    """
     scenes = get_my_scenes(request.user)
     staff = None
     if request.user.is_staff:  # admin/staff
@@ -314,10 +346,17 @@ def user_profile(request):
 
 
 def login_callback(request):
+    """
+    Callback page endpoint for successful social auth login, and handles some submit errors.
+    """
     return render(request=request, template_name="users/login_callback.html")
 
 
 class SocialSignupView(SocialSignupViewDefault):
+    """
+    Signup page handler for the Social Auth signup registration with account email/username.
+    """
+
     def get(self, request, *args, **kwargs):
         social_form = SocialSignupForm(sociallogin=self.sociallogin)
         return render(
@@ -348,7 +387,8 @@ class SocialSignupView(SocialSignupViewDefault):
 @api_view(["GET", "POST"])
 def user_state(request):
     """
-    Request the user's authenticated status, username, name, email.
+    Endpoint request for the user's authenticated status, username, name, email: GET/POST.
+    - POST requires id_token for headless clients like Python apps.
     """
     user = request.user
     if request.method == "POST":
@@ -452,6 +492,9 @@ class MqttTokenSchema(AutoSchema):
 
 
 def get_user_from_id_token(gid_token):
+    """
+    Internal method to validate id_tokens from remote authentication.
+    """
     if not gid_token:
         raise ValueError("Missing token.")
     gclient_ids = [os.environ["GAUTH_CLIENTID"],
@@ -469,8 +512,11 @@ def get_user_from_id_token(gid_token):
 
 
 def _field_requested(request, field):
-    # field value could vary: true/false, or another string
-    # only missing field should evaluate to False
+    """
+    Internal handler to accommodate backward compatible token requests.
+    - Field value could vary: true/false, or another string.
+    - Only missing field should evaluate to False.
+    """
     value = request.POST.get(field, False)
     if value:
         return True
@@ -481,7 +527,8 @@ def _field_requested(request, field):
 # @schema(MqttTokenSchema())  # TODO: schema not working yet
 def mqtt_token(request):
     """
-    Request a MQTT JWT token with permissions for an anonymous or authenticated user given incoming parameters.
+    Endpoint to request a MQTT JWT token with permissions for an anonymous or authenticated user given incoming parameters.
+    - POST requires id_token for headless clients like Python apps.
     """
     user = request.user
     gid_token = request.POST.get("id_token", None)
