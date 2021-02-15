@@ -36,10 +36,10 @@
                                     <select aria-label="Scene Select" id="userSceneSelect" class="form-control"
                                             data-placeholder="Search My Scene Names" data-allow-clear="1">
                                         <option></option>
-                                        {% for scene in scenes %}
-                                            {% if scene.namespace == user.get_username %}
-                                                <option value="{{ scene.name }}">{{ scene.name }}</option>
-                                            {% endif %}
+                                        {% for scene in my_scenes %}
+                                            <!-- my_scenes may include 'public' namespaces for staff -->
+                                            <!-- my_scenes may include other editor namespaces that have been granted -->
+                                            <option value="{{ scene.name }}">{{ scene.name }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -90,10 +90,8 @@
                                     <select aria-label="Scene Select" id="publicSceneSelect" class="form-control"
                                             data-placeholder="Search Public Scene Names" data-allow-clear="1">
                                         <option></option>
-                                        {% for scene in scenes %}
-                                            {% if scene.namespace == "public" %}
-                                                <option value="{{ scene.name }}">{{ scene.name }}</option>
-                                            {% endif %}
+                                        {% for scene in public_scenes %}
+                                            <option value="{{ scene.name }}">{{ scene.name }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>

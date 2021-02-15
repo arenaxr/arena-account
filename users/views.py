@@ -243,11 +243,11 @@ def my_scenes(request):
     """
     Request a list of scenes this user can write to.
     """
-    serializer = SceneNameSerializer(user_scenes(request.user), many=True)
+    serializer = SceneNameSerializer(get_my_scenes(request.user), many=True)
     return JsonResponse(serializer.data, safe=False)
 
 
-def user_scenes(user):
+def get_my_scenes(user):
     # update scene list from object persistance db
     token = scenes_read_token()
     p_scenes = get_persist_scenes(token)
@@ -290,20 +290,19 @@ def scene_permission(user, scene):
 
 
 def scene_landing(request):
-    scenes = user_scenes(request.user)
-    staff = None
-    if request.user.is_staff:  # admin/staff
-        staff = User.objects.filter(is_staff=True)
+    my_scenes = get_my_scenes(request.user)
+    public_scenes = Scene.objects.filter(name__startswith=f"public/")
     return render(
         request=request,
         template_name="users/scene_landing.html",
-        context={"user": request.user, "scenes": scenes, "staff": staff},
+        context={"user": request.user, "my_scenes": my_scenes,
+                 "public_scenes": public_scenes, },
     )
 
 
 def user_profile(request):
     # load updated list of staff users
-    scenes = user_scenes(request.user)
+    scenes = get_my_scenes(request.user)
     staff = None
     if request.user.is_staff:  # admin/staff
         staff = User.objects.filter(is_staff=True)
