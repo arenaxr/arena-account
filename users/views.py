@@ -268,8 +268,9 @@ def get_my_scenes(user):
         else:  # standard user
             scenes = Scene.objects.filter(name__startswith=f"{user.username}/")
             editor_scenes = Scene.objects.filter(editors=user)
-            # merge 'my' namespaced scenes and extras scenes granted
-    return (scenes | editor_scenes).order_by("name")
+    # merge 'my' namespaced scenes and extras scenes granted
+    merged_scenes = (scenes | editor_scenes).distinct().order_by("name")
+    return merged_scenes
 
 
 def scene_permission(user, scene):
