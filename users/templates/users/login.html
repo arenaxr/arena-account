@@ -10,6 +10,7 @@
 <!--Login-->
 
 {% include 'users/includes/messages.html' %}
+{% csrf_token %} <!-- TODO: keep csrf_token for python apps temporariliy -->
 <div class="d-none min-vh-100 routePage" id="landing">
     <div class="container-xxl">
         <div class="row pt-5 d-flex justify-content-between align-items-center">
