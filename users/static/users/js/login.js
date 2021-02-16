@@ -4,8 +4,7 @@ function returnToRequestedPage() {
         location.href = localStorage.getItem("request_uri");
     } else {
         //redirect user to root page
-        const port = (location.port ? ':' + location.port : '');
-        location.href = `${window.location.protocol}//${window.location.host}${port}/user/scenes`;
+        location.href = `${window.location.origin}/user/scenes`;
     }
 }
 

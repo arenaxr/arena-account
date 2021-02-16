@@ -15,9 +15,6 @@
         <div class="container">
             <div class="row d-flex justify-content-center align-items-center">
                 <div class="col-lg-6 p-5 col-md-8 shadow rounded bg-white">
-                    {% if not user.is_authenticated %}
-                        <h5>Anonymous users have no profile.</h5>
-                    {% else %}
                         <div class="row mb-3">
                             <div class="col">
                                 <h3><img alt="conix xr logo" style="max-height: 32px" src="{% static 'users/img/xr-logo-v7.png' %}"/>
@@ -26,6 +23,7 @@
                             </div>
                         </div>
                         <hr/>
+                        {% if user.is_authenticated %} <!-- anon users may not edit scenes -->
                         <h3 class="mb-3">My Scenes</h3>
                         <div class="row text-center">
                             <div class="col">
@@ -80,6 +78,7 @@
                             </div>
                         </div>
                         <hr/>
+                        {% endif %} <!-- if user.is_authenticated -->
                         <h3 class="mb-3">Discover Public Scenes</h3>
                         <div class="row text-center">
                             <div class="col">
@@ -103,15 +102,19 @@
                                     <i class="fas fa-sign-in-alt"></i> Enter Scene
                                 </button>
                             </div>
+                            {% if user.is_authenticated %}
                             <div class="col-6">
                                 <button class="btn btn-info w-100 disabled" id="clonePublicSceneBtn">
                                     <i class="far fa-clone"></i> Clone Scene
                                 </button>
                             </div>
+                            {% endif %}
                             <input aria-hidden="true" class="d-none" id="publicSceneUrl" type="hidden" value=""/>
                         </div>
+                        {% if not user.is_authenticated %}
+                        <small style="color: grey">To create or clone scenes, please login with an authenticated account.</small>
+                        {% endif %}
                         </div>
-                    {% endif %}
             </div>
         </div>
     </div>
@@ -183,7 +186,10 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script type="text/javascript" src="{% static 'users/js/scenes.js' %}"></script>
+    {% if user.is_authenticated %}
+    <script type="text/javascript" src="{% static 'users/js/scenes-user.js' %}"></script>
     <script>
         window.username = '{{ user.get_username }}';
     </script>
+    {% endif %}
 {% endblock extrajs %}
