@@ -8,6 +8,8 @@ from django.conf import settings
 from .models import (SCENE_ANON_USERS_DEF, SCENE_PUBLIC_READ_DEF,
                      SCENE_PUBLIC_WRITE_DEF, Scene)
 
+PUBLIC_NAMESPACE = "public"
+
 
 def generate_mqtt_token(
     *,
@@ -34,6 +36,8 @@ def generate_mqtt_token(
     else:
         duration = datetime.timedelta(hours=6)
     payload = {"sub": username, "exp": datetime.datetime.utcnow() + duration}
+    # everyone should be able to read all public scenes
+    subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/#")
     # user presence objects
     if user.is_authenticated:
         if user.is_staff:
@@ -100,10 +104,17 @@ def generate_mqtt_token(
     subs.append("$NETWORK")
     pubs.append("$NETWORK/latency")
     if len(subs) > 0:
-        subs.sort()
-        payload["subs"] = subs
+        payload["subs"] = clean_list(subs)
     if len(pubs) > 0:
-        pubs.sort()
-        payload["publ"] = pubs
+        payload["publ"] = clean_list(pubs)
 
     return jwt.encode(payload, private_key, algorithm="RS256")
+
+
+def clean_list(_list):
+    """
+    Sort and remove list duplicates.
+    """
+    _list = list(dict.fromkeys(_list))
+    _list.sort()
+    return _list

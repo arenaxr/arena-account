@@ -29,19 +29,13 @@ from rest_framework.decorators import api_view, permission_classes, schema
 from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
 
-from .forms import (
-    SceneForm,
-    SocialSignupForm,
-    UpdateSceneForm,
-    UpdateStaffForm
-)
+from .forms import (SceneForm, SocialSignupForm, UpdateSceneForm,
+                    UpdateStaffForm)
 from .models import Scene
-from .mqtt import generate_mqtt_token
+from .mqtt import PUBLIC_NAMESPACE, generate_mqtt_token
 from .persistence import (delete_scene_objects, get_persist_scenes,
                           scenes_read_token)
 from .serializers import SceneNameSerializer, SceneSerializer
-
-STAFF_NAMESPACE = "public"
 
 logger = logging.getLogger(__name__)
 logger.info("views.py load test...")
@@ -260,7 +254,7 @@ def my_namespaces(request):
     if request.user.is_authenticated:
         namespaces.append(request.user.username)
     if request.user.is_staff:  # admin/staff
-        namespaces.append(STAFF_NAMESPACE)
+        namespaces.append(PUBLIC_NAMESPACE)
     # TODO: when entire namespaces are shared, they should be added here
     namespaces.sort()
     return JsonResponse({"namespaces": namespaces})
@@ -334,7 +328,7 @@ def scene_landing(request):
     3. Loads the page with 2 lists of scenes: my_scenes and public_scenes.
     """
     my_scenes = get_my_scenes(request.user)
-    public_scenes = Scene.objects.filter(name__startswith=f"{STAFF_NAMESPACE}/")
+    public_scenes = Scene.objects.filter(name__startswith=f"{PUBLIC_NAMESPACE}/")
     return render(
         request=request,
         template_name="users/scene_landing.html",
