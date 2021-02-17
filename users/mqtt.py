@@ -11,6 +11,24 @@ from .models import (SCENE_ANON_USERS_DEF, SCENE_PUBLIC_READ_DEF,
 PUBLIC_NAMESPACE = "public"
 
 
+def all_scenes_read_token():
+    config = settings.PUBSUB
+    privkeyfile = settings.MQTT_TOKEN_PRIVKEY
+    if not os.path.exists(privkeyfile):
+        print("Error: keyfile not found" + privkeyfile)
+        return None
+    print("Using keyfile at: " + privkeyfile)
+    with open(privkeyfile) as privatefile:
+        private_key = privatefile.read()
+    payload = {
+        "sub": config["mqtt_username"],
+        "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=5),
+        "subs": [f"{config['mqtt_realm']}/s/#"],
+    }
+    token = jwt.encode(payload, private_key, algorithm="RS256")
+    return token
+
+
 def generate_mqtt_token(
     *,
     user,
@@ -115,6 +133,7 @@ def clean_list(_list):
     """
     Sort and remove list duplicates.
     """
+    # TODO: this should also collapse overlapping topic levels to reduce size
     _list = list(dict.fromkeys(_list))
     _list.sort()
     return _list
