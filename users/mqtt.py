@@ -80,7 +80,7 @@ def generate_mqtt_token(
         if scene_opt.exists():
             # did the user set specific public read or public write?
             scene_opt = Scene.objects.get(name=scene)
-            if not scene_opt.anonymous_users:
+            if not user.is_authenticated and not scene_opt.anonymous_users:
                 return None  # anonymous not permitted
             if scene_opt.public_read:
                 subs.append(f"{realm}/s/{scene}/#")
@@ -88,7 +88,7 @@ def generate_mqtt_token(
                 pubs.append(f"{realm}/s/{scene}/#")
         else:
             # otherwise, use public access defaults
-            if not SCENE_ANON_USERS_DEF:
+            if not user.is_authenticated and not SCENE_ANON_USERS_DEF:
                 return None  # anonymous not permitted
             if SCENE_PUBLIC_READ_DEF:
                 subs.append(f"{realm}/s/{scene}/#")
