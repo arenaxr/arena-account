@@ -133,10 +133,7 @@ def clean_list(_list):
     """
     Sort and remove list duplicates.
     """
-<<<<<<< HEAD
-=======
     # TODO: this should also collapse overlapping topic levels to reduce size
->>>>>>> main
     _list = list(dict.fromkeys(_list))
     _list.sort()
     return _list
