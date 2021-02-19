@@ -25,14 +25,8 @@ from rest_framework.schemas import AutoSchema
 from .forms import (SceneForm, SocialSignupForm, UpdateSceneForm,
                     UpdateStaffForm)
 from .models import Scene
-<<<<<<< HEAD
-from .mqtt import PUBLIC_NAMESPACE, generate_mqtt_token
-from .persistence import (delete_scene_objects, get_persist_scenes,
-                          scenes_read_token)
-=======
 from .mqtt import PUBLIC_NAMESPACE, all_scenes_read_token, generate_mqtt_token
 from .persistence import delete_scene_objects, get_persist_scenes
->>>>>>> main
 from .serializers import SceneNameSerializer, SceneSerializer
 
 logger = logging.getLogger(__name__)
