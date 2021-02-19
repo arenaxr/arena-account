@@ -25,9 +25,14 @@ from rest_framework.schemas import AutoSchema
 from .forms import (SceneForm, SocialSignupForm, UpdateSceneForm,
                     UpdateStaffForm)
 from .models import Scene
+<<<<<<< HEAD
 from .mqtt import PUBLIC_NAMESPACE, generate_mqtt_token
 from .persistence import (delete_scene_objects, get_persist_scenes,
                           scenes_read_token)
+=======
+from .mqtt import PUBLIC_NAMESPACE, all_scenes_read_token, generate_mqtt_token
+from .persistence import delete_scene_objects, get_persist_scenes
+>>>>>>> main
 from .serializers import SceneNameSerializer, SceneSerializer
 
 logger = logging.getLogger(__name__)
@@ -269,7 +274,7 @@ def get_my_scenes(user):
     2. Requests and returns list of user's editable scenes from scene permissions table.
     """
     # update scene list from object persistance db
-    token = scenes_read_token()
+    token = all_scenes_read_token()
     p_scenes = get_persist_scenes(token)
     a_scenes = Scene.objects.values_list("name", flat=True)
     for p_scene in p_scenes:
@@ -321,14 +326,24 @@ def scene_landing(request):
     3. Loads the page with 2 lists of scenes: my_scenes and public_scenes.
     """
     my_scenes = get_my_scenes(request.user)
-    public_scenes = Scene.objects.filter(name__startswith=f"{PUBLIC_NAMESPACE}/")
-    return render(
+    public_scenes = Scene.objects.filter(
+        name__startswith=f"{PUBLIC_NAMESPACE}/")
+    response = render(
         request=request,
         template_name="users/scene_landing.html",
         context={"user": request.user, "my_scenes": my_scenes,
                  "public_scenes": public_scenes, },
     )
-
+    token = generate_mqtt_token(
+        user=request.user, username=request.user.username)
+    response.set_cookie(
+        "mqtt_token",
+        token.decode("utf-8"),
+        max_age=86400000,
+        httponly=True,
+        secure=True,
+    )
+    return response
 
 def user_profile(request):
     """
