@@ -149,12 +149,14 @@ def clean_topics(topics):
     topics.sort()
     # after sort, collapse overlapping topic levels to reduce size
     _topics = []
+    high_topic = ""
     for i, topic in enumerate(topics):
         print(topics[i])
         add = True
-        if i > 0 and topics[i-1].endswith("/#"):
-            if topic.startswith(topics[i-1][0:-1]):
-                add = False # higher topic level already granted
+        if i > 0 and high_topic.endswith("/#"):
+            if topic.startswith(high_topic[0:-1]):
+                add = False  # higher topic level already granted
         if add:
+            high_topic = topic
             _topics.append(topic)
     return _topics
