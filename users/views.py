@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 import secrets
 
 import coreapi
@@ -25,7 +26,8 @@ from rest_framework.schemas import AutoSchema
 from .forms import (SceneForm, SocialSignupForm, UpdateSceneForm,
                     UpdateStaffForm)
 from .models import Scene
-from .mqtt import PUBLIC_NAMESPACE, all_scenes_read_token, generate_mqtt_token
+from .mqtt import (ANON_REGEX, PUBLIC_NAMESPACE, all_scenes_read_token,
+                   generate_mqtt_token)
 from .persistence import delete_scene_objects, get_persist_scenes
 from .serializers import SceneNameSerializer, SceneSerializer
 
@@ -58,7 +60,8 @@ def login_request(request):
                 user = authenticate(username=username, password=password)
                 if user is not None:
                     login(request, user)
-                    messages.info(request, f"You are now logged in as {username}.")
+                    messages.info(
+                        request, f"You are now logged in as {username}.")
                     return redirect("login_callback")
                 else:
                     messages.error(request, "Invalid username or password.")
@@ -258,7 +261,8 @@ def my_scenes(request):
     Editable scenes headless endpoint for requesting a list of scenes this user can write to: GET.
     """
     serializer = SceneNameSerializer(get_my_scenes(request.user), many=True)
-    return JsonResponse(serializer.data, safe=False) # TODO: fix response to remove csrf risk
+    # TODO: fix response to remove csrf risk
+    return JsonResponse(serializer.data, safe=False)
 
 
 def get_my_scenes(user):
@@ -338,6 +342,7 @@ def scene_landing(request):
         secure=True,
     )
     return response
+
 
 def user_profile(request):
     """
@@ -551,16 +556,18 @@ def mqtt_token(request):
                 {"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN
             )
 
-    # TODO: (mwfarb) fix me
-    # if not username:
-    #     return JsonResponse(
-    #         {"error": "Invalid parameters"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
-    #     )
-
     if user.is_authenticated:
         username = user.username
+        if not username:
+            return JsonResponse(
+                {"error": "Invalid parameters"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     else:  # AnonymousUser
         username = request.POST.get("username", None)
+        if not username or not re.match(ANON_REGEX, username):
+            return JsonResponse(
+                {"error": "Invalid parameters"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     # produce nonce with 32-bits secure randomness
     nonce = str(secrets.randbits(32))

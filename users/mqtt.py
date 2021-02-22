@@ -9,6 +9,7 @@ from .models import (SCENE_ANON_USERS_DEF, SCENE_PUBLIC_READ_DEF,
                      SCENE_PUBLIC_WRITE_DEF, Scene)
 
 PUBLIC_NAMESPACE = "public"
+ANON_REGEX = "anonymous-(?=.*?[a-zA-Z].*?[a-zA-Z])"
 
 
 def all_scenes_read_token():
