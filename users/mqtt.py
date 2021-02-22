@@ -134,18 +134,27 @@ def generate_mqtt_token(
     subs.append("$NETWORK")
     pubs.append("$NETWORK/latency")
     if len(subs) > 0:
-        payload["subs"] = clean_list(subs)
+        payload["subs"] = clean_topics(subs)
     if len(pubs) > 0:
-        payload["publ"] = clean_list(pubs)
+        payload["publ"] = clean_topics(pubs)
 
     return jwt.encode(payload, private_key, algorithm="RS256")
 
 
-def clean_list(_list):
+def clean_topics(topics):
     """
     Sort and remove list duplicates.
     """
-    # TODO: this should also collapse overlapping topic levels to reduce size
-    _list = list(dict.fromkeys(_list))
-    _list.sort()
-    return _list
+    topics = list(dict.fromkeys(topics))
+    topics.sort()
+    # after sort, collapse overlapping topic levels to reduce size
+    _topics = []
+    for i, topic in enumerate(topics):
+        print(topics[i])
+        add = True
+        if i > 0 and topics[i-1].endswith("/#"):
+            if topic.startswith(topics[i-1][0:-1]):
+                add = False # higher topic level already granted
+        if add:
+            _topics.append(topic)
+    return _topics
