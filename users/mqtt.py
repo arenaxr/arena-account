@@ -151,7 +151,6 @@ def clean_topics(topics):
     _topics = []
     high_topic = ""
     for i, topic in enumerate(topics):
-        print(topics[i])
         add = True
         if i > 0 and high_topic.endswith("/#"):
             if topic.startswith(high_topic[0:-1]):
