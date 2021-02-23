@@ -105,16 +105,6 @@ def generate_mqtt_token(
     # chat messages
     if scene and userid:
         userhandle = userid + base64.b64encode(userid.encode()).decode()
-        # CHAT v1
-        # receive private messages: Read
-        subs.append(f"{realm}/g/c/p/{userid}/#")
-        # receive open messages to everyone and/or scene: Read
-        subs.append(f"{realm}/g/c/o/#")
-        # send open messages (chat keepalive, messages to all/scene): Write
-        pubs.append(f"{realm}/g/c/o/{userhandle}")
-        # private messages to user: Write
-        pubs.append(f"{realm}/g/c/p/+/{userhandle}")
-        # CHAT v2
         # receive private messages: Read
         subs.append(f"{realm}/c/{username}/p/{userid}/#")
         # receive open messages to everyone and/or scene: Read
