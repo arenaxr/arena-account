@@ -104,15 +104,16 @@ def generate_mqtt_token(
             pubs.append(f"{realm}/s/{scene}/{ctrlid2}")
     # chat messages
     if scene and userid:
+        namespace = scene.split("/")[0]
         userhandle = userid + base64.b64encode(userid.encode()).decode()
         # receive private messages: Read
-        subs.append(f"{realm}/c/{username}/p/{userid}/#")
+        subs.append(f"{realm}/c/{namespace}/p/{userid}/#")
         # receive open messages to everyone and/or scene: Read
-        subs.append(f"{realm}/c/{username}/o/#")
+        subs.append(f"{realm}/c/{namespace}/o/#")
         # send open messages (chat keepalive, messages to all/scene): Write
-        pubs.append(f"{realm}/c/{username}/o/{userhandle}")
+        pubs.append(f"{realm}/c/{namespace}/o/{userhandle}")
         # private messages to user: Write
-        pubs.append(f"{realm}/c/{username}/p/+/{userhandle}")
+        pubs.append(f"{realm}/c/{namespace}/p/+/{userhandle}")
 
     # apriltags
     subs.append(f"{realm}/g/a/#")
