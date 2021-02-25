@@ -96,6 +96,6 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
     document.getElementById('googleBtn').addEventListener('click', function() {
         // Django template uses http:// not https:// scheme as a default for allauth: {% provider_login_url 'google' %}
         // Force use of existing scheme to use https for all social provider callbacks.
-        location.href = `${window.location.origin}/accounts/google/login/callback/`;
+        location.href = `${window.location.origin}/user/accounts/google/login/callback/`;
     });
 });
