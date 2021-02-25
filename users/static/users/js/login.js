@@ -92,4 +92,10 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
 
     window.dispatchEvent(new Event('hashchange')); // Manually trigger initial hash routing
     providerSelect.dispatchEvent(new Event('change')); // Manually trigger selection effects for default
+
+    document.getElementById('googleBtn').addEventListener('click', function() {
+        // Django template uses http:// not https:// scheme as a default for allauth: {% provider_login_url 'google' %}
+        // Force use of existing scheme to use https for all social provider callbacks.
+        location.href = `${window.location.origin}/accounts/google/login/callback/`;
+    });
 });
