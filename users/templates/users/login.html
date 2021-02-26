@@ -60,7 +60,8 @@
                         </div>
                         <button class="btn btn-white" id="anonBtn" type="submit">Sign In</button>
 
-                        <div class="d-none btn" id="googleBtn">
+                            <div class="d-none btn" id="googleBtn" onclick="location.href='{% provider_login_url 'google' %}';">
+                            <!-- <div class="d-none btn" id="googleBtn"> -->
                             <div id="customBtnGoogle">
                                 <span class="icon"></span>
                                 <span class="buttonText">Google Sign In</span>
