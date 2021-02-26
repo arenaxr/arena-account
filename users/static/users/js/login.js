@@ -92,5 +92,4 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
 
     window.dispatchEvent(new Event('hashchange')); // Manually trigger initial hash routing
     providerSelect.dispatchEvent(new Event('change')); // Manually trigger selection effects for default
-
 });
