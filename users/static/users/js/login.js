@@ -93,25 +93,4 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
     window.dispatchEvent(new Event('hashchange')); // Manually trigger initial hash routing
     providerSelect.dispatchEvent(new Event('change')); // Manually trigger selection effects for default
 
-    // TODO: why is allauth having trouble with upgraded https link for google callback?
-
-    // document.getElementById('googleBtn').addEventListener('click', function() {
-    //     // Django template uses http:// not https:// scheme as a default for allauth: {% provider_login_url 'google' %}
-    //     // Force use of existing scheme to use https for all social provider callbacks.
-    //     // location.href = `${window.location.origin}/user/accounts/google/login/callback/`;
-    //     //location.href = `http://localhost/user/accounts/google/login/callback/`;
-    //     location.href = `https://localhost/user/accounts/google/login/callback/`;
-    // });
-
-    // TODO: references that may help
-    // https://github.com/pennersr/django-allauth/blob/master/docs/providers.rst#google
-    // https://docs.djangoproject.com/en/3.1/ref/settings/#use-x-forwarded-host
-    // https://github.com/pennersr/django-allauth/blob/master/allauth/socialaccount/providers/google/views.py
-    // https://django-allauth.readthedocs.io/en/latest/advanced.html#https
-
-    // TODO: nginx headers to help upgrade to https
-    // proxy_set_header X-Forwarded-For   ${ESC}proxy_add_x_forwarded_for;
-    // proxy_set_header X-Forwarded-Proto ${ESC}scheme;
-    // proxy_set_header X-Forwarded-Host  ${ESC}host;
-    // proxy_set_header X-Forwarded-Port  ${ESC}server_port;
 });
