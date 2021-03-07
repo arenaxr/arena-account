@@ -10,6 +10,7 @@
 <!--Login-->
 
 {% include 'users/includes/messages.html' %}
+{% csrf_token %} <!-- TODO: keep csrf_token for python apps temporarily -->
 <div class="d-none min-vh-100 routePage" id="landing">
     <div class="container-xxl">
         <div class="row pt-5 d-flex justify-content-between align-items-center">
@@ -48,8 +49,8 @@
                     <form id="loginForm">
                         <div class="form-floating">
                             <select aria-label="Provider Select" class="form-select mb-3" id="provider">
-                                <option value="anon">Anonymous</option>
                                 <option value="google">Google</option>
+                                <option value="anon">Anonymous</option>
                             </select>
                             <label for="provider">Authentication Provider</label>
                         </div>
@@ -60,7 +61,7 @@
                         <button class="btn btn-white" id="anonBtn" type="submit">Sign In</button>
 
                         <div class="d-none btn" id="googleBtn"
-                            onclick="location.href='{% provider_login_url 'google' %}?prompt=select_account';">
+                            onclick="location.href='{% provider_login_url 'google' %}';">
                             <div id="customBtnGoogle">
                                 <span class="icon"></span>
                                 <span class="buttonText">Google Sign In</span>
@@ -72,7 +73,8 @@
         </div>
     </div>
 </div>
-
-<script type="text/javascript" src="{% static 'users/js/login.js' %}"></script>
-
 {% endblock content %}
+
+{% block extrajs %}
+    <script type="text/javascript" src="{% static 'users/js/login.js' %}"></script>
+{% endblock extrajs %}

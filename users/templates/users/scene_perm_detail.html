@@ -7,7 +7,7 @@
 <!-- Scene Permissions Detail-->
 <div class="container-fluid">
     <div class="row d-flex justify-content-center align-items-center">
-        <div class="col-lg-7 col-md-8 shadow rounded bg-white p-5">
+        <div class="col-lg-8 col-md-8 shadow rounded bg-white p-5">
 
             <h1>Edit Scene Permissions</h1>
             <form action="" method="post">
@@ -27,6 +27,11 @@
                         <td><b>Public Write:</b></td>
                         <td>{{ form.public_write }}</td>
                         <td>Allow any user to edit the scene (default: off).</td>
+                    </tr>
+                    <tr>
+                        <td><b>Anonymous Users:</b></td>
+                        <td>{{ form.anonymous_users }}</td>
+                        <td>Allow anonymous users to connect to the scene (default: on).</td>
                     </tr>
                     <tr>
                         <td><b>Editors:</b></td>

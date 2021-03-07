@@ -108,6 +108,9 @@ REST_FRAMEWORK = {
     ],
 }
 
+# allauth general config
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http"  # https for docker, http for localhost:8000
+
 # allauth social accounts
 SITE_ID = 2  # must match our domain Site used in admin: Sites
 LOGIN_REDIRECT_URL = "/user/login_callback"
@@ -126,7 +129,10 @@ SOCIALACCOUNT_PROVIDERS = {
             "key": "",
         },
         "SCOPE": ["profile", "email", ],
-        "AUTH_PARAMS": {"access_type": "online", },
+        "AUTH_PARAMS": {
+            "access_type": "online",
+            "prompt": "select_account",
+        },
     }
 }
 

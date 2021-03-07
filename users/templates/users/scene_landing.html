@@ -1,5 +1,10 @@
 {% extends "users/header.html" %}
 
+{% block extrahead %}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css">
+{% endblock extrahead %}
+
 {% block content %}
 
     {% include 'users/includes/messages.html' %}
@@ -10,9 +15,6 @@
         <div class="container">
             <div class="row d-flex justify-content-center align-items-center">
                 <div class="col-lg-6 p-5 col-md-8 shadow rounded bg-white">
-                    {% if not user.is_authenticated %}
-                        <h5>Anonymous users have no profile.</h5>
-                    {% else %}
                         <div class="row mb-3">
                             <div class="col">
                                 <h3><img alt="conix xr logo" style="max-height: 32px" src="{% static 'users/img/xr-logo-v7.png' %}"/>
@@ -21,23 +23,24 @@
                             </div>
                         </div>
                         <hr/>
+                        {% if user.is_authenticated %} <!-- anon users may not edit scenes -->
                         <h3 class="mb-3">My Scenes</h3>
                         <div class="row text-center">
                             <div class="col">
-                                <label aria-hidden="true" class="form-label d-none" for="userSceneInput">Search My
-                                    Scenes</label>
-                                <div class="input-group">
-                                    <input class="form-control" id="userSceneInput" list="userSceneDatalist"
-                                           placeholder="Search Scene Names" autocomplete="off">
-                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <div class="form-group">
+                                    <label aria-hidden="true" class="form-label d-none" for="userSceneSelect">
+                                        Search My Scenes
+                                    </label>
+                                    <select aria-label="Scene Select" id="userSceneSelect" class="form-control"
+                                            data-placeholder="Search My Scene Names" data-allow-clear="1">
+                                        <option></option>
+                                        {% for scene in my_scenes %}
+                                            <!-- my_scenes may include 'public' namespaces for staff -->
+                                            <!-- my_scenes may include other editor namespaces that have been granted -->
+                                            <option value="{{ scene.name }}">{{ scene.name }}</option>
+                                        {% endfor %}
+                                    </select>
                                 </div>
-                                <datalist aria-label="Scene Select" id="userSceneDatalist">
-                                    {% for scene in scenes %}
-                                        {% if scene.namespace == user.get_username %}
-                                            <option value="{{ scene.name }}"></option>
-                                        {% endif %}
-                                    {%  endfor %}
-                                </datalist>
                             </div>
                         </div>
                         <div class="row g-1 mb-3">
@@ -75,22 +78,21 @@
                             </div>
                         </div>
                         <hr/>
+                        {% endif %} <!-- if user.is_authenticated -->
                         <h3 class="mb-3">Discover Public Scenes</h3>
                         <div class="row text-center">
                             <div class="col">
-                                <label aria-hidden="true" class="form-label d-none" for="publicSceneInput">Search Public
-                                    Scenes</label>
-                                <datalist aria-label="Scene Select" id="publicSceneDatalist">
-                                    {% for scene in scenes %}
-                                        {% if scene.namespace == "public" %}
-                                            <option value="{{ scene.name }}"></option>
-                                        {% endif %}
-                                    {%  endfor %}
-                                </datalist>
-                                <div class="input-group">
-                                    <input class="form-control" id="publicSceneInput" list="publicSceneDatalist"
-                                           placeholder="Search Scene Names" autocomplete="off">
-                                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <div class="form-group">
+                                    <label aria-hidden="true" class="form-label d-none" for="publicSceneSelect">
+                                        Search Public Scenes
+                                    </label>
+                                    <select aria-label="Scene Select" id="publicSceneSelect" class="form-control"
+                                            data-placeholder="Search Public Scene Names" data-allow-clear="1">
+                                        <option></option>
+                                        {% for scene in public_scenes %}
+                                            <option value="{{ scene.name }}">{{ scene.name }}</option>
+                                        {% endfor %}
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -100,23 +102,19 @@
                                     <i class="fas fa-sign-in-alt"></i> Enter Scene
                                 </button>
                             </div>
+                            {% if user.is_authenticated %}
                             <div class="col-6">
                                 <button class="btn btn-info w-100 disabled" id="clonePublicSceneBtn">
                                     <i class="far fa-clone"></i> Clone Scene
                                 </button>
                             </div>
+                            {% endif %}
                             <input aria-hidden="true" class="d-none" id="publicSceneUrl" type="hidden" value=""/>
                         </div>
-                        <hr/>
-                        <h4 class="mb-3">Advanced</h4>
-                        <div class="row">
-                            <div class="col">
-                                <a class="btn btn-primary" href="/build">Builder</a>
-                                <a class="btn btn-primary" href="#">File Store</a>
-                            </div>
+                        {% if not user.is_authenticated %}
+                        <small style="color: grey">To create or clone scenes, please login with an authenticated account.</small>
+                        {% endif %}
                         </div>
-                        </div>
-                    {% endif %}
             </div>
         </div>
     </div>
@@ -127,7 +125,7 @@
             <div class="row d-flex justify-content-center align-items-center">
                 <div class="col-lg-5 p-5 col-md-8 shadow rounded bg-white">
                     <button type="button" class="close float-end" id="closeCloneScene" aria-label="Close">
-                        <span aria-hidden="true"><i class="far fa-times-circle"></i></span>
+                        <span aria-hidden="true"><i class="far fa-ctimes-circle"></i></span>
                     </button>
                     <div class="row mb-3">
                         <div class="col">
@@ -181,10 +179,17 @@
             </div>
         </div>
     </div>
+{% endblock content %}
+
+
+{% block extrajs %}
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script type="text/javascript" src="{% static 'users/js/scenes.js' %}"></script>
+    {% if user.is_authenticated %}
+    <script type="text/javascript" src="{% static 'users/js/scenes-user.js' %}"></script>
     <script>
         window.username = '{{ user.get_username }}';
     </script>
-
-{% endblock content %}
+    {% endif %}
+{% endblock extrajs %}

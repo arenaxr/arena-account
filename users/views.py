@@ -2,6 +2,7 @@ import datetime
 import json
 import logging
 import os
+import re
 import secrets
 
 import coreapi
@@ -12,42 +13,35 @@ from allauth.socialaccount.views import SignupView as SocialSignupViewDefault
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
+from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
-from django.contrib.auth.tokens import default_token_generator
-from django.core.exceptions import ObjectDoesNotExist
-from django.core.mail import BadHeaderError, send_mail
 from django.db import transaction
-from django.db.models.query_utils import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
-from django.template.loader import render_to_string
-from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode
 from google.auth.transport import requests
 from google.oauth2 import id_token
 from rest_framework import permissions, status
 from rest_framework.compat import coreapi
-from rest_framework.decorators import api_view, permission_classes, schema
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
 
 from .forms import (SceneForm, SocialSignupForm, UpdateSceneForm,
                     UpdateStaffForm)
 from .models import Scene
-from .mqtt import generate_mqtt_token
-from .persistence import (delete_scene_objects, get_persist_scenes,
-                          scenes_read_token)
+from .mqtt import (ANON_REGEX, PUBLIC_NAMESPACE, all_scenes_read_token,
+                   generate_mqtt_token)
+from .persistence import delete_scene_objects, get_persist_scenes
 from .serializers import SceneNameSerializer, SceneSerializer
-
-STAFF_ACCTNAME = "public"
 
 logger = logging.getLogger(__name__)
 logger.info("views.py load test...")
 
 
 def index(request):
-    # index is treated as login
+    """
+    Root page load, index is treated as Login page.
+    """
     if request.user.is_authenticated:
         return redirect("scenes")
     else:
@@ -55,36 +49,45 @@ def index(request):
 
 
 def login_request(request):
-    if request.method == "POST":
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get("username")
-            password = form.cleaned_data.get("password")
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                login(request, user)
-                messages.info(request, f"You are now logged in as {username}.")
-                return redirect("login_callback")
+    """
+    Login page load, handles user/pass login if required.
+    """
+    if request.user.is_authenticated:
+        return redirect("scenes")
+    else:
+        if request.method == "POST":
+            form = AuthenticationForm(request, data=request.POST)
+            if form.is_valid():
+                username = form.cleaned_data.get("username")
+                password = form.cleaned_data.get("password")
+                user = authenticate(username=username, password=password)
+                if user is not None:
+                    login(request, user)
+                    messages.info(
+                        request, f"You are now logged in as {username}.")
+                    return redirect("login_callback")
+                else:
+                    messages.error(request, "Invalid username or password.")
             else:
                 messages.error(request, "Invalid username or password.")
-        else:
-            messages.error(request, "Invalid username or password.")
-    form = AuthenticationForm()
-    return render(
-        request=request, template_name="users/login.html", context={"login_form": form}
-    )
+        form = AuthenticationForm()
+        return render(
+            request=request, template_name="users/login.html", context={"login_form": form}
+        )
 
 
 def logout_request(request):
+    """
+    Removes ID and flushes session data, shows login page.
+    """
     logout(request)
-    messages.info(request, "You have successfully logged out.")
     return redirect("login")
 
 
 @permission_classes([permissions.IsAuthenticated])
 def profile_update_scene(request):
     """
-    Update existing scene permissions the user has access to.
+    Handle User Profile page, get page load and post submit requests.
     """
     if request.method != "POST":
         return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
@@ -106,6 +109,9 @@ def profile_update_scene(request):
 
 
 def scene_perm_detail(request, pk):
+    """
+    Handle Scene Permissions Edit page, get page load and post submit requests.
+    """
     if not scene_permission(user=request.user, scene=pk):
         return JsonResponse({"error": f"User does not have permission for: {pk}."}, status=status.HTTP_400_BAD_REQUEST)
     # now, make sure scene exists before the other commands are tried
@@ -138,6 +144,9 @@ def scene_perm_detail(request, pk):
 @api_view(["POST", "GET", "PUT", "DELETE"])
 @permission_classes([permissions.IsAuthenticated])
 def scene_detail(request, pk):
+    """
+    Scene Permissions headless endpoint for editing permission: POST, GET, PUT, DELETE.
+    """
     # check permissions model for namespace
     if not scene_permission(user=request.user, scene=pk):
         return JsonResponse(
@@ -205,7 +214,7 @@ def scene_detail(request, pk):
 @permission_classes([permissions.IsAdminUser])
 def profile_update_staff(request):
     """
-    Toggle the user's is_staff true/false status.
+    Profile page GET/POST handler for editing Staff permissions.
     """
     # update staff status if allowed
     if request.method != "POST":
@@ -235,17 +244,38 @@ def profile_update_staff(request):
 
 
 @api_view(["GET"])
+def my_namespaces(request):
+    """
+    Editable entire namespaces headless endpoint for requesting a list of namespaces this user can write to: GET.
+    """
+    namespaces = []
+    if request.user.is_authenticated:
+        namespaces.append(request.user.username)
+    if request.user.is_staff:  # admin/staff
+        namespaces.append(PUBLIC_NAMESPACE)
+    # TODO: when entire namespaces are shared, they should be added here
+    namespaces.sort()
+    return JsonResponse({"namespaces": namespaces})
+
+
+@api_view(["GET"])
 def my_scenes(request):
     """
-    Request a list of scenes this user can write to.
+    Editable scenes headless endpoint for requesting a list of scenes this user can write to: GET.
     """
-    serializer = SceneNameSerializer(user_scenes(request.user), many=True)
+    serializer = SceneNameSerializer(get_my_scenes(request.user), many=True)
+    # TODO: fix response to remove csrf risk
     return JsonResponse(serializer.data, safe=False)
 
 
-def user_scenes(user):
+def get_my_scenes(user):
+    """
+    Internal method to update scene permissions table:
+    1. Requests list of any scenes with objects saved from /persist/!allscenes to add to scene permissions table.
+    2. Requests and returns list of user's editable scenes from scene permissions table.
+    """
     # update scene list from object persistance db
-    token = scenes_read_token()
+    token = all_scenes_read_token()
     p_scenes = get_persist_scenes(token)
     a_scenes = Scene.objects.values_list("name", flat=True)
     for p_scene in p_scenes:
@@ -265,11 +295,15 @@ def user_scenes(user):
         else:  # standard user
             scenes = Scene.objects.filter(name__startswith=f"{user.username}/")
             editor_scenes = Scene.objects.filter(editors=user)
-            # merge 'my' namespaced scenes and extras scenes granted
-    return (scenes | editor_scenes).order_by("name")
+    # merge 'my' namespaced scenes and extras scenes granted
+    merged_scenes = (scenes | editor_scenes).distinct().order_by("name")
+    return merged_scenes
 
 
 def scene_permission(user, scene):
+    """
+    Internal method to check if 'user' can edit 'scene'.
+    """
     if not user.is_authenticated:  # anon
         return False
     elif user.is_staff:  # admin/staff
@@ -286,20 +320,40 @@ def scene_permission(user, scene):
 
 
 def scene_landing(request):
-    scenes = user_scenes(request.user)
-    staff = None
-    if request.user.is_staff:  # admin/staff
-        staff = User.objects.filter(is_staff=True)
-    return render(
+    """
+    Scene landing/listing page GET handler for user's editable 'my' scenes and viewable 'public' scenes.
+    1. Requests updated scenes in permissions db from get_my_scenes() call to persistance db, filtered by permissions.
+    2. Requests known public scenes from the permissions db.
+    3. Loads the page with 2 lists of scenes: my_scenes and public_scenes.
+    """
+    my_scenes = get_my_scenes(request.user)
+    public_scenes = Scene.objects.filter(
+        name__startswith=f"{PUBLIC_NAMESPACE}/")
+    response = render(
         request=request,
         template_name="users/scene_landing.html",
-        context={"user": request.user, "scenes": scenes, "staff": staff},
+        context={"user": request.user, "my_scenes": my_scenes,
+                 "public_scenes": public_scenes, },
     )
+    token = generate_mqtt_token(
+        user=request.user, username=request.user.username)
+    response.set_cookie(
+        "mqtt_token",
+        token.decode("utf-8"),
+        max_age=86400000,
+        httponly=True,
+        secure=True,
+    )
+    return response
 
 
 def user_profile(request):
-    # load updated list of staff users
-    scenes = user_scenes(request.user)
+    """
+    User Profile listing page GET handler.
+    - Shows Admin functions, based on superuser status.
+    - Shows scenes that the user has permissions to edit and a button to edit them.
+    """
+    scenes = get_my_scenes(request.user)
     staff = None
     if request.user.is_staff:  # admin/staff
         staff = User.objects.filter(is_staff=True)
@@ -311,10 +365,17 @@ def user_profile(request):
 
 
 def login_callback(request):
+    """
+    Callback page endpoint for successful social auth login, and handles some submit errors.
+    """
     return render(request=request, template_name="users/login_callback.html")
 
 
 class SocialSignupView(SocialSignupViewDefault):
+    """
+    Signup page handler for the Social Auth signup registration with account email/username.
+    """
+
     def get(self, request, *args, **kwargs):
         social_form = SocialSignupForm(sociallogin=self.sociallogin)
         return render(
@@ -345,7 +406,8 @@ class SocialSignupView(SocialSignupViewDefault):
 @api_view(["GET", "POST"])
 def user_state(request):
     """
-    Request the user's authenticated status, username, name, email.
+    Endpoint request for the user's authenticated status, username, name, email: GET/POST.
+    - POST requires id_token for headless clients like Python apps.
     """
     user = request.user
     if request.method == "POST":
@@ -449,6 +511,9 @@ class MqttTokenSchema(AutoSchema):
 
 
 def get_user_from_id_token(gid_token):
+    """
+    Internal method to validate id_tokens from remote authentication.
+    """
     if not gid_token:
         raise ValueError("Missing token.")
     gclient_ids = [os.environ["GAUTH_CLIENTID"],
@@ -466,8 +531,11 @@ def get_user_from_id_token(gid_token):
 
 
 def _field_requested(request, field):
-    # field value could vary: true/false, or another string
-    # only missing field should evaluate to False
+    """
+    Internal handler to accommodate backward compatible token requests.
+    - Field value could vary: true/false, or another string.
+    - Only missing field should evaluate to False.
+    """
     value = request.POST.get(field, False)
     if value:
         return True
@@ -478,7 +546,8 @@ def _field_requested(request, field):
 # @schema(MqttTokenSchema())  # TODO: schema not working yet
 def mqtt_token(request):
     """
-    Request a MQTT JWT token with permissions for an anonymous or authenticated user given incoming parameters.
+    Endpoint to request a MQTT JWT token with permissions for an anonymous or authenticated user given incoming parameters.
+    - POST requires id_token for headless clients like Python apps.
     """
     user = request.user
     gid_token = request.POST.get("id_token", None)
@@ -492,8 +561,16 @@ def mqtt_token(request):
 
     if user.is_authenticated:
         username = user.username
+        if not username:
+            return JsonResponse(
+                {"error": "Invalid parameters"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     else:  # AnonymousUser
         username = request.POST.get("username", None)
+        if not username or not re.match(ANON_REGEX, username):
+            return JsonResponse(
+                {"error": "Invalid parameters"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     # produce nonce with 32-bits secure randomness
     nonce = str(secrets.randbits(32))
@@ -517,6 +594,10 @@ def mqtt_token(request):
         ctrlid1=ctrlid1,
         ctrlid2=ctrlid2,
     )
+    if not token:
+        return JsonResponse(
+            {"error": "Authentication required for this scene."}, status=status.HTTP_403_FORBIDDEN
+        )
     data = {
         "username": username,
         "token": token.decode("utf-8"),
