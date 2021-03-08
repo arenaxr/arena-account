@@ -64,9 +64,9 @@ def generate_arena_token(
     if scene and camid:
         headers = {"kid": "arena-public-key"}
         if user.is_authenticated:
-            display_name = user.fullname
+            display_name = user.get_full_name()
         else:
-            display_name = user.username
+            display_name = username
         payload["context"] = {"user": {}}
         if display_name:
             payload["context"]["user"]["name"] = display_name
