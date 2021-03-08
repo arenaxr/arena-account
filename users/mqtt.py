@@ -62,7 +62,8 @@ def generate_arena_token(
 
     # add jitsi server params if a/v scene
     if scene and camid:
-        headers = {"kid": "arena-public-key"}
+        host = os.getenv("HOSTNAME")
+        headers = {"kid": host}
         if user.is_authenticated:
             display_name = user.get_full_name()
         else:
