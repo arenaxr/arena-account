@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import os
@@ -27,7 +28,7 @@ from .forms import (SceneForm, SocialSignupForm, UpdateSceneForm,
                     UpdateStaffForm)
 from .models import Scene
 from .mqtt import (ANON_REGEX, PUBLIC_NAMESPACE, all_scenes_read_token,
-                   generate_mqtt_token)
+                   generate_arena_token)
 from .persistence import delete_scene_objects, get_persist_scenes
 from .serializers import SceneNameSerializer, SceneSerializer
 
@@ -127,7 +128,7 @@ def scene_perm_detail(request, pk):
             # delete account scene data
             scene.delete()
             # delete persist scene data
-            token = generate_mqtt_token(
+            token = generate_arena_token(
                 user=request.user, username=request.user.username)
             delete_scene_objects(pk, token)
             return redirect("user_profile")
@@ -332,7 +333,7 @@ def scene_landing(request):
         context={"user": request.user, "my_scenes": my_scenes,
                  "public_scenes": public_scenes, },
     )
-    token = generate_mqtt_token(
+    token = generate_arena_token(
         user=request.user, username=request.user.username)
     response.set_cookie(
         "mqtt_token",
@@ -439,9 +440,9 @@ def user_state(request):
         )
 
 
-class MqttTokenSchema(AutoSchema):
+class ArenaTokenSchema(AutoSchema):
     def __init__(self):
-        super(MqttTokenSchema, self).__init__()
+        super(ArenaTokenSchema, self).__init__()
 
     def get_manual_fields(self, path, method):
         extra_fields = [
@@ -540,10 +541,11 @@ def _field_requested(request, field):
 
 
 @api_view(["POST"])
-# @schema(MqttTokenSchema())  # TODO: schema not working yet
-def mqtt_token(request):
+# @schema(ArenaTokenSchema())  # TODO: schema not working yet
+def arena_token(request):
     """
-    Endpoint to request a MQTT JWT token with permissions for an anonymous or authenticated user given incoming parameters.
+    Endpoint to request a ARENA JWT token with permissions for an anonymous or authenticated user for
+    MQTT and Jitsi resoucres given incoming parameters.
     - POST requires id_token for headless clients like Python apps.
     """
     user = request.user
@@ -581,7 +583,7 @@ def mqtt_token(request):
         ctrlid1 = f"viveLeft_{nonce}_{username}"
     if _field_requested(request, "ctrlid2"):
         ctrlid2 = f"viveRight_{nonce}_{username}"
-    token = generate_mqtt_token(
+    token = generate_arena_token(
         user=user,
         username=username,
         realm=request.POST.get("realm", "realm"),

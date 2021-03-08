@@ -1,6 +1,7 @@
 import base64
 import datetime
 import os
+import re
 
 import jwt
 from django.conf import settings
@@ -30,7 +31,7 @@ def all_scenes_read_token():
     return token
 
 
-def generate_mqtt_token(
+def generate_arena_token(
     *,
     user,
     username,
@@ -54,7 +55,33 @@ def generate_mqtt_token(
         duration = datetime.timedelta(days=1)
     else:
         duration = datetime.timedelta(hours=6)
-    payload = {"sub": username, "exp": datetime.datetime.utcnow() + duration}
+    payload = {}
+    payload["sub"] = username
+    payload["exp"] = datetime.datetime.utcnow() + duration
+    headers = None
+
+    # add jitsi server params if a/v scene
+    if scene and camid:
+        headers = {"kid": "arena-public-key"}
+        if user.is_authenticated:
+            display_name = user.get_full_name()
+        else:
+            display_name = username
+        payload["context"] = {"user": {}}
+        if display_name:
+            payload["context"]["user"]["name"] = display_name
+            payload["context"]["user"]["arenaDisplayName"] = display_name
+        if userid:
+            payload["context"]["user"]["name"] += f"#4r3n4_{userid}"
+            payload["context"]["user"]["arenaId"] = userid
+        if camid:
+            payload["context"]["user"]["arenaCameraName"] = camid
+        payload["aud"] = "arena"
+        payload["iss"] = "arena-account"
+        # we use the scene name as the jitsi room name, handle RFC 3986 reserved chars as = '_'
+        roomname = re.sub(r"[!#$&'()*+,\/:;=?@[\]]", '_', scene.lower())
+        payload["room"] = roomname
+
     # everyone should be able to read all public scenes
     subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/#")
     # user presence objects
@@ -129,7 +156,7 @@ def generate_mqtt_token(
     if len(pubs) > 0:
         payload["publ"] = clean_topics(pubs)
 
-    return jwt.encode(payload, private_key, algorithm="RS256")
+    return jwt.encode(payload, private_key, algorithm="RS256", headers=headers)
 
 
 def clean_topics(topics):
