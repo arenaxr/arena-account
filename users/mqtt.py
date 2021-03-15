@@ -64,19 +64,6 @@ def generate_arena_token(
     if scene and camid:
         host = os.getenv("HOSTNAME")
         headers = {"kid": host}
-        if user.is_authenticated:
-            display_name = user.get_full_name()
-        else:
-            display_name = username
-        payload["context"] = {"user": {}}
-        if display_name:
-            payload["context"]["user"]["name"] = display_name
-            payload["context"]["user"]["arenaDisplayName"] = display_name
-        if userid:
-            payload["context"]["user"]["name"] += f"#4r3n4_{userid}"
-            payload["context"]["user"]["arenaId"] = userid
-        if camid:
-            payload["context"]["user"]["arenaCameraName"] = camid
         payload["aud"] = "arena"
         payload["iss"] = "arena-account"
         # we use the scene name as the jitsi room name, handle RFC 3986 reserved chars as = '_'
