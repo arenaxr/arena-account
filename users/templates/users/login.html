@@ -15,19 +15,53 @@
     <div class="container-xxl">
         <div class="row pt-5 d-flex justify-content-between align-items-center">
             <div class="col-lg-4">
-                <img alt="CONIX Logo" class="top-logo" src="{% static 'users/img/xr-logo-white-v7.png' %}" />
+                <img alt="CONIX Logo" class="top-logo" src="{% static 'users/img/xr-logo-v8.png' %}"/>
             </div>
-            <div class="col-lg-4 text-end">
-                <Button class="btn btn-white" id="loginPageBtn">Login</Button>
+        </div>
+        <div class="row mt-3">
+            <div class="col col-lg-8 offset-lg-2 col-12">
+                <div class="intro-text">
+                    The ARENA (Augmented Reality Edge Networking Architecture) is a platform for supporting real-time
+                    mixed reality interaction between multiple users and the physical world.
+                </div>
+                <h1 class="text-center mt-2 font-weight-boldest">
+                    Coming Soon!
+                </h1>
             </div>
         </div>
         <div class="row my-5">
-            <div class="col px-0 bg-black">
+            <div class="col-lg-10 offset-lg-1 col-12 px-0 bg-black">
                 <div class="ratio ratio-16x9">
-                    <iframe src="https://www.youtube-nocookie.com/embed/nZM-uiAPkqc?autoplay=1" frameborder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowfullscreen></iframe>
+                    <video autoplay loop>
+                        <source src="https://arena-public.s3.us-east-2.amazonaws.com/media/landing_demo.mp4"
+                                type="video/mp4">
+                    </video>
                 </div>
+            </div>
+        </div>
+        <div class="row my-4">
+            <div class="col col-lg-8 offset-lg-2 col-12 d-flex">
+                <div class="flex-grow-1 text-center d-flex justify-content-around">
+                    <a href="https://www.youtube.com/channel/UCKUC9UFyt9eLrK_9ILdlXgg" target="_blank">
+                        <img src="{% static 'users/img/youtube-icon.png' %}" class="social-icon" alt="youtube icon"/>
+                    </a>
+                    <a href="https://github.com/conix-center" target="_blank">
+                        <img src="{% static 'users/img/github-icon.png' %}" class="social-icon" alt="github icon"/>
+                    </a>
+                </div>
+                <div class="flex-grow-1  text-center">
+                    <a class="btn btn-outline-xred btn-lg" href="https://conix.io/arena">Learn More</a>
+                </div>
+                <div class="flex-grow-1 text-center">
+                    <Button class="btn btn-xred btn-lg" id="loginPageBtn">Try Arena</Button>
+                </div>
+            </div>
+        </div>
+        <div class="row my-5">
+             <div class="col col-lg-6 offset-lg-3 col-12 text-center">
+                This work was supported in part by the CONIX Research Center, one of six centers in JUMP, a
+                 Semiconductor Research Corporation (SRC) program sponsored by DARPA.<br/>
+                 For more information, please contact <a href="mailto:info@arenaxr.org">info@arenaxr.org</a>
             </div>
         </div>
     </div>
