@@ -30,6 +30,10 @@ function changePage(page = 'landing') {
     }
 }
 
+function setRedirectScene(sceneName) {
+    localStorage.setItem('request_uri', `/${sceneName}`);
+}
+
 
 document.addEventListener('DOMContentLoaded', function () {   // document.ready() equiv
     window.addEventListener('hashchange', function () {
