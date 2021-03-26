@@ -162,9 +162,9 @@ img.scene-thumb {
 
 @media (min-width: 576px) and (max-width: 767.98px) {
     .thumb-container:nth-child(even) img.scene-thumb:hover {
-        transform: translateX(12%) scale(1.25);
+        transform: translateX(25%) scale(1.5);
     }
     .thumb-container:nth-child(odd) img.scene-thumb:hover {
-        transform: translateX(-12%) scale(1.25);
+        transform: translateX(-25%) scale(1.5);
     }
 }
