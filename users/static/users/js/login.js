@@ -2,6 +2,7 @@ function returnToRequestedPage() {
     if (localStorage.getItem("request_uri")) {
         //redirect user to originally requested page
         location.href = localStorage.getItem("request_uri");
+        localStorage.removeItem("request_uri");
     } else {
         //redirect user to root page
         location.href = `${window.location.origin}/user/scenes`;
