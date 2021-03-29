@@ -256,13 +256,24 @@ def my_namespaces(request):
     return JsonResponse({"namespaces": namespaces})
 
 
-@api_view(["GET"])
+@api_view(["GET", "POST"])
 def my_scenes(request):
     """
-    Editable scenes headless endpoint for requesting a list of scenes this user can write to: GET.
+    Editable scenes headless endpoint for requesting a list of scenes this user can write to: GET/POST.
+    - POST requires id_token for headless clients like Python apps.
     """
-    serializer = SceneNameSerializer(get_my_scenes(request.user), many=True)
-    # TODO: fix response to remove csrf risk
+    user = request.user
+    if request.method == "POST":
+        gid_token = request.POST.get("id_token", None)
+        if gid_token:
+            try:
+                user = get_user_from_id_token(gid_token)
+            except (ValueError, SocialAccount.DoesNotExist) as err:
+                return JsonResponse(
+                    {"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN
+                )
+
+    serializer = SceneNameSerializer(get_my_scenes(user), many=True)
     return JsonResponse(serializer.data, safe=False)
 
 
@@ -544,7 +555,7 @@ def _field_requested(request, field):
 # @schema(ArenaTokenSchema())  # TODO: schema not working yet
 def arena_token(request):
     """
-    Endpoint to request a ARENA JWT token with permissions for an anonymous or authenticated user for
+    Endpoint to request an ARENA with permissions for an anonymous or authenticated user for
     MQTT and Jitsi resoucres given incoming parameters.
     - POST requires id_token for headless clients like Python apps.
     """
