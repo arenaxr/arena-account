@@ -48,7 +48,9 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
         showEl(pageEl, true);
         pageEl.dispatchEvent(new Event('routePageLoaded'));
     }, false);
-    document.getElementById('loginPageBtn').addEventListener('click', () => changePage('signIn'));
+    document.getElementsByClassName('loginPageBtn').forEach((el) => {
+        el.addEventListener('click', () => changePage('signIn'));
+    });
     const usernameContainer = document.getElementById('usernameContainer');
     const anonBtn = document.getElementById('anonBtn');
     const googleBtn = document.getElementById('googleBtn');
