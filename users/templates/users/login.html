@@ -11,116 +11,7 @@
 
 {% include 'users/includes/messages.html' %}
 {% csrf_token %} <!-- TODO: keep csrf_token for python apps temporarily -->
-<div class="d-none min-vh-100 routePage" id="landing">
-    <div class="container-xxl">
-        <div class="row pt-3 d-flex justify-content-between align-items-center">
-            <div class="col-lg-4">
-                <img alt="CONIX Logo" class="top-logo" src="{% static 'users/img/xr-logo-v8.png' %}"/>
-            </div>
-            <div class="col-lg-4 text-end">
-                <Button class="btn btn-xred loginPageBtn">Login</Button>
-            </div>
-        </div>
-        <div class="row mt-3">
-            <div class="col col-lg-8 offset-lg-2 col-12">
-                <div class="intro-text">
-                    The ARENA (Augmented Reality Edge Networking Architecture) is a platform for supporting real-time
-                    mixed reality interaction between multiple users and the physical world.
-                </div>
-            </div>
-        </div>
-        <div class="row my-4">
-            <div class="col-lg-10 offset-lg-1 col-12 px-0 bg-black">
-                <div class="ratio ratio-16x9">
-                    <iframe src="https://www.youtube-nocookie.com/embed/ftY3VMM2rhU?autoplay=1&loop=1&playlist=ftY3VMM2rhU&modestbranding=1&rel=0&controls=0"
-                            frameborder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowfullscreen>
-                    </iframe>
-                </div>
-            </div>
-        </div>
-        <div class="row my-5">
-            <div class="col col-lg-8 offset-lg-2 col-12 d-flex">
-                <div class="flex-grow-1 text-center d-flex justify-content-around">
-                    <a href="https://www.youtube.com/playlist?list=PL_AQ_N7xzl5qA-5ezYJg80Br_jdbdathD" target="_blank">
-                        <img src="{% static 'users/img/youtube-icon.png' %}" class="social-icon" alt="youtube icon"/>
-                    </a>
-                    <a href="https://github.com/conix-center" target="_blank">
-                        <img src="{% static 'users/img/github-icon.png' %}" class="social-icon" alt="github icon"/>
-                    </a>
-                </div>
-                <div class="flex-grow-1  text-center">
-                    <a class="btn btn-outline-xred btn-lg" href="https://arena.conix.io/">Learn More</a>
-                </div>
-                <div class="flex-grow-1 text-center">
-                    <Button class="btn btn-xred btn-lg loginPageBtn font-weight-boldest">Try Arena</Button>
-                </div>
-            </div>
-        </div>
-        <div class="row my-5 pt-3">
-            <div class="col-12 text-center">
-                <h2>
-                    Click the images to try these scenes
-                </h2>
-            </div>
-            <div class="col-xl-3 col-md-4 col-sm-6 p-3 thumb-container">
-                <a href="#signIn" onclick="setRedirectScene('lobby')">
-                    <img src="{% static 'users/img/thumbs/a8.jpg' %}" class="img-fluid scene-thumb" alt="Lobby Scene">
-                </a>
-            </div>
-            <div class="col-xl-3 col-md-4 col-sm-6 p-3 thumb-container">
-                <a href="#signIn" onclick="setRedirectScene('fireside')">
-                    <img src="{% static 'users/img/thumbs/a7.jpg' %}" class="img-fluid scene-thumb"
-                         alt="Fireside Scene">
-                </a>
-            </div>
-            <div class="col-xl-3 col-md-4 col-sm-6 p-3 thumb-container">
-                <a href="#signIn" onclick="setRedirectScene('meeting-4')">
-                    <img src="{% static 'users/img/thumbs/a6.jpg' %}" class="img-fluid scene-thumb"
-                         alt="Meeting-4 Scene">
-                </a>
-            </div>
-            <div class="col-xl-3 col-md-4 col-sm-6 p-3 thumb-container">
-                <a href="#signIn" onclick="setRedirectScene('island')">
-                    <img src="{% static 'users/img/thumbs/a5.jpg' %}" class="img-fluid scene-thumb" alt="Island Scene">
-                </a>
-            </div>
-            <div class="col-xl-3 col-md-4 col-sm-6 p-3 thumb-container">
-                <a href="#signIn" onclick="setRedirectScene('kingshall')">
-                    <img src="{% static 'users/img/thumbs/a4.jpg' %}" class="img-fluid scene-thumb"
-                         alt="Kings Hall Scene">
-                </a>
-            </div>
-            <div class="col-xl-3 col-md-4 col-sm-6 p-3 thumb-container">
-                <a href="#signIn" onclick="setRedirectScene('skatepark')">
-                    <img src="{% static 'users/img/thumbs/a3.jpg' %}" class="img-fluid scene-thumb"
-                         alt="Skate Park Scene">
-                </a>
-            </div>
-            <div class="col-xl-3 col-md-4 col-sm-6 p-3 thumb-container">
-                <a href="#signIn" onclick="setRedirectScene('cmu-tepper-hall')">
-                    <img src="{% static 'users/img/thumbs/a2.jpg' %}" class="img-fluid scene-thumb"
-                         alt="CMU Tepper Hall Scene">
-                </a>
-            </div>
-            <div class="col-xl-3 col-md-4 col-sm-6 p-3 thumb-container">
-                <a href="#signIn" onclick="setRedirectScene('loft')">
-                    <img src="{% static 'users/img/thumbs/a1.jpg' %}" class="img-fluid scene-thumb" alt="Loft Scene">
-                </a>
-            </div>
-        </div>
-        <div class="row my-4">
-             <div class="col col-lg-6 offset-lg-3 col-12 text-center">
-                This work was supported in part by the CONIX Research Center, one of six centers in JUMP, a
-                 Semiconductor Research Corporation (SRC) program sponsored by DARPA.<br/>
-                 For more information, please contact <a href="mailto:info@conix.io">info@conix.io</a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="d-none d-flex align-items-center min-vh-100 routePage" id="signIn">
+<div class="d-flex align-items-center min-vh-100">
     <div class="container">
         <div class="row d-flex justify-content-center align-items-center">
             <div class="col-lg-4 col-md-6 shadow rounded bg-white p-5">
@@ -129,7 +20,7 @@
                 </div>
                 <div class="row mb-5 text-center">
                     <div class="col">
-                        <img alt="conix face logo" src="{% static 'users/img/conix-face-white.jpg' %}" />
+                        <img alt="conix logo" class="top-logo" src="{% static 'users/img/xr-logo-v8.png' %}" />
                     </div>
                 </div>
                 <div class="row">

@@ -25,32 +25,7 @@ function hideEls(els, flex = false) {
     }
 }
 
-function changePage(page = 'landing') {
-    if (window.location.hash !== page) {
-        window.location.hash = page;
-    }
-}
-
-function setRedirectScene(sceneName) {
-    localStorage.setItem('request_uri', `/${sceneName}`);
-}
-
-
 document.addEventListener('DOMContentLoaded', function () {   // document.ready() equiv
-    window.addEventListener('hashchange', function () {
-        const validRoutes = [
-            '#landing',
-            '#signIn',
-        ]
-        const routePage = validRoutes.includes(window.location.hash) ? window.location.hash : '#landing';
-        const pageEl = document.querySelector(routePage);
-        hideEls(document.querySelectorAll(`.routePage:not(${routePage})`))
-        showEl(pageEl, true);
-        pageEl.dispatchEvent(new Event('routePageLoaded'));
-    }, false);
-    document.getElementsByClassName('loginPageBtn').forEach((el) => {
-        el.addEventListener('click', () => changePage('signIn'));
-    });
     const usernameContainer = document.getElementById('usernameContainer');
     const anonBtn = document.getElementById('anonBtn');
     const googleBtn = document.getElementById('googleBtn');
@@ -75,12 +50,10 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
     const usernameInput = document.getElementById('usernameInput');
     usernameInput.setAttribute('pattern', nameRegex);
 
-    document.getElementById('signIn').addEventListener('routePageLoaded', () => {
-        if (localStorage.getItem('display_name')) {
-            usernameInput.value = localStorage.getItem('display_name');
-            usernameInput.focus();
-        }
-    })
+    if (localStorage.getItem('display_name')) {
+        usernameInput.value = localStorage.getItem('display_name');
+        usernameInput.focus();
+    }
 
     // ** Anon Auth Init
     const re = new RegExp(nameRegex);
@@ -96,7 +69,5 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
         }
     };
     document.getElementById('loginForm').addEventListener('submit', anonFormHandler);
-
-    window.dispatchEvent(new Event('hashchange')); // Manually trigger initial hash routing
     providerSelect.dispatchEvent(new Event('change')); // Manually trigger selection effects for default
 });
