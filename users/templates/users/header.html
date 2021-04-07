@@ -57,7 +57,7 @@
         <!-- Container wrapper -->
         <div class="container-fluid">
             <!-- Navbar brand -->
-            <a class="navbar-brand" href="{{request.scheme}}://{{request.get_host}}/user/scenes">ARENA</a>
+            <a class="navbar-brand" href="{{request.scheme}}://{{request.get_host}}">ARENA</a>
 
             <!-- Toggle button -->
             <button class="navbar-toggler" type="button" data-mdb-toggle="collapse"
@@ -70,6 +70,9 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <!-- Left links -->
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{request.scheme}}://{{request.get_host}}/user/scenes">Scenes</a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{request.scheme}}://{{request.get_host}}/build">Builder</a>
                     </li>
