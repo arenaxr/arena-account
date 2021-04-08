@@ -583,7 +583,7 @@ def arena_token(request):
             )
 
     # produce nonce with 32-bits secure randomness
-    nonce = str(secrets.randbits(32))
+    nonce = f"{secrets.randbits(32):010d}"
     # define user object_ids server-side to prevent spoofing
     userid = camid = ctrlid1 = ctrlid2 = None
     if _field_requested(request, "userid"):
