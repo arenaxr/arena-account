@@ -26,7 +26,7 @@ Django project user account management for the ARENA.
     ```
     http://localhost:8000/user/accounts/google/login/callback/
     ```
-3. Create an environment file, [.env](.env), for testing on localhost using your Google auth app "Client id" and "Secret key".
+3. Create an environment file, `.env`, for testing on localhost using your Google auth app "Client id" and "Secret key".
 ```env
 HOSTNAME=localhost
 EMAIL=nouser@nomail.com
@@ -43,5 +43,5 @@ MQTT_TOKEN_PRIVKEY=/path/to/your/test/key/file.pem
 - ```make run```
 
 ### UIs
-- Admin: [http://localhost:8000/user/admin](http://localhost:8000/user/admin)
-- Main Page: [http://localhost:8000/user](http://localhost:8000/user)
+- Admin: http://localhost:8000/user/admin
+- Main Page: http://localhost:8000/user
