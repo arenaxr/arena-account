@@ -43,5 +43,5 @@ MQTT_TOKEN_PRIVKEY=/path/to/your/test/key/file.pem
 - ```make run```
 
 ### UIs
-- Admin: http://localhost:8000/user/admin
-- Main Page: http://localhost:8000/user
+- Admin: `http://localhost:8000/user/admin`
+- Main Page: `http://localhost:8000/user`
