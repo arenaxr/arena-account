@@ -9,14 +9,21 @@ logger.info("startup.py load test...")
 
 
 def setup_socialapps():
-    # add host to Sites if not there already
+    # Sites db must have a SITE_ID row that equals our host
     host = os.getenv("HOSTNAME")
-    hc = Site.objects.filter(id=settings.SITE_ID)
-    if hc.exists():
-        hc = Site.objects.get(id=settings.SITE_ID)
-        if hc.domain != host:
-            hc.name = host
-            hc.domain = host
-            hc.save()
+    site_id = settings.SITE_ID
+    # check that site_id has correct host
+    id_inst = Site.objects.filter(id=site_id)
+    if id_inst.exists():
+        id_inst = Site.objects.get(id=site_id)
+        if id_inst.domain != host:
+            # check that another site is not using our host, remove
+            host_inst = Site.objects.filter(domain=host)
+            if host_inst.exists():
+                host_inst.delete()
+            # update proper site_id with host
+            id_inst.name = host
+            id_inst.domain = host
+            id_inst.save()
     else:
-        hc = Site(id=settings.SITE_ID, name=host, domain=host)
+        id_inst = Site(id=site_id, name=host, domain=host)
