@@ -25,6 +25,7 @@
                 </div>
                 <div class="row">
                     <form id="loginForm">
+                        {% csrf_token %}
                         <div class="form-floating">
                             <select aria-label="Provider Select" class="form-select mb-3" id="provider">
                                 <option value="google">Google</option>
