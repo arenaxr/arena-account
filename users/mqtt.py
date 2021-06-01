@@ -7,7 +7,7 @@ import jwt
 from django.conf import settings
 
 from .models import (SCENE_ANON_USERS_DEF, SCENE_PUBLIC_READ_DEF,
-                     SCENE_PUBLIC_WRITE_DEF, Scene)
+                     SCENE_PUBLIC_WRITE_DEF, SCENE_VIDEO_CONF_DEF, Scene)
 
 PUBLIC_NAMESPACE = "public"
 ANON_REGEX = "anonymous-(?=.*?[a-zA-Z].*?[a-zA-Z])"
@@ -62,13 +62,21 @@ def generate_arena_token(
 
     # add jitsi server params if a/v scene
     if scene and camid:
-        host = os.getenv("HOSTNAME")
-        headers = {"kid": host}
-        payload["aud"] = "arena"
-        payload["iss"] = "arena-account"
-        # we use the scene name as the jitsi room name, handle RFC 3986 reserved chars as = '_'
-        roomname = re.sub(r"[!#$&'()*+,\/:;=?@[\]]", '_', scene.lower())
-        payload["room"] = roomname
+        video = False
+        scene_opt = Scene.objects.filter(name=scene)
+        if scene_opt.exists():
+            scene_opt = Scene.objects.get(name=scene)
+            video = scene_opt.video_conference
+        else:
+            video = SCENE_VIDEO_CONF_DEF
+        if video:
+            host = os.getenv("HOSTNAME")
+            headers = {"kid": host}
+            payload["aud"] = "arena"
+            payload["iss"] = "arena-account"
+            # we use the scene name as the jitsi room name, handle RFC 3986 reserved chars as = '_'
+            roomname = re.sub(r"[!#$&'()*+,\/:;=?@[\]]", '_', scene.lower())
+            payload["room"] = roomname
 
     # everyone should be able to read all public scenes
     subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/#")

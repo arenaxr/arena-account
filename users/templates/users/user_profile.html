@@ -117,6 +117,14 @@
                             Deny
                             {% endif %}
                         </td>
+                        <!--video conferencing ok-->
+                        <td>
+                            {% if scene.video_conference %}
+                            <b>Allow</b>
+                            {% else %}
+                            Deny
+                            {% endif %}
+                        </td>
                         <!--number of editors-->
                         <td>
                             {{ scene.editors.all|join:", " }}
