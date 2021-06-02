@@ -85,6 +85,7 @@
                     <th>Public Read</th>
                     <th>Public Write</th>
                     <th>Anonymous Users</th>
+                    <th>Video Conference</th>
                     <th>Other Editors</th>
                     <th></th>
                 </thead>
@@ -112,6 +113,14 @@
                         <!--anonymous users ok-->
                         <td>
                             {% if scene.anonymous_users %}
+                            <b>Allow</b>
+                            {% else %}
+                            Deny
+                            {% endif %}
+                        </td>
+                        <!--video conferencing ok-->
+                        <td>
+                            {% if scene.video_conference %}
                             <b>Allow</b>
                             {% else %}
                             Deny
