@@ -20,6 +20,7 @@ schema_view = get_schema_view(
         ),
     ),
     # TODO: review permissions
+    url=f"https://{os.environ['HOSTNAME']}",
     public=True,
     permission_classes=(permissions.AllowAny,),
 )
