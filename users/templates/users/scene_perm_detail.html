@@ -43,6 +43,8 @@
                 <button type="submit" class="btn btn-primary btn-sm" name="save">Save</button>
                 <button type="submit" class="btn btn-primary btn-sm" name="delete"
                     onclick="return confirm('Are you sure you want to delete {{ scene.name }}?');">Delete</button>
+                <a href="{{request.scheme}}://{{request.get_host}}/build/?scene={{ scene.name }}"
+                    class="btn btn-primary btn-sm">Edit Scene Objects</a>
             </form>
 
         </div>
