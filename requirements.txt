@@ -12,3 +12,4 @@ uritemplate==3.0.1
 drf-yasg==1.20.0
 python-dotenv==0.17.0
 requests==2.25.1
+django-autocomplete-light==3.8.2
