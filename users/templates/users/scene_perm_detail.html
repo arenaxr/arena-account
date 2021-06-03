@@ -1,11 +1,5 @@
 {% extends "users/header.html" %}
 
-{% block extrahead %}
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css">
-{% endblock extrahead %}
-
 {% block content %}
 
 {% include 'users/includes/messages.html' %}
@@ -47,7 +41,8 @@
                     <tr>
                         <td><b>Editors:</b></td>
                         <td>{{ form.editors }}</td>
-                        <td>Select/deselect specific editors.<br>Autocompletes on valid usernames.<br>Clear all: right x. Clear one: left x on left side of username.</td>
+                        <td>Select/deselect specific editors.<br>Autocompletes on valid usernames.<br>Clear All: right
+                            x. Clear One: left x on left side of username.</td>
                     </tr>
                 </table>
                 <button type="submit" class="btn btn-primary btn-sm" name="save">Save</button>
