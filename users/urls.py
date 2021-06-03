@@ -4,7 +4,6 @@ from django.urls import path, re_path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
-
 from . import views
 
 schema_view = get_schema_view(
@@ -64,4 +63,9 @@ urlpatterns = [
     ),
     path("redoc/", schema_view.with_ui("redoc",
                                        cache_timeout=0), name="schema-redoc"),
-]
+    # autocomplete
+    re_path(
+        r'^user-autocomplete/$',
+        views.UserAutocomplete.as_view(),
+        name='user-autocomplete',
+    ), ]

@@ -41,8 +41,8 @@
                     <tr>
                         <td><b>Editors:</b></td>
                         <td>{{ form.editors }}</td>
-                        <td>Select/deselect specific editors.<br>Windows: Hold down the control (ctrl) button.<br>
-                            Mac: Hold down the command button.</td>
+                        <td>Select/deselect specific editors.<br>Autocompletes on valid usernames.<br>Clear All: right
+                            x. Clear One: left x on left side of username.</td>
                     </tr>
                 </table>
                 <button type="submit" class="btn btn-primary btn-sm" name="save">Save</button>
@@ -55,5 +55,28 @@
         </div>
     </div>
 </div>
+
+{{ form.media }}
+
+<script>
+    (function($) {
+        $('#add-form').click(function() {
+            var index = $('#id_inline_test_models-TOTAL_FORMS').val()
+            var newTable = $('#id_inline_test_models-__prefix__-DELETE').parents('table').clone()
+            newTable.find(':input').each(function() {
+                for (attr of ['username', 'id'])
+                    $(this).attr(
+                        attr,
+                        $(this).attr(attr).replace('__prefix__', index)
+                    )
+            })
+            newTable.insertBefore($(this))
+            $('#id_inline_test_models-TOTAL_FORMS').val(
+                parseInt($('#id_inline_test_models-TOTAL_FORMS').val()) + 1
+            )
+            newTable.slideDown()
+        })
+    })($)
+</script>
 
 {% endblock content %}

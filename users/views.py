@@ -1,9 +1,10 @@
-import datetime
 import json
 import logging
 import os
 import re
 import secrets
+
+from dal import autocomplete
 
 import coreapi
 from allauth.socialaccount import helpers
@@ -24,8 +25,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
 
-from .forms import (SceneForm, SocialSignupForm, UpdateSceneForm,
-                    UpdateStaffForm)
+from .forms import SceneForm, SocialSignupForm, UpdateSceneForm
 from .models import Scene
 from .mqtt import (ANON_REGEX, PUBLIC_NAMESPACE, all_scenes_read_token,
                    generate_arena_token)
@@ -137,6 +137,20 @@ def scene_perm_detail(request, pk):
 
     return render(request=request, template_name="users/scene_perm_detail.html",
                   context={"scene": scene, "form": form})
+
+
+class UserAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        # Don't forget to filter out results depending on the visitor !
+        if not self.request.user.is_authenticated:
+            return User.objects.none()
+
+        qs = User.objects.all()
+
+        if self.q:
+            qs = qs.filter(username__istartswith=self.q)
+
+        return qs
 
 
 @api_view(["POST", "GET", "PUT", "DELETE"])
