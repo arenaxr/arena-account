@@ -1,5 +1,5 @@
 from allauth.socialaccount.forms import SignupForm as _SocialSignupForm
-from dal import autocomplete
+from dal import autocomplete, forward
 from django import forms
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -33,12 +33,9 @@ class SceneForm(forms.ModelForm):
         queryset=User.objects.all().order_by('username'),
         widget=autocomplete.ModelSelect2Multiple(
             url='user-autocomplete',
+            forward=(forward.Self(), ),
             attrs={'data-minimum-input-length': 2},
         ), required=False)
-
-    # editors = forms.ModelMultipleChoiceField(
-    #     queryset=User.objects.all().order_by('username'),
-    #     widget=forms.SelectMultiple(attrs={"class": "form-select"}), required=False)
     public_read = forms.BooleanField(
         widget=forms.CheckboxInput(attrs={"class": "form-check-input"}), required=False)
     public_write = forms.BooleanField(
