@@ -29,13 +29,11 @@ class UpdateSceneForm(forms.Form):
 
 
 class SceneForm(forms.ModelForm):
-    editors = forms.ModelChoiceField(
+    editors = forms.ModelMultipleChoiceField(
         queryset=User.objects.all().order_by('username'),
         widget=autocomplete.ModelSelect2Multiple(
             url='user-autocomplete',
-            attrs={'data-placeholder': 'Autocomplete ...',
-                   'data-minimum-input-length': 2,
-                   },
+            attrs={'data-minimum-input-length': 2},
         ), required=False)
 
     # editors = forms.ModelMultipleChoiceField(
