@@ -209,38 +209,6 @@ def scene_detail(request, pk):
         )
 
 
-@permission_classes([permissions.IsAdminUser])
-def profile_update_staff(request):
-    """
-    Profile page GET/POST handler for editing Staff permissions.
-    """
-    # update staff status if allowed
-    if request.method != "POST":
-        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
-    form = UpdateStaffForm(request.POST)
-    if not request.user.is_authenticated:
-        return JsonResponse(
-            {"error": "Not authenticated."}, status=status.HTTP_403_FORBIDDEN
-        )
-    if not form.is_valid():
-        return JsonResponse(
-            {"error": "Invalid parameters"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
-    staff_username = form.cleaned_data["staff_username"]
-    is_staff = form.cleaned_data["is_staff"]
-    if (
-        request.user.is_superuser
-        and User.objects.filter(username=staff_username).exists()
-    ):
-        print(f"Setting user {staff_username}, is_staff={is_staff}")
-        user = User.objects.get(username=staff_username)
-        user.is_staff = is_staff
-        user.save()
-
-    return redirect("user_profile")
-
-
 @api_view(["GET"])
 def my_namespaces(request):
     """
