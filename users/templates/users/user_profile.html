@@ -39,7 +39,7 @@
             {% if user.is_superuser %}
             <!-- Set or Remove user as Staff -->
             <h5>Admin Functions:</h5>
-            <form action="profile_update_staff" method="POST">
+            <form action="" id="form_admin" method="POST">
                 {% csrf_token %}
                 <label for="username">Username:</label>
                 <input type="text" id="username" pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$">
@@ -51,6 +51,7 @@
                 var input = document.getElementById('username');
                 input.onchange = input.onkeyup = function() {
                     link.search = '?q=' + encodeURIComponent(input.value);
+                    document.getElementById("form_admin").action = link.href;
                 };
             </script>
             <br>

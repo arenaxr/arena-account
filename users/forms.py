@@ -1,9 +1,8 @@
 from allauth.socialaccount.forms import SignupForm as _SocialSignupForm
+from dal import autocomplete
 from django import forms
 from django.conf import settings
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from django.forms import ModelForm
 
 from .models import Scene
 
@@ -25,20 +24,23 @@ class SocialSignupForm(_SocialSignupForm):
             self.add_error("username", msg)
 
 
-class UpdateStaffForm(forms.Form):
-    staff_username = forms.CharField(label="staff_username", required=True)
-    is_staff = forms.BooleanField(
-        label="is_staff", required=False, initial=False)
-
-
 class UpdateSceneForm(forms.Form):
     edit = forms.CharField(label="edit", required=False)
 
 
 class SceneForm(forms.ModelForm):
-    editors = forms.ModelMultipleChoiceField(
+    editors = forms.ModelChoiceField(
         queryset=User.objects.all().order_by('username'),
-        widget=forms.SelectMultiple(attrs={"class": "form-select"}), required=False)
+        widget=autocomplete.ModelSelect2Multiple(
+            url='user-autocomplete',
+            attrs={'data-placeholder': 'Autocomplete ...',
+                   'data-minimum-input-length': 2,
+                   },
+        ), required=False)
+
+    # editors = forms.ModelMultipleChoiceField(
+    #     queryset=User.objects.all().order_by('username'),
+    #     widget=forms.SelectMultiple(attrs={"class": "form-select"}), required=False)
     public_read = forms.BooleanField(
         widget=forms.CheckboxInput(attrs={"class": "form-check-input"}), required=False)
     public_write = forms.BooleanField(
@@ -50,4 +52,5 @@ class SceneForm(forms.ModelForm):
 
     class Meta:
         model = Scene
-        fields = ("public_read", "public_write", "anonymous_users", "video_conference", "editors")
+        fields = ("public_read", "public_write",
+                  "anonymous_users", "video_conference", "editors")
