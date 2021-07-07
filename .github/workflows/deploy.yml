@@ -23,6 +23,5 @@ jobs:
              git reset --hard HEAD
              git pull
              cd ..
-             ./prod.sh stop arena-account
-             ./prod.sh up --force-recreate --build -d arena-account
-             ./prod.sh restart arena-web
+             ./prod.sh down
+             ./prod.sh up --force-recreate --build -d
