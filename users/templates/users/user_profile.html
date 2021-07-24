@@ -121,12 +121,18 @@
             None
             {% endif %}
             <br>
+            <!-- <button type="submit" class="btn btn-danger btn-sm" name="delete"
+                onclick="return confirm('Are you sure you want to delete account {{ user.get_username }}?');">Delete
+                Account</button> -->
             {% else %}
             <h5>Anonymous users have no profile.</h5>
             {% endif %}
 
         </div>
     </div>
+    <script>
+        // window.onload = function() {};
+    </script>
 </div>
 
 {% endblock content %}
