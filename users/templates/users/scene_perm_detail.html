@@ -66,10 +66,12 @@
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    //Swal.fire('Saved!', '', 'success')
-                    // post name=delete
-                    //document.getElementById("scene_perms_form").name = "delete";
-                    document.getElementById("scene_perms_form").submit();
+                    // submit delete in form manually
+                    const form = document.getElementById('scene_perms_form');
+                    const input = document.createElement('input');
+                    input.setAttribute('name', 'delete');
+                    form.appendChild(input);
+                    form.submit();
                 }
             })
         }
