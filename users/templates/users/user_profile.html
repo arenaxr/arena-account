@@ -121,9 +121,11 @@
             None
             {% endif %}
             <br>
-            <!-- <button type="submit" class="btn btn-danger btn-sm" name="delete"
-                onclick="return confirm('Are you sure you want to delete account {{ user.get_username }}?');">Delete
-                Account</button> -->
+            <form action="" id="form_user_account" method="POST">
+                {% csrf_token %}
+                <input type="button" class="btn btn-danger btn-sm" onclick="clickDelete(this);"
+                    value="Delete Account and Scenes" />
+            </form>
             {% else %}
             <h5>Anonymous users have no profile.</h5>
             {% endif %}
@@ -131,7 +133,35 @@
         </div>
     </div>
     <script>
-        // window.onload = function() {};
+        async function clickDelete() {
+            const confirm_text = 'delete {{ user.get_username }} account and scenes'
+            const {
+                value: text
+            } = await Swal.fire({
+                title: 'Are you sure you want to delete account {{ user.get_username }} and all of {{ user.get_username }} scenes?',
+                showCancelButton: true,
+                confirmButtonText: `Yes`,
+                customClass: {
+                    cancelButton: 'order-1 right-gap',
+                    confirmButton: 'order-2',
+                },
+                html: 'To save a scene under another account: CANCEL this dialog, give Editor permissions to another user, the other user can then Clone Scenes to their account.',
+                input: 'text',
+                inputLabel: `Confirm by typing "${confirm_text}"`,
+                inputPlaceholder: 'Type your confirmation here...',
+                inputAttributes: {
+                    'aria-label': 'Type your confirmation here'
+                },
+            })
+            if (text == confirm_text) {
+                // submit delete in form manually
+                const form = document.getElementById('form_user_account');
+                const input = document.createElement('input');
+                input.setAttribute('name', 'delete');
+                form.appendChild(input);
+                form.submit();
+            }
+        }
     </script>
 </div>
 

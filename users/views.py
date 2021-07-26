@@ -344,6 +344,21 @@ def user_profile(request):
     - Shows Admin functions, based on superuser status.
     - Shows scenes that the user has permissions to edit and a button to edit them.
     """
+
+    if request.method == 'POST':
+        if "delete" in request.POST:
+            context = {}
+            try:
+                user = request.user
+                user.is_active = False
+                user.save()
+                context['msg'] = 'Profile successfully disabled.'
+                return logout_request(request)
+            except User.DoesNotExist:
+                return JsonResponse({"message": "The user does not exist"}, status=status.HTTP_404_NOT_FOUND)
+            except Exception as e:
+                return JsonResponse({"error": "Invalid parameters"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     scenes = get_my_scenes(request.user)
     staff = None
     if request.user.is_staff:  # admin/staff
