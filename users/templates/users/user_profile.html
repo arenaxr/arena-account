@@ -61,7 +61,7 @@
             {% if scenes %}
             <table class="table table-sm table-hover">
                 <thead class="thead-light">
-                    <th>Scene</th>
+                    <th>Scene Name (view)</th>
                     <th>Public Read</th>
                     <th>Public Write</th>
                     <th>Anonymous Users</th>
@@ -77,33 +77,33 @@
                         <!--public subscribe ok-->
                         <td>
                             {% if scene.public_read %}
-                            <b>Allow</b>
+                            <i class="fas fa-check"></i>
                             {% else %}
-                            Deny
+                            <i class="fas fa-times"></i>
                             {% endif %}
                         </td>
                         <!--public publish objects ok-->
                         <td>
                             {% if scene.public_write %}
-                            <b>Allow</b>
+                            <i class="fas fa-check"></i>
                             {% else %}
-                            Deny
+                            <i class="fas fa-times"></i>
                             {% endif %}
                         </td>
                         <!--anonymous users ok-->
                         <td>
                             {% if scene.anonymous_users %}
-                            <b>Allow</b>
+                            <i class="fas fa-check"></i>
                             {% else %}
-                            Deny
+                            <i class="fas fa-times"></i>
                             {% endif %}
                         </td>
                         <!--video conferencing ok-->
                         <td>
                             {% if scene.video_conference %}
-                            <b>Allow</b>
+                            <i class="fas fa-check"></i>
                             {% else %}
-                            Deny
+                            <i class="fas fa-times"></i>
                             {% endif %}
                         </td>
                         <!--number of editors-->
@@ -138,7 +138,7 @@
             const {
                 value: text
             } = await Swal.fire({
-                title: 'Are you sure you want to delete account {{ user.get_username }} and all of {{ user.get_username }} scenes?',
+                title: 'Are you sure you want to delete account {{ user.get_username }} and all {{ user.get_username }}/+ scenes?',
                 showCancelButton: true,
                 confirmButtonText: `Yes`,
                 customClass: {
@@ -157,7 +157,7 @@
                 // submit delete in form manually
                 const form = document.getElementById('form_user_account');
                 const input = document.createElement('input');
-                input.setAttribute('name', 'delete');
+                input.setAttribute('name', confirm_text);
                 form.appendChild(input);
                 form.submit();
             }

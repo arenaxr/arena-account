@@ -95,10 +95,8 @@ def profile_update_scene(request):
         )
     form = UpdateSceneForm(request.POST)
     if not form.is_valid():
-        return JsonResponse(
-            {"error": "Invalid parameters"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        messages.error(request, "Invalid parameters")
+        return redirect("user_profile")
     if "edit" in request.POST:
         name = form.cleaned_data["edit"]
         return redirect(f"profile/scenes/{name}")
@@ -109,15 +107,15 @@ def profile_update_scene(request):
 def scene_perm_detail(request, pk):
     """
     Handle Scene Permissions Edit page, get page load and post submit requests.
+    - Handles scene permissions changes and deletes.
     """
     if not scene_permission(user=request.user, scene=pk):
-        return JsonResponse({"error": f"User does not have permission for: {pk}."}, status=status.HTTP_400_BAD_REQUEST)
+        messages.error(request, f"User does not have permission for: {pk}.")
     # now, make sure scene exists before the other commands are tried
     try:
         scene = Scene.objects.get(name=pk)
     except Scene.DoesNotExist:
-        return JsonResponse({"message": "The scene does not exist"}, status=status.HTTP_404_NOT_FOUND)
-
+        messages.error(request, "The scene does not exist")
     if request.method == 'POST':
         if "save" in request.POST:
             form = SceneForm(instance=scene, data=request.POST)
@@ -125,12 +123,12 @@ def scene_perm_detail(request, pk):
                 form.save()
                 return redirect("user_profile")
         elif "delete" in request.POST:
-            # delete account scene data
-            scene.delete()
             # delete persist scene data
             token = generate_arena_token(
                 user=request.user, username=request.user.username)
             delete_scene_objects(pk, token)
+            # delete account scene data
+            scene.delete()
             return redirect("user_profile")
     else:
         form = SceneForm(instance=scene)
@@ -343,21 +341,30 @@ def user_profile(request):
     User Profile listing page GET handler.
     - Shows Admin functions, based on superuser status.
     - Shows scenes that the user has permissions to edit and a button to edit them.
+    - Handles account deletes.
     """
 
     if request.method == 'POST':
-        if "delete" in request.POST:
-            context = {}
+        # account delete request
+        confirm_text = f'delete {request.user.username} account and scenes'
+        if confirm_text in request.POST:
+            token = generate_arena_token(
+                user=request.user, username=request.user.username)
+            u_scenes = Scene.objects.filter(
+                name__startswith=f'{request.user.username}/')
+            for scene in u_scenes:
+                # delete persist scene data
+                delete_scene_objects(scene.name, token)
+                # delete account scene data
+                scene.delete()
+
             try:
                 user = request.user
                 user.is_active = False
                 user.save()
-                context['msg'] = 'Profile successfully disabled.'
                 return logout_request(request)
             except User.DoesNotExist:
-                return JsonResponse({"message": "The user does not exist"}, status=status.HTTP_404_NOT_FOUND)
-            except Exception as e:
-                return JsonResponse({"error": "Invalid parameters"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                messages.error(request, "Unable to complete account delete.")
 
     scenes = get_my_scenes(request.user)
     staff = None

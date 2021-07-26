@@ -54,3 +54,11 @@ span.icon {
 .min-vh-75 {
     min-height: 75vh
 }
+
+.fa-check {
+    color: green;
+}
+
+.fa-times {
+    color: red;
+}
