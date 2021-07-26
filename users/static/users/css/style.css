@@ -55,6 +55,7 @@ span.icon {
     min-height: 75vh
 }
 
+/* allow/deny permissions icons for profile dashboard */
 .fa-check {
     color: green;
 }

@@ -1,15 +1,15 @@
+import datetime
 import json
 import logging
 import os
 import re
 import secrets
 
-from dal import autocomplete
-
 import coreapi
 from allauth.socialaccount import helpers
 from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.views import SignupView as SocialSignupViewDefault
+from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -123,12 +123,15 @@ def scene_perm_detail(request, pk):
                 form.save()
                 return redirect("user_profile")
         elif "delete" in request.POST:
-            # delete persist scene data
             token = generate_arena_token(
                 user=request.user, username=request.user.username)
-            delete_scene_objects(pk, token)
             # delete account scene data
             scene.delete()
+            # delete persist scene data
+            if not delete_scene_objects(pk, token):
+                messages.error(
+                    request, f"Unable to delete {pk} objects from persistance database.")
+
             return redirect("user_profile")
     else:
         form = SceneForm(instance=scene)
@@ -353,11 +356,13 @@ def user_profile(request):
             u_scenes = Scene.objects.filter(
                 name__startswith=f'{request.user.username}/')
             for scene in u_scenes:
-                # delete persist scene data
-                delete_scene_objects(scene.name, token)
                 # delete account scene data
                 scene.delete()
-
+                # delete persist scene data
+                if not delete_scene_objects(scene.name, token):
+                    messages.error(
+                        request, f"Unable to delete {scene.name} objects from persistance database.")
+            # delete account
             try:
                 user = request.user
                 user.is_active = False
@@ -598,6 +603,10 @@ def arena_token(request):
         ctrlid1 = f"viveLeft_{nonce}_{username}"
     if _field_requested(request, "ctrlid2"):
         ctrlid2 = f"viveRight_{nonce}_{username}"
+    if user.is_authenticated:
+        duration = datetime.timedelta(days=1)
+    else:
+        duration = datetime.timedelta(hours=6)
     token = generate_arena_token(
         user=user,
         username=username,
@@ -607,6 +616,7 @@ def arena_token(request):
         userid=userid,
         ctrlid1=ctrlid1,
         ctrlid2=ctrlid2,
+        duration=duration
     )
     if not token:
         return JsonResponse(
