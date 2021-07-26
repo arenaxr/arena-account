@@ -362,11 +362,14 @@ def user_profile(request):
                 if not delete_scene_objects(scene.name, token):
                     messages.error(
                         request, f"Unable to delete {scene.name} objects from persistance database.")
-            # delete account
+
+            # Be careful of foreign keys, in that case this is suggested:
+            # user.is_active = False
+            # user.save()
             try:
+                # delete account
                 user = request.user
-                user.is_active = False
-                user.save()
+                user.delete()
                 return logout_request(request)
             except User.DoesNotExist:
                 messages.error(request, "Unable to complete account delete.")
