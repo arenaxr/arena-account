@@ -67,7 +67,7 @@
                     <th>Anonymous Users</th>
                     <th>Video Conference</th>
                     <th>Other Editors</th>
-                    <th></th>
+                    <th>Edit Permissions</th>
                 </thead>
                 {% for scene in scenes %}
                 <form action="profile_update_scene" method="POST">
@@ -118,7 +118,11 @@
                 {% endfor %}
             </table>
             {% else %}
-            None
+            <table class="table table-sm table-hover">
+                <tr>
+                    <td>No scenes</td>
+                </tr>
+            </table>
             {% endif %}
             <br>
             <form action="" id="form_user_account" method="POST">
