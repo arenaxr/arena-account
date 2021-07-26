@@ -1,15 +1,15 @@
+import datetime
 import json
 import logging
 import os
 import re
 import secrets
 
-from dal import autocomplete
-
 import coreapi
 from allauth.socialaccount import helpers
 from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.views import SignupView as SocialSignupViewDefault
+from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -95,10 +95,8 @@ def profile_update_scene(request):
         )
     form = UpdateSceneForm(request.POST)
     if not form.is_valid():
-        return JsonResponse(
-            {"error": "Invalid parameters"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        messages.error(request, "Invalid parameters")
+        return redirect("user_profile")
     if "edit" in request.POST:
         name = form.cleaned_data["edit"]
         return redirect(f"profile/scenes/{name}")
@@ -109,15 +107,15 @@ def profile_update_scene(request):
 def scene_perm_detail(request, pk):
     """
     Handle Scene Permissions Edit page, get page load and post submit requests.
+    - Handles scene permissions changes and deletes.
     """
     if not scene_permission(user=request.user, scene=pk):
-        return JsonResponse({"error": f"User does not have permission for: {pk}."}, status=status.HTTP_400_BAD_REQUEST)
+        messages.error(request, f"User does not have permission for: {pk}.")
     # now, make sure scene exists before the other commands are tried
     try:
         scene = Scene.objects.get(name=pk)
     except Scene.DoesNotExist:
-        return JsonResponse({"message": "The scene does not exist"}, status=status.HTTP_404_NOT_FOUND)
-
+        messages.error(request, "The scene does not exist")
     if request.method == 'POST':
         if "save" in request.POST:
             form = SceneForm(instance=scene, data=request.POST)
@@ -125,12 +123,15 @@ def scene_perm_detail(request, pk):
                 form.save()
                 return redirect("user_profile")
         elif "delete" in request.POST:
+            token = generate_arena_token(
+                user=request.user, username=request.user.username)
             # delete account scene data
             scene.delete()
             # delete persist scene data
-            token = generate_arena_token(
-                user=request.user, username=request.user.username)
-            delete_scene_objects(pk, token)
+            if not delete_scene_objects(pk, token):
+                messages.error(
+                    request, f"Unable to delete {pk} objects from persistance database.")
+
             return redirect("user_profile")
     else:
         form = SceneForm(instance=scene)
@@ -343,7 +344,36 @@ def user_profile(request):
     User Profile listing page GET handler.
     - Shows Admin functions, based on superuser status.
     - Shows scenes that the user has permissions to edit and a button to edit them.
+    - Handles account deletes.
     """
+
+    if request.method == 'POST':
+        # account delete request
+        confirm_text = f'delete {request.user.username} account and scenes'
+        if confirm_text in request.POST:
+            token = generate_arena_token(
+                user=request.user, username=request.user.username)
+            u_scenes = Scene.objects.filter(
+                name__startswith=f'{request.user.username}/')
+            for scene in u_scenes:
+                # delete account scene data
+                scene.delete()
+                # delete persist scene data
+                if not delete_scene_objects(scene.name, token):
+                    messages.error(
+                        request, f"Unable to delete {scene.name} objects from persistance database.")
+
+            # Be careful of foreign keys, in that case this is suggested:
+            # user.is_active = False
+            # user.save()
+            try:
+                # delete account
+                user = request.user
+                user.delete()
+                return logout_request(request)
+            except User.DoesNotExist:
+                messages.error(request, "Unable to complete account delete.")
+
     scenes = get_my_scenes(request.user)
     staff = None
     if request.user.is_staff:  # admin/staff
@@ -576,6 +606,10 @@ def arena_token(request):
         ctrlid1 = f"viveLeft_{nonce}_{username}"
     if _field_requested(request, "ctrlid2"):
         ctrlid2 = f"viveRight_{nonce}_{username}"
+    if user.is_authenticated:
+        duration = datetime.timedelta(days=1)
+    else:
+        duration = datetime.timedelta(hours=6)
     token = generate_arena_token(
         user=user,
         username=username,
@@ -585,6 +619,7 @@ def arena_token(request):
         userid=userid,
         ctrlid1=ctrlid1,
         ctrlid2=ctrlid2,
+        duration=duration
     )
     if not token:
         return JsonResponse(

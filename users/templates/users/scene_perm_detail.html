@@ -10,7 +10,7 @@
         <div class="col-lg-8 col-md-8 shadow rounded bg-white p-5">
 
             <h1>Edit Scene Permissions</h1>
-            <form action="" method="post">
+            <form id="scene_perms_form" action="" method="post">
                 {% csrf_token %}
                 <table class="table">
                     <tr>
@@ -46,14 +46,36 @@
                     </tr>
                 </table>
                 <button type="submit" class="btn btn-primary btn-sm" name="save">Save</button>
-                <button type="submit" class="btn btn-primary btn-sm" name="delete"
-                    onclick="return confirm('Are you sure you want to delete {{ scene.name }}?');">Delete</button>
                 <a href="{{request.scheme}}://{{request.get_host}}/build/?scene={{ scene.name }}"
                     class="btn btn-primary btn-sm">Edit Scene Objects</a>
+                <hr />
+                <input type="button" class="btn btn-danger btn-sm" onclick="clickDelete(this);" value="Delete Scene" />
             </form>
 
         </div>
     </div>
+    <script>
+        async function clickDelete() {
+            Swal.fire({
+                title: 'Are you sure you want to delete scene {{ scene.name }}?',
+                showCancelButton: true,
+                confirmButtonText: `Yes`,
+                customClass: {
+                    cancelButton: 'order-1 right-gap',
+                    confirmButton: 'order-2',
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // submit delete in form manually
+                    const form = document.getElementById('scene_perms_form');
+                    const input = document.createElement('input');
+                    input.setAttribute('name', 'delete');
+                    form.appendChild(input);
+                    form.submit();
+                }
+            })
+        }
+    </script>
 </div>
 
 {{ form.media }}

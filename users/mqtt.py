@@ -11,6 +11,7 @@ from .models import (SCENE_ANON_USERS_DEF, SCENE_PUBLIC_READ_DEF,
 
 PUBLIC_NAMESPACE = "public"
 ANON_REGEX = "anonymous-(?=.*?[a-zA-Z].*?[a-zA-Z])"
+DEF_JWT_DURATION = datetime.timedelta(minutes=1)
 
 
 def all_scenes_read_token():
@@ -41,6 +42,7 @@ def generate_arena_token(
     userid=None,
     ctrlid1=None,
     ctrlid2=None,
+    duration=DEF_JWT_DURATION
 ):
     subs = []
     pubs = []
@@ -51,10 +53,6 @@ def generate_arena_token(
     print("Using keyfile at: " + privkeyfile)
     with open(privkeyfile) as privatefile:
         private_key = privatefile.read()
-    if user.is_authenticated:
-        duration = datetime.timedelta(days=1)
-    else:
-        duration = datetime.timedelta(hours=6)
     payload = {}
     payload["sub"] = username
     payload["exp"] = datetime.datetime.utcnow() + duration
