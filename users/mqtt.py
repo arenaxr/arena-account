@@ -40,8 +40,8 @@ def generate_arena_token(
     scene=None,
     camid=None,
     userid=None,
-    ctrlid1=None,
-    ctrlid2=None,
+    handleftid=None,
+    handrightid=None,
     duration=DEF_JWT_DURATION
 ):
     subs = []
@@ -119,10 +119,10 @@ def generate_arena_token(
         if camid:  # probable web browser write
             pubs.append(f"{realm}/s/{scene}/{camid}")
             pubs.append(f"{realm}/s/{scene}/{camid}/#")
-        if ctrlid1:
-            pubs.append(f"{realm}/s/{scene}/{ctrlid1}")
-        if ctrlid2:
-            pubs.append(f"{realm}/s/{scene}/{ctrlid2}")
+        if handleftid:
+            pubs.append(f"{realm}/s/{scene}/{handleftid}")
+        if handrightid:
+            pubs.append(f"{realm}/s/{scene}/{handrightid}")
     # chat messages
     if scene and userid:
         namespace = scene.split("/")[0]

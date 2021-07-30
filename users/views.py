@@ -513,18 +513,18 @@ class ArenaTokenSchema(AutoSchema):
                 description="Name of the user's ARENA camera object id.",
             ),
             coreapi.Field(
-                "ctrlid1",
+                "handleftid",
                 required=False,
                 location="body",
                 type="string",
-                description="Name of the user's ARENA controller object 1, like vive left.",
+                description="Name of the user's ARENA controller object left hand.",
             ),
             coreapi.Field(
-                "ctrlid2",
+                "handrightid",
                 required=False,
                 location="body",
                 type="string",
-                description="Name of the user's ARENA controller object 2, like vive right.",
+                description="Name of the user's ARENA controller object right hand.",
             ),
         ]
         manual_fields = super().get_manual_fields(path, method)
@@ -597,15 +597,15 @@ def arena_token(request):
     # produce nonce with 32-bits secure randomness
     nonce = f"{secrets.randbits(32):010d}"
     # define user object_ids server-side to prevent spoofing
-    userid = camid = ctrlid1 = ctrlid2 = None
+    userid = camid = handleftid = handrightid = None
     if _field_requested(request, "userid"):
         userid = f"{nonce}_{username}"
     if _field_requested(request, "camid"):
         camid = f"camera_{nonce}_{username}"
-    if _field_requested(request, "ctrlid1"):
-        ctrlid1 = f"viveLeft_{nonce}_{username}"
-    if _field_requested(request, "ctrlid2"):
-        ctrlid2 = f"viveRight_{nonce}_{username}"
+    if _field_requested(request, "handleftid"):
+        handleftid = f"handLeft_{nonce}_{username}"
+    if _field_requested(request, "handrightid"):
+        handrightid = f"handRight_{nonce}_{username}"
     if user.is_authenticated:
         duration = datetime.timedelta(days=1)
     else:
@@ -617,8 +617,8 @@ def arena_token(request):
         scene=request.POST.get("scene", None),
         camid=camid,
         userid=userid,
-        ctrlid1=ctrlid1,
-        ctrlid2=ctrlid2,
+        handleftid=handleftid,
+        handrightid=handrightid,
         duration=duration
     )
     if not token:
@@ -634,10 +634,10 @@ def arena_token(request):
         data["ids"]["userid"] = userid
     if camid:
         data["ids"]["camid"] = camid
-    if ctrlid1:
-        data["ids"]["ctrlid1"] = ctrlid1
-    if ctrlid2:
-        data["ids"]["ctrlid2"] = ctrlid2
+    if handleftid:
+        data["ids"]["handleftid"] = handleftid
+    if handrightid:
+        data["ids"]["handrightid"] = handrightid
     response = HttpResponse(json.dumps(data), content_type="application/json")
     response.set_cookie(
         "mqtt_token",
