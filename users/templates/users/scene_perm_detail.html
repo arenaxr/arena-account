@@ -26,7 +26,8 @@
                     <tr>
                         <td><b>Public Write:</b></td>
                         <td>{{ form.public_write }}</td>
-                        <td>Allow any user to edit the scene (default: off).</td>
+                        <td>Allow any user to edit the scene (default: off). On: disables whitelisted Editors, allowing
+                            all users to edit. </td>
                     </tr>
                     <tr>
                         <td><b>Anonymous Users:</b></td>
@@ -55,6 +56,25 @@
         </div>
     </div>
     <script>
+        window.onload = onPageLoad();
+
+        function onPageLoad() {
+            let checkbox = document.getElementById("id_public_write");
+            let select = document.getElementById("id_editors");
+            updatePublicWrite(checkbox, select);
+            checkbox.addEventListener('change', function() {
+                updatePublicWrite(checkbox, select);
+            });
+        }
+
+        function updatePublicWrite(checkbox, select) {
+            if (checkbox.checked == true) {
+                select.disabled = true;
+            } else {
+                select.disabled = false;
+            }
+        }
+
         async function clickDelete() {
             Swal.fire({
                 title: 'Are you sure you want to delete scene {{ scene.name }}?',

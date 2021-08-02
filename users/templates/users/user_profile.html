@@ -108,7 +108,11 @@
                         </td>
                         <!--number of editors-->
                         <td>
+                            {% if scene.public_write %}
+                            <span style="color:darkorange;font-weight:bolder;font-style:italic;">ALL USERS</span>
+                            {% else %}
                             {{ scene.editors.all|join:", " }}
+                            {% endif %}
                         </td>
                         <td><button type="submit" class="btn btn-primary btn-sm" name="edit"
                                 value="{{ scene.name }}">Edit</button></td>
