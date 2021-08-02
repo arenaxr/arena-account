@@ -63,3 +63,11 @@ span.icon {
 .fa-times {
     color: red;
 }
+
+/* table size/scroll management */
+.sticky-header {
+    position: sticky;
+    top: 60;
+    background: white;
+    z-index: 999;
+}

@@ -6,8 +6,8 @@
 
 <!--Profile-->
 <div class="container-fluid">
-    <div class="row d-flex justify-content-center align-items-center">
-        <div class="col-lg-9 col-md-10 shadow rounded bg-white p-5">
+    <div class="row d-flex justify-content-center align-items-center min-vh-75">
+        <div class="col-md-10 bg-white p-5">
 
             {% if user.is_authenticated %}
             <h1>User Profile</h1>
@@ -59,7 +59,7 @@
             <!-- List scenes user can edit, and links -->
             <h5>Scene Permissions:</h5>
             {% if scenes %}
-            <table class="table table-sm table-hover">
+            <table class="table table-sm table-hover sticky-header">
                 <thead class="thead-light">
                     <th>Scene Name (view)</th>
                     <th>Public Read</th>
@@ -69,57 +69,59 @@
                     <th>Other Editors</th>
                     <th>Edit Permissions</th>
                 </thead>
-                {% for scene in scenes %}
-                <form action="profile_update_scene" method="POST">
-                    {% csrf_token %}
-                    <tr>
-                        <td><a href="../../{{ scene.name }}"><b>{{ scene.name }}</b></a></td>
-                        <!--public subscribe ok-->
-                        <td>
-                            {% if scene.public_read %}
-                            <i class="fas fa-check"></i>
-                            {% else %}
-                            <i class="fas fa-times"></i>
-                            {% endif %}
-                        </td>
-                        <!--public publish objects ok-->
-                        <td>
-                            {% if scene.public_write %}
-                            <i class="fas fa-check"></i>
-                            {% else %}
-                            <i class="fas fa-times"></i>
-                            {% endif %}
-                        </td>
-                        <!--anonymous users ok-->
-                        <td>
-                            {% if scene.anonymous_users %}
-                            <i class="fas fa-check"></i>
-                            {% else %}
-                            <i class="fas fa-times"></i>
-                            {% endif %}
-                        </td>
-                        <!--video conferencing ok-->
-                        <td>
-                            {% if scene.video_conference %}
-                            <i class="fas fa-check"></i>
-                            {% else %}
-                            <i class="fas fa-times"></i>
-                            {% endif %}
-                        </td>
-                        <!--number of editors-->
-                        <td>
-                            {% if scene.public_write %}
-                            <span style="color:darkorange;font-weight:bolder;font-style:italic;">ALL USERS</span>
-                            {% else %}
-                            {{ scene.editors.all|join:", " }}
-                            {% endif %}
-                        </td>
-                        <td><button type="submit" class="btn btn-primary btn-sm" name="edit"
-                                value="{{ scene.name }}">Edit</button></td>
-                        </td>
-                    </tr>
-                </form>
-                {% endfor %}
+                <tbody>
+                    {% for scene in scenes %}
+                    <form action="profile_update_scene" method="POST">
+                        {% csrf_token %}
+                        <tr>
+                            <td><a href="../../{{ scene.name }}"><b>{{ scene.name }}</b></a></td>
+                            <!--public subscribe ok-->
+                            <td>
+                                {% if scene.public_read %}
+                                <i class="fas fa-check"></i>
+                                {% else %}
+                                <i class="fas fa-times"></i>
+                                {% endif %}
+                            </td>
+                            <!--public publish objects ok-->
+                            <td>
+                                {% if scene.public_write %}
+                                <i class="fas fa-check"></i>
+                                {% else %}
+                                <i class="fas fa-times"></i>
+                                {% endif %}
+                            </td>
+                            <!--anonymous users ok-->
+                            <td>
+                                {% if scene.anonymous_users %}
+                                <i class="fas fa-check"></i>
+                                {% else %}
+                                <i class="fas fa-times"></i>
+                                {% endif %}
+                            </td>
+                            <!--video conferencing ok-->
+                            <td>
+                                {% if scene.video_conference %}
+                                <i class="fas fa-check"></i>
+                                {% else %}
+                                <i class="fas fa-times"></i>
+                                {% endif %}
+                            </td>
+                            <!--number of editors-->
+                            <td>
+                                {% if scene.public_write %}
+                                <span style="color:darkorange;font-weight:bolder;font-style:italic;">ALL USERS</span>
+                                {% else %}
+                                {{ scene.editors.all|join:", " }}
+                                {% endif %}
+                            </td>
+                            <td><button type="submit" class="btn btn-primary btn-sm" name="edit"
+                                    value="{{ scene.name }}">Edit</button></td>
+                            </td>
+                        </tr>
+                    </form>
+                    {% endfor %}
+                </tbody>
             </table>
             {% else %}
             <table class="table table-sm table-hover">
@@ -171,6 +173,10 @@
             }
         }
     </script>
+
+
 </div>
+
+
 
 {% endblock content %}
