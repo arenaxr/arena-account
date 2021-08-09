@@ -5,6 +5,7 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 from . import views
+from revproxy.views import ProxyView
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -47,9 +48,10 @@ urlpatterns = [
     ),
     path("my_scenes", views.my_scenes, name="my_scenes"),
     path("my_namespaces", views.my_namespaces, name="my_namespaces"),
+    # namespace/scenename
     re_path(
         r"^scenes/(?P<pk>[^\/]+\/[^\/]+)$", views.scene_detail
-    ),  # namespace/scenename
+    ),
     # docs
     re_path(
         r"^doc(?P<format>\.json|\.yaml)$",
@@ -65,7 +67,11 @@ urlpatterns = [
                                        cache_timeout=0), name="schema-redoc"),
     # autocomplete
     re_path(
-        r'^user-autocomplete/$',
+        r"^user-autocomplete/$",
         views.UserAutocomplete.as_view(),
         name='user-autocomplete',
-    ), ]
+    ),
+
+    # filebrowser reverse proxy
+    re_path(r"^storeauth/(?P<path>.*)$", views.StoreAuthProxyView.as_view()),
+]

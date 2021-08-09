@@ -11,7 +11,7 @@ def delete_scene_objects(scene, token: jwt):
     config = settings.PUBSUB
     host = config["mqtt_server"]["host"]
     # in docker on localhost this url will fail
-    url = f"https://{host}/persist/{scene}"
+    url = f"https://host.docker.internal/persist/{scene}"
     result = _urlopen(url, token, "DELETE")
     return result
 
@@ -21,7 +21,7 @@ def get_persist_scenes(token: jwt):
     config = settings.PUBSUB
     host = config["mqtt_server"]["host"]
     # in docker on localhost this url will fail
-    url = f"https://{host}/persist/!allscenes"
+    url = f"https://host.docker.internal/persist/!allscenes"
     result = _urlopen(url, token, "GET")
     if result:
         return json.loads(result)
@@ -34,7 +34,7 @@ def _urlopen(url, token: jwt, method):
         return None
     headers = {"Cookie": f"mqtt_token={token.decode('utf-8')}"}
     cookies = {"mqtt_token": token.decode("utf-8")}
-    verify = not settings.DEBUG
+    verify = False #not settings.DEBUG
     try:
         if method == "GET":
             response = requests.get(

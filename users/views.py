@@ -14,9 +14,11 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
+from django.contrib.sites.shortcuts import get_current_site
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from google.auth.transport import requests
 from google.oauth2 import id_token
 from rest_framework import permissions, status
@@ -24,6 +26,7 @@ from rest_framework.compat import coreapi
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
+from revproxy.views import ProxyView
 
 from .forms import SceneForm, SocialSignupForm, UpdateSceneForm
 from .models import Scene
@@ -461,6 +464,35 @@ def user_state(request):
         return JsonResponse(
             {"authenticated": user.is_authenticated, }, status=status.HTTP_200_OK
         )
+
+
+#@xframe_options_sameorigin
+class StoreAuthProxyView(ProxyView):
+    # If the user is authenticated in Django and add_remote_user attribute is set to True
+    # the HTTP header REMOTE_USER will be set with request.user.username.
+    #upstream = '/storesrv'
+    site = get_current_site(None)
+    #upstream = f'https://{site.domain}/storesrv'
+    #upstream = f'https://192.168.1.167/storesrv'
+    #upstream = f'https://host.docker.internal/storesrv'
+    upstream = f'http://host.docker.internal/storesrv'
+    #upstream = f'https://127.0.0.1/storesrv'
+    #upstream = 'http://example.com'
+    add_remote_user = True
+    rewrite = (
+        (r'^(?P<base>.*)(?<!/)$', r'\g<base>/'),
+    )
+
+    def get_request_headers(self):
+        # Call super to get default headers
+        headers = super(StoreAuthProxyView, self).get_request_headers()
+        # Add new header
+        headers['X-Filebrowser-Auth'] = headers.get('REMOTE_USER')
+        print('headers')
+        print(headers)
+        print('upstream')
+        print(self.upstream)
+        return headers
 
 
 class ArenaTokenSchema(AutoSchema):
