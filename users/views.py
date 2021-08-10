@@ -466,7 +466,7 @@ def user_state(request):
         )
 
 
-#@xframe_options_sameorigin
+# @xframe_options_sameorigin
 class StoreAuthProxyView(ProxyView):
     # If the user is authenticated in Django and add_remote_user attribute is set to True
     # the HTTP header REMOTE_USER will be set with request.user.username.
@@ -487,7 +487,8 @@ class StoreAuthProxyView(ProxyView):
         # Call super to get default headers
         headers = super(StoreAuthProxyView, self).get_request_headers()
         # Add new header
-        headers['X-Filebrowser-Auth'] = headers.get('REMOTE_USER')
+        if headers.get('REMOTE_USER'):
+            headers['X-Filebrowser-Auth'] = headers.get('REMOTE_USER')
         print('headers')
         print(headers)
         print('upstream')
