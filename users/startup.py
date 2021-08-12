@@ -1,11 +1,7 @@
-import logging
 import os
 
 from django.conf import settings
 from django.contrib.sites.models import Site
-
-logger = logging.getLogger(__name__)
-logger.info("startup.py load test...")
 
 
 def setup_socialapps():

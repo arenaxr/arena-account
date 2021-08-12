@@ -1,6 +1,5 @@
 import datetime
 import json
-import logging
 import os
 import re
 import secrets
@@ -10,6 +9,7 @@ from allauth.socialaccount import helpers
 from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.views import SignupView as SocialSignupViewDefault
 from dal import autocomplete
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -34,9 +34,6 @@ from .mqtt import (ANON_REGEX, PUBLIC_NAMESPACE, all_scenes_read_token,
                    generate_arena_token)
 from .persistence import delete_scene_objects, get_persist_scenes
 from .serializers import SceneNameSerializer, SceneSerializer
-
-logger = logging.getLogger(__name__)
-logger.info("views.py load test...")
 
 
 def index(request):
@@ -466,22 +463,16 @@ def user_state(request):
         )
 
 
-# @xframe_options_sameorigin
+# TODO(mwfarb): use per view @xframe_options_sameorigin
 class StoreAuthProxyView(ProxyView):
     # If the user is authenticated in Django and add_remote_user attribute is set to True
     # the HTTP header REMOTE_USER will be set with request.user.username.
-    #upstream = '/storesrv'
-    site = get_current_site(None)
-    #upstream = f'https://{site.domain}/storesrv'
-    #upstream = f'https://192.168.1.167/storesrv'
-    #upstream = f'https://host.docker.internal/storesrv'
-    upstream = f'http://host.docker.internal/storesrv'
-    #upstream = f'https://127.0.0.1/storesrv'
-    #upstream = 'http://example.com'
+    if os.environ["HOSTNAME"] == 'localhost':
+        upstream = f'http://host.docker.internal/storesrv'
+    else:
+        site = get_current_site(None)
+        upstream = f'https://{site.domain}/storesrv'
     add_remote_user = True
-    rewrite = (
-        (r'^(?P<base>.*)(?<!/)$', r'\g<base>/'),
-    )
 
     def get_request_headers(self):
         # Call super to get default headers
@@ -489,10 +480,6 @@ class StoreAuthProxyView(ProxyView):
         # Add new header
         if headers.get('REMOTE_USER'):
             headers['X-Filebrowser-Auth'] = headers.get('REMOTE_USER')
-        print('headers')
-        print(headers)
-        print('upstream')
-        print(self.upstream)
         return headers
 
 
