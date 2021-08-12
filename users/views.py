@@ -470,8 +470,7 @@ class StoreAuthProxyView(ProxyView):
     if os.environ["HOSTNAME"] == 'localhost':
         upstream = f'http://host.docker.internal/storesrv'
     else:
-        site = get_current_site(None)
-        upstream = f'https://{site.domain}/storesrv'
+        upstream = f'https://{os.environ["HOSTNAME"]}/storesrv'
     add_remote_user = True
 
     def get_request_headers(self):
