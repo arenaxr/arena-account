@@ -71,3 +71,7 @@ span.icon {
     background: white;
     z-index: 999;
 }
+
+.border-grey {
+    border-color: #BBB;
+}
