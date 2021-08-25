@@ -468,9 +468,9 @@ class StoreAuthProxyView(ProxyView):
     # If the user is authenticated in Django and add_remote_user attribute is set to True
     # the HTTP header REMOTE_USER will be set with request.user.username.
     if os.environ["HOSTNAME"] == 'localhost':
-        upstream = f'http://host.docker.internal/storesrv'
+        upstream = f'http://host.docker.internal/storemng'
     else:
-        upstream = f'https://{os.environ["HOSTNAME"]}/storesrv'
+        upstream = f'https://{os.environ["HOSTNAME"]}/storemng'
     add_remote_user = True
 
     def get_request_headers(self):
