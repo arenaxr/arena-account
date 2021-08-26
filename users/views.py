@@ -14,12 +14,11 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
-from django.contrib.sites.shortcuts import get_current_site
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.clickjacking import xframe_options_sameorigin
-from google.auth.transport import requests
+from google.auth.transport import requests as grequests
 from google.oauth2 import id_token
 from rest_framework import permissions, status
 from rest_framework.compat import coreapi
@@ -28,6 +27,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
 from revproxy.views import ProxyView
 
+from .filestore import get_filestore_auth
 from .forms import SceneForm, SocialSignupForm, UpdateSceneForm
 from .models import Scene
 from .mqtt import (ANON_REGEX, PUBLIC_NAMESPACE, all_scenes_read_token,
@@ -41,7 +41,11 @@ def index(request):
     Root page load, index is treated as Login page.
     """
     if request.user.is_authenticated:
-        return redirect("scenes")
+        response = redirect("scenes")
+        fs_user_cookie = get_filestore_auth(request)
+        if fs_user_cookie:
+            response.set_cookie("auth", fs_user_cookie)
+        return response
     else:
         return redirect("login")
 
@@ -51,7 +55,11 @@ def login_request(request):
     Login page load, handles user/pass login if required.
     """
     if request.user.is_authenticated:
-        return redirect("scenes")
+        response = redirect("scenes")
+        fs_user_cookie = get_filestore_auth(request)
+        if fs_user_cookie:
+            response.set_cookie("auth", fs_user_cookie)
+        return response
     else:
         if request.method == "POST":
             form = AuthenticationForm(request, data=request.POST)
@@ -82,7 +90,7 @@ def logout_request(request):
     return redirect("login")
 
 
-@permission_classes([permissions.IsAuthenticated])
+@ permission_classes([permissions.IsAuthenticated])
 def profile_update_scene(request):
     """
     Handle User Profile page, get page load and post submit requests.
@@ -154,8 +162,8 @@ class UserAutocomplete(autocomplete.Select2QuerySetView):
         return qs
 
 
-@api_view(["POST", "GET", "PUT", "DELETE"])
-@permission_classes([permissions.IsAuthenticated])
+@ api_view(["POST", "GET", "PUT", "DELETE"])
+@ permission_classes([permissions.IsAuthenticated])
 def scene_detail(request, pk):
     """
     Scene Permissions headless endpoint for editing permission: POST, GET, PUT, DELETE.
@@ -224,7 +232,7 @@ def scene_detail(request, pk):
         )
 
 
-@api_view(["GET"])
+@ api_view(["GET"])
 def my_namespaces(request):
     """
     Editable entire namespaces headless endpoint for requesting a list of namespaces this user can write to: GET.
@@ -239,7 +247,7 @@ def my_namespaces(request):
     return JsonResponse({"namespaces": namespaces})
 
 
-@api_view(["GET", "POST"])
+@ api_view(["GET", "POST"])
 def my_scenes(request):
     """
     Editable scenes headless endpoint for requesting a list of scenes this user can write to: GET/POST.
@@ -416,7 +424,7 @@ class SocialSignupView(SocialSignupViewDefault):
             {"form": social_form, "account": self.sociallogin.account},
         )
 
-    @transaction.atomic
+    @ transaction.atomic
     def form_valid(self, social_form):
         self.request.session.pop("socialaccount_sociallogin", None)
         user = social_form.save(self.request)
@@ -424,7 +432,7 @@ class SocialSignupView(SocialSignupViewDefault):
         return helpers.complete_social_signup(self.request, self.sociallogin)
 
 
-@api_view(["GET", "POST"])
+@ api_view(["GET", "POST"])
 def user_state(request):
     """
     Endpoint request for the user's authenticated status, username, name, email: GET/POST.
@@ -558,7 +566,7 @@ def get_user_from_id_token(gid_token):
         raise ValueError("Missing token.")
     gclient_ids = [os.environ["GAUTH_CLIENTID"],
                    os.environ["GAUTH_INSTALLED_CLIENTID"]]
-    idinfo = id_token.verify_oauth2_token(gid_token, requests.Request())
+    idinfo = id_token.verify_oauth2_token(gid_token, grequests.Request())
     if idinfo["aud"] not in gclient_ids:
         raise ValueError("Could not verify audience.")
     # ID token is valid. Get the user's Google Account ID from the decoded token.
@@ -582,7 +590,7 @@ def _field_requested(request, field):
     return False
 
 
-@api_view(["POST"])
+@ api_view(["POST"])
 # @schema(ArenaTokenSchema())  # TODO: schema not working yet
 def arena_token(request):
     """
