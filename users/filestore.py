@@ -35,8 +35,7 @@ ADDUSER_OPTS = {
 }
 
 
-def get_filestore_auth(request):
-    django_user = request.user.username
+def get_filestore_auth(django_user):
     verify = True
     if os.environ["HOSTNAME"] == 'localhost':
         host = "host.docker.internal"
@@ -55,8 +54,9 @@ def get_filestore_auth(request):
     admin_cookie = r_admin.text
 
     try:
+        headers = {"Cookie": f"auth={admin_cookie}", "X-Auth": admin_cookie}
         r_users = requests.get(
-            f'https://{host}/storemng/api/users', cookies={'auth': admin_cookie}, verify=verify)
+            f'https://{host}/storemng/api/users', cookies={'auth': admin_cookie}, headers=headers, verify=verify)
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
         return None
@@ -67,8 +67,10 @@ def get_filestore_auth(request):
         ADDUSER_OPTS["data"]["username"] = django_user
         ADDUSER_OPTS["data"]["password"] = ''
         try:
+            headers = {"Cookie": f"auth={admin_cookie}",
+                       "X-Auth": admin_cookie}
             r_adduser = requests.post(f'https://{host}/storemng/api/users',
-                                      data=json.dumps(ADDUSER_OPTS), cookies={'auth': admin_cookie}, verify=verify)
+                                      data=json.dumps(ADDUSER_OPTS), cookies={'auth': admin_cookie}, headers=headers, verify=verify)
         except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
             print("{0}: ".format(err))
             return None

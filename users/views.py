@@ -42,7 +42,7 @@ def index(request):
     """
     if request.user.is_authenticated:
         response = redirect("scenes")
-        fs_user_cookie = get_filestore_auth(request)
+        fs_user_cookie = get_filestore_auth(request.user.username)
         if fs_user_cookie:
             response.set_cookie("auth", fs_user_cookie)
         return response
@@ -56,7 +56,7 @@ def login_request(request):
     """
     if request.user.is_authenticated:
         response = redirect("scenes")
-        fs_user_cookie = get_filestore_auth(request)
+        fs_user_cookie = get_filestore_auth(request.user.username)
         if fs_user_cookie:
             response.set_cookie("auth", fs_user_cookie)
         return response
