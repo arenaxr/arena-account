@@ -42,9 +42,9 @@ def index(request):
     """
     if request.user.is_authenticated:
         response = redirect("scenes")
-        fs_user_cookie = get_filestore_auth(request.user.username)
-        if fs_user_cookie:
-            response.set_cookie("auth", fs_user_cookie)
+        fs_user_token = get_filestore_auth(request.user.username)
+        if fs_user_token:
+            response.set_cookie("auth", fs_user_token)
         return response
     else:
         return redirect("login")
@@ -56,9 +56,9 @@ def login_request(request):
     """
     if request.user.is_authenticated:
         response = redirect("scenes")
-        fs_user_cookie = get_filestore_auth(request.user.username)
-        if fs_user_cookie:
-            response.set_cookie("auth", fs_user_cookie)
+        fs_user_token = get_filestore_auth(request.user.username)
+        if fs_user_token:
+            response.set_cookie("auth", fs_user_token)
         return response
     else:
         if request.method == "POST":

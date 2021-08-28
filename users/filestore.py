@@ -7,30 +7,25 @@ ADDUSER_OPTS = {
     "what": "user",
     "which": [],
     "data": {
-        "scope": ".",
         "locale": "en",
+        "lockPassword": True,
         "viewMode": "mosaic",
-        "singleClick": False,
-        "sorting": {
-            "by": "",
-            "asc": False
-        },
         "perm": {
             "admin": False,
-            "execute": False,
+            "execute": True,
             "create": True,
-            "rename": False,
+            "rename": True,
             "modify": True,
             "delete": True,
             "share": True,
             "download": True
         },
         "commands": [],
-        "hideDotfiles": False,
-        "rules": [],
-        "lockPassword": True,
-        "id": 0,
-        "passsword": "",
+        "sorting": {
+            "by": "name",
+            "asc": False
+        },
+        "rules": []
     }
 }
 
@@ -51,12 +46,11 @@ def get_filestore_auth(django_user):
         print("{0}: ".format(err))
         return None
     print(r_admin.text)
-    admin_cookie = r_admin.text
+    admin_token = r_admin.text
 
     try:
-        headers = {"Cookie": f"auth={admin_cookie}", "X-Auth": admin_cookie}
         r_users = requests.get(
-            f'https://{host}/storemng/api/users', cookies={'auth': admin_cookie}, headers=headers, verify=verify)
+            f'https://{host}/storemng/api/users', headers={"X-Auth": admin_token}, verify=verify)
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
         return None
@@ -65,12 +59,10 @@ def get_filestore_auth(django_user):
     # User doesn't exist, create first
     if len([user for user in users if user['username'] == django_user]) == 0:
         ADDUSER_OPTS["data"]["username"] = django_user
-        ADDUSER_OPTS["data"]["password"] = ''
+        ADDUSER_OPTS["data"]["password"] = django_user
         try:
-            headers = {"Cookie": f"auth={admin_cookie}",
-                       "X-Auth": admin_cookie}
             r_adduser = requests.post(f'https://{host}/storemng/api/users',
-                                      data=json.dumps(ADDUSER_OPTS), cookies={'auth': admin_cookie}, headers=headers, verify=verify)
+                                      data=json.dumps(ADDUSER_OPTS), headers={"X-Auth": admin_token}, verify=verify)
         except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
             print("{0}: ".format(err))
             return None
@@ -78,10 +70,9 @@ def get_filestore_auth(django_user):
 
     try:
         r_userlogin = requests.post(f'https://{host}/storemng/api/login', data=json.dumps(
-            {'username': django_user, 'password': ''}), verify=verify)
+            {'username': django_user, 'password': django_user}), verify=verify)
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
         return None
-    # request.set_cookie('auth', r_userlogin.text)
     print(r_userlogin.text)
     return r_userlogin.text
