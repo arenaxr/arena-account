@@ -25,7 +25,9 @@ ADDUSER_OPTS = {
             "by": "name",
             "asc": False
         },
-        "rules": []
+        "rules": [],
+        "hideDotfiles": False,
+        "singleClick": False,
     }
 }
 

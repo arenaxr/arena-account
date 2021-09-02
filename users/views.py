@@ -41,11 +41,7 @@ def index(request):
     Root page load, index is treated as Login page.
     """
     if request.user.is_authenticated:
-        response = redirect("scenes")
-        fs_user_token = get_filestore_auth(request.user.username)
-        if fs_user_token:
-            response.set_cookie("auth", fs_user_token)
-        return response
+        return redirect("scenes")
     else:
         return redirect("login")
 
@@ -55,11 +51,7 @@ def login_request(request):
     Login page load, handles user/pass login if required.
     """
     if request.user.is_authenticated:
-        response = redirect("scenes")
-        fs_user_token = get_filestore_auth(request.user.username)
-        if fs_user_token:
-            response.set_cookie("auth", fs_user_token)
-        return response
+        return redirect("scenes")
     else:
         if request.method == "POST":
             form = AuthenticationForm(request, data=request.POST)
@@ -469,6 +461,14 @@ def user_state(request):
         return JsonResponse(
             {"authenticated": user.is_authenticated, }, status=status.HTTP_200_OK
         )
+
+
+def storelogin(request):
+    response = HttpResponse()
+    fs_user_token = get_filestore_auth(request.user.username)
+    if fs_user_token:
+        response.set_cookie("auth", fs_user_token)
+    return response
 
 
 # TODO(mwfarb): use per view @xframe_options_sameorigin

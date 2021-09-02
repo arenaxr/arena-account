@@ -74,4 +74,5 @@ urlpatterns = [
 
     # filebrowser reverse proxy
     re_path(r"^storeauth/(?P<path>.*)$", views.StoreAuthProxyView.as_view()),
+    path("storelogin", views.storelogin, name="storelogin"),
 ]
