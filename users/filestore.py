@@ -8,7 +8,6 @@ ADDUSER_OPTS = {
     "what": "user",
     "which": [],
     "data": {
-        "scope": ".",
         "locale": "en",
         "lockPassword": True,
         "viewMode": "mosaic",
@@ -34,14 +33,30 @@ ADDUSER_OPTS = {
 }
 
 
-def get_filestore_auth(user: User):
+def get_rest_host():
     verify = True
     if os.environ["HOSTNAME"] == 'localhost':
         host = "host.docker.internal"
         verify = False
     else:
         host = os.environ["HOSTNAME"]
+    return verify, host
 
+
+def use_filestore_auth(user: User):
+    verify, host = get_rest_host()
+    try:
+        r_userlogin = requests.post(f'https://{host}/storemng/api/login', data=json.dumps(
+            {'username': user.username, 'password': user.password}), verify=verify)
+    except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
+        print("{0}: ".format(err))
+        return None
+    return r_userlogin.text
+
+
+def add_filestore_auth(user: User):
+    verify, host = get_rest_host()
+    # get auth for setting new user
     try:
         r_admin = requests.post(f'https://{host}/storemng/api/login',
                                 data=json.dumps({'username': os.environ["STORE_ADMIN_USERNAME"],
@@ -49,7 +64,38 @@ def get_filestore_auth(user: User):
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
         return None
-    print(r_admin.text)
+    admin_token = r_admin.text
+
+    # set new user options
+    ADDUSER_OPTS["data"]["username"] = user.username
+    ADDUSER_OPTS["data"]["password"] = user.password
+    ADDUSER_OPTS["data"]["perm"]["admin"] = user.is_superuser
+    if user.is_superuser:
+        ADDUSER_OPTS["data"]["scope"] = "."
+    else:
+        ADDUSER_OPTS["data"]["scope"] = f"./users/{user.username}"
+
+    # add new user to filestore db
+    try:
+        requests.post(f'https://{host}/storemng/api/users',
+                      data=json.dumps(ADDUSER_OPTS), headers={"X-Auth": admin_token}, verify=verify)
+    except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
+        print("{0}: ".format(err))
+        return None
+
+    return use_filestore_auth(user)
+
+
+def delete_filestore_auth(user: User):
+    verify, host = get_rest_host()
+    # get auth for removing user
+    try:
+        r_admin = requests.post(f'https://{host}/storemng/api/login',
+                                data=json.dumps({'username': os.environ["STORE_ADMIN_USERNAME"],
+                                                 'password': os.environ["STORE_ADMIN_PASSWORD"]}), verify=verify)
+    except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
+        print("{0}: ".format(err))
+        return False
     admin_token = r_admin.text
 
     try:
@@ -57,27 +103,21 @@ def get_filestore_auth(user: User):
             f'https://{host}/storemng/api/users', headers={"X-Auth": admin_token}, verify=verify)
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
-        return None
+        return False
     print(r_users.text)
     fsusers = r_users.json()
-    # User doesn't exist, create first
-    if len([fsuser for fsuser in fsusers if fsuser['username'] == user.username]) == 0:
-        ADDUSER_OPTS["data"]["username"] = user.username
-        ADDUSER_OPTS["data"]["password"] = user.password
-        ADDUSER_OPTS["data"]["perm"]["admin"] = user.is_superuser
-        try:
-            r_adduser = requests.post(f'https://{host}/storemng/api/users',
-                                      data=json.dumps(ADDUSER_OPTS), headers={"X-Auth": admin_token}, verify=verify)
-        except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
-            print("{0}: ".format(err))
-            return None
-        print(r_adduser.text)
-
+    # find user in list
+    for fsuser in fsusers:
+        if fsuser['username']:
+            del_userid = fsuser.id
+        else:
+            return False
+    # delete user from filestore db
     try:
-        r_userlogin = requests.post(f'https://{host}/storemng/api/login', data=json.dumps(
-            {'username': user.username, 'password': user.password}), verify=verify)
+        requests.delete(f'https://{host}/storemng/api/users',
+                        data=json.dumps({"raw": del_userid}), headers={"X-Auth": admin_token}, verify=verify)
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
-        return None
-    print(r_userlogin.text)
-    return r_userlogin.text
+        return False
+
+    return True

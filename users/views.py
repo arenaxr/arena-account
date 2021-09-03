@@ -27,7 +27,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
 from revproxy.views import ProxyView
 
-from .filestore import get_filestore_auth
+from .filestore import add_filestore_auth, use_filestore_auth, delete_filestore_auth
 from .forms import SceneForm, SocialSignupForm, UpdateSceneForm
 from .models import Scene
 from .mqtt import (ANON_REGEX, PUBLIC_NAMESPACE, all_scenes_read_token,
@@ -363,6 +363,11 @@ def user_profile(request):
                     messages.error(
                         request, f"Unable to delete {scene.name} objects from persistance database.")
 
+            # TODO: delete filestore account files
+
+            # delete filestore account
+            fs_del = delete_filestore_auth(request.user)
+
             # Be careful of foreign keys, in that case this is suggested:
             # user.is_active = False
             # user.save()
@@ -465,7 +470,12 @@ def user_state(request):
 
 def storelogin(request):
     response = HttpResponse()
-    fs_user_token = get_filestore_auth(request.user)
+    # try user auth
+    fs_user_token = use_filestore_auth(request.user)
+    if not fs_user_token:
+        # otherwise user needs to be ca
+        fs_user_token = add_filestore_auth(request.user)
+
     if fs_user_token:
         response.set_cookie("auth", fs_user_token)
     return response
