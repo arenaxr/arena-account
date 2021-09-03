@@ -2,6 +2,7 @@ import json
 import os
 
 import requests
+from django.contrib.auth.models import User
 
 ADDUSER_OPTS = {
     "what": "user",
@@ -32,13 +33,16 @@ ADDUSER_OPTS = {
 }
 
 
-def get_filestore_auth(django_user):
+def get_filestore_auth(user: User):
     verify = True
     if os.environ["HOSTNAME"] == 'localhost':
         host = "host.docker.internal"
         verify = False
     else:
         host = os.environ["HOSTNAME"]
+
+    if not user.password:
+        user.set_unusable_password()
 
     try:
         r_admin = requests.post(f'https://{host}/storemng/api/login',
@@ -57,11 +61,12 @@ def get_filestore_auth(django_user):
         print("{0}: ".format(err))
         return None
     print(r_users.text)
-    users = r_users.json()
+    fsusers = r_users.json()
     # User doesn't exist, create first
-    if len([user for user in users if user['username'] == django_user]) == 0:
-        ADDUSER_OPTS["data"]["username"] = django_user
-        ADDUSER_OPTS["data"]["password"] = django_user
+    if len([fsuser for fsuser in fsusers if fsuser['username'] == user.username]) == 0:
+        ADDUSER_OPTS["data"]["username"] = user.username
+        ADDUSER_OPTS["data"]["password"] = user.password
+        ADDUSER_OPTS["data"]["perm"]["admin"] = user.is_superuser
         try:
             r_adduser = requests.post(f'https://{host}/storemng/api/users',
                                       data=json.dumps(ADDUSER_OPTS), headers={"X-Auth": admin_token}, verify=verify)
@@ -72,7 +77,7 @@ def get_filestore_auth(django_user):
 
     try:
         r_userlogin = requests.post(f'https://{host}/storemng/api/login', data=json.dumps(
-            {'username': django_user, 'password': django_user}), verify=verify)
+            {'username': user.username, 'password': user.password}), verify=verify)
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
         return None

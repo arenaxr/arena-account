@@ -465,7 +465,7 @@ def user_state(request):
 
 def storelogin(request):
     response = HttpResponse()
-    fs_user_token = get_filestore_auth(request.user.username)
+    fs_user_token = get_filestore_auth(request.user)
     if fs_user_token:
         response.set_cookie("auth", fs_user_token)
     return response
