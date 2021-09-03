@@ -8,6 +8,7 @@ ADDUSER_OPTS = {
     "what": "user",
     "which": [],
     "data": {
+        "scope": ".",
         "locale": "en",
         "lockPassword": True,
         "viewMode": "mosaic",
@@ -40,9 +41,6 @@ def get_filestore_auth(user: User):
         verify = False
     else:
         host = os.environ["HOSTNAME"]
-
-    if not user.password:
-        user.set_unusable_password()
 
     try:
         r_admin = requests.post(f'https://{host}/storemng/api/login',
