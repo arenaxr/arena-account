@@ -48,6 +48,7 @@ def use_filestore_auth(user: User):
     try:
         r_userlogin = requests.post(f'https://{host}/storemng/api/login', data=json.dumps(
             {'username': user.username, 'password': user.password}), verify=verify)
+        r_userlogin.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
         return None
@@ -61,6 +62,7 @@ def add_filestore_auth(user: User):
         r_admin = requests.post(f'https://{host}/storemng/api/login',
                                 data=json.dumps({'username': os.environ["STORE_ADMIN_USERNAME"],
                                                  'password': os.environ["STORE_ADMIN_PASSWORD"]}), verify=verify)
+        r_admin.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
         return None
@@ -77,8 +79,9 @@ def add_filestore_auth(user: User):
 
     # add new user to filestore db
     try:
-        requests.post(f'https://{host}/storemng/api/users',
-                      data=json.dumps(ADDUSER_OPTS), headers={"X-Auth": admin_token}, verify=verify)
+        r_useradd = requests.post(f'https://{host}/storemng/api/users',
+                                  data=json.dumps(ADDUSER_OPTS), headers={"X-Auth": admin_token}, verify=verify)
+        r_useradd.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
         return None
@@ -93,6 +96,7 @@ def delete_filestore_auth(user: User):
         r_admin = requests.post(f'https://{host}/storemng/api/login',
                                 data=json.dumps({'username': os.environ["STORE_ADMIN_USERNAME"],
                                                  'password': os.environ["STORE_ADMIN_PASSWORD"]}), verify=verify)
+        r_admin.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
         return False
@@ -101,6 +105,7 @@ def delete_filestore_auth(user: User):
     try:
         r_users = requests.get(
             f'https://{host}/storemng/api/users', headers={"X-Auth": admin_token}, verify=verify)
+        r_users.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
         return False
@@ -114,8 +119,9 @@ def delete_filestore_auth(user: User):
             return False
     # delete user from filestore db
     try:
-        requests.delete(f'https://{host}/storemng/api/users',
-                        data=json.dumps({"raw": del_userid}), headers={"X-Auth": admin_token}, verify=verify)
+        r_userdel = requests.delete(f'https://{host}/storemng/api/users',
+                                    data=json.dumps({"raw": del_userid}), headers={"X-Auth": admin_token}, verify=verify)
+        r_userdel.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
         return False
