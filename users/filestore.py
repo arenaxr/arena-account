@@ -129,3 +129,21 @@ def delete_filestore_auth(user: User):
         return False
 
     return True
+
+
+def delete_filestore_files(user: User):
+    if not user.is_authenticated:
+        return None
+    verify, host = get_rest_host()
+    # get auth for removing files
+    fs_user_token = use_filestore_auth(user)
+    # add new user to filestore db
+    try:
+        r_filesdel = requests.delete(
+            f'https://{host}/storemng/api/resources', headers={"X-Auth": fs_user_token}, verify=verify)
+        r_filesdel.raise_for_status()
+    except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
+        print("{0}: ".format(err))
+        return False
+
+    return True
