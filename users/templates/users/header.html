@@ -141,6 +141,15 @@
     <script type="text/javascript" src="{% static 'users/vendor/sweetalert2.min.js' %}"></script>
 
     <script>
+        $(document).ready(function() {
+            // highlight active page in navbar
+            $('.nav-link').filter(function() {
+                const link = new URL(this.href).pathname.replace(/^\/+|\/+$/g, '');
+                const loc = location.pathname.replace(/^\/+|\/+$/g, '');
+                return link == loc;
+            }).addClass('active');
+        });
+
         function returnToRequestedPage() {
             if (localStorage.getItem("request_uri")) {
                 //redirect user to originally requested page
