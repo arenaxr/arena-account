@@ -473,11 +473,13 @@ def storelogin(request):
     # try user auth
     fs_user_token = use_filestore_auth(request.user)
     if not fs_user_token:
-        # otherwise user needs to be ca
+        # otherwise user needs to be added
         fs_user_token = add_filestore_auth(request.user)
 
     if fs_user_token:
         response.set_cookie("auth", fs_user_token)
+    else:
+        response.set_cookie("auth", "")  # revoke auth
     return response
 
 

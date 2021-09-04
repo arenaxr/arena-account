@@ -44,6 +44,8 @@ def get_rest_host():
 
 
 def use_filestore_auth(user: User):
+    if not user.is_authenticated:
+        return None
     verify, host = get_rest_host()
     try:
         r_userlogin = requests.post(f'https://{host}/storemng/api/login', data=json.dumps(
@@ -56,6 +58,8 @@ def use_filestore_auth(user: User):
 
 
 def add_filestore_auth(user: User):
+    if not user.is_authenticated:
+        return None
     verify, host = get_rest_host()
     # get auth for setting new user
     try:
@@ -67,7 +71,6 @@ def add_filestore_auth(user: User):
         print("{0}: ".format(err))
         return None
     admin_token = r_admin.text
-
     # set new user options
     ADDUSER_OPTS["data"]["username"] = user.username
     ADDUSER_OPTS["data"]["password"] = user.password
@@ -76,7 +79,6 @@ def add_filestore_auth(user: User):
         ADDUSER_OPTS["data"]["scope"] = "."
     else:
         ADDUSER_OPTS["data"]["scope"] = f"./users/{user.username}"
-
     # add new user to filestore db
     try:
         r_useradd = requests.post(f'https://{host}/storemng/api/users',
@@ -90,6 +92,8 @@ def add_filestore_auth(user: User):
 
 
 def delete_filestore_auth(user: User):
+    if not user.is_authenticated:
+        return None
     verify, host = get_rest_host()
     # get auth for removing user
     try:
@@ -101,7 +105,7 @@ def delete_filestore_auth(user: User):
         print("{0}: ".format(err))
         return False
     admin_token = r_admin.text
-
+    # find user in list
     try:
         r_users = requests.get(
             f'https://{host}/storemng/api/users', headers={"X-Auth": admin_token}, verify=verify)
@@ -109,18 +113,16 @@ def delete_filestore_auth(user: User):
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
         return False
-    print(r_users.text)
     fsusers = r_users.json()
-    # find user in list
     for fsuser in fsusers:
         if fsuser['username']:
-            del_userid = fsuser.id
+            del_userid = fsuser['id']
         else:
             return False
     # delete user from filestore db
     try:
-        r_userdel = requests.delete(f'https://{host}/storemng/api/users',
-                                    data=json.dumps({"raw": del_userid}), headers={"X-Auth": admin_token}, verify=verify)
+        r_userdel = requests.delete(
+            f'https://{host}/storemng/api/users/{del_userid}', headers={"X-Auth": admin_token}, verify=verify)
         r_userdel.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
