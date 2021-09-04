@@ -5,7 +5,6 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 from . import views
-from revproxy.views import ProxyView
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -72,7 +71,6 @@ urlpatterns = [
         name='user-autocomplete',
     ),
 
-    # filebrowser reverse proxy
-    re_path(r"^storeauth/(?P<path>.*)$", views.StoreAuthProxyView.as_view()),
+    # filebrowser auth
     path("storelogin", views.storelogin, name="storelogin"),
 ]

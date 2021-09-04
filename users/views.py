@@ -9,7 +9,6 @@ from allauth.socialaccount import helpers
 from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.views import SignupView as SocialSignupViewDefault
 from dal import autocomplete
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -17,7 +16,6 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
-from django.views.decorators.clickjacking import xframe_options_sameorigin
 from google.auth.transport import requests as grequests
 from google.oauth2 import id_token
 from rest_framework import permissions, status
@@ -25,7 +23,6 @@ from rest_framework.compat import coreapi
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
-from revproxy.views import ProxyView
 
 from .filestore import (add_filestore_auth, delete_filestore_auth,
                         delete_filestore_files, use_filestore_auth)
@@ -486,25 +483,6 @@ def storelogin(request):
     else:
         response.set_cookie("auth", "")  # revoke auth
     return response
-
-
-# TODO(mwfarb): use per view @xframe_options_sameorigin
-class StoreAuthProxyView(ProxyView):
-    # If the user is authenticated in Django and add_remote_user attribute is set to True
-    # the HTTP header REMOTE_USER will be set with request.user.username.
-    if os.environ["HOSTNAME"] == 'localhost':
-        upstream = f'http://host.docker.internal/storemng'
-    else:
-        upstream = f'https://{os.environ["HOSTNAME"]}/storemng'
-    add_remote_user = True
-
-    def get_request_headers(self):
-        # Call super to get default headers
-        headers = super(StoreAuthProxyView, self).get_request_headers()
-        # Add new header
-        if headers.get('REMOTE_USER'):
-            headers['X-Filebrowser-Auth'] = headers.get('REMOTE_USER')
-        return headers
 
 
 class ArenaTokenSchema(AutoSchema):
