@@ -24,8 +24,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
 
-from .filestore import (add_filestore_auth, delete_filestore_auth,
-                        delete_filestore_files, use_filestore_auth)
+from .filestore import (add_filestore_auth, delete_filestore_user,
+                        use_filestore_auth)
 from .forms import SceneForm, SocialSignupForm, UpdateSceneForm
 from .models import Scene
 from .mqtt import (ANON_REGEX, PUBLIC_NAMESPACE, all_scenes_read_token,
@@ -361,14 +361,10 @@ def user_profile(request):
                     messages.error(
                         request, f"Unable to delete {scene.name} objects from persistance database.")
 
-            # delete filestore files
-            if not delete_filestore_files(request.user):
+            # delete filestore files/account
+            if not delete_filestore_user(request.user):
                 messages.error(
-                    request, f"Unable to delete files from the filestore.")
-            # delete filestore account
-            if not delete_filestore_auth(request.user):
-                messages.error(
-                    request, f"Unable to delete authorization from the filestore.")
+                    request, f"Unable to delete account/files from the filestore.")
 
             # Be careful of foreign keys, in that case this is suggested:
             # user.is_active = False
