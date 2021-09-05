@@ -481,7 +481,7 @@ def storelogin(request):
     if fs_user_token:
         response.set_cookie("auth", fs_user_token)
     else:
-        response.set_cookie("auth", "")  # revoke auth
+        response.set_cookie("auth", None)  # revoke auth
     return response
 
 

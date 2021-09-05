@@ -43,13 +43,21 @@ def get_rest_host():
     return verify, host
 
 
+def get_user_scope(user):
+    return f"./users/{user.username}"
+
+
 def use_filestore_auth(user: User):
     if not user.is_authenticated:
         return None
     verify, host = get_rest_host()
+    if user.username == os.environ["STORE_ADMIN_USERNAME"]:
+        password = os.environ["STORE_ADMIN_PASSWORD"]
+    else:
+        password = user.password
     try:
         r_userlogin = requests.post(f'https://{host}/storemng/api/login', data=json.dumps(
-            {'username': user.username, 'password': user.password}), verify=verify)
+            {'username': user.username, 'password': password}), verify=verify)
         r_userlogin.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
@@ -78,7 +86,7 @@ def add_filestore_auth(user: User):
     if user.is_superuser:
         ADDUSER_OPTS["data"]["scope"] = "."
     else:
-        ADDUSER_OPTS["data"]["scope"] = f"./users/{user.username}"
+        ADDUSER_OPTS["data"]["scope"] = get_user_scope(user)
     # add new user to filestore db
     try:
         r_useradd = requests.post(f'https://{host}/storemng/api/users',
