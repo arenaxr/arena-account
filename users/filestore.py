@@ -117,7 +117,7 @@ def delete_filestore_user(user: User):
         r_admin.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
-        return v
+        return False
     admin_token = r_admin.text
     # find user in list
     try:
