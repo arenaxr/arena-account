@@ -106,7 +106,7 @@ def delete_filestore_user(user: User):
     if not user.is_authenticated:
         return False
     if user.username == os.environ["STORE_ADMIN_USERNAME"]:
-        return False # root admin not allowed delete
+        return False  # root admin not allowed delete
     verify, host = get_rest_host()
     # get auth for removing user
     admin_login = {"username": os.environ["STORE_ADMIN_USERNAME"],
@@ -129,7 +129,7 @@ def delete_filestore_user(user: User):
         return False
     fsusers = r_users.json()
     for fsuser in fsusers:
-        if fsuser["username"]:
+        if fsuser["username"] == user.username:
             del_user = fsuser
         else:
             return False
@@ -137,7 +137,7 @@ def delete_filestore_user(user: User):
     fs_user_token = use_filestore_auth(user)
     # remove user scope files
     if del_user['scope'] == get_user_scope(user):
-        try: # only user scope files can be removed, not root
+        try:  # only user scope files can be removed, not root
             r_filesdel = requests.delete(f"https://{host}/storemng/api/resources",
                                          headers={"X-Auth": fs_user_token}, verify=verify)
             r_filesdel.raise_for_status()
