@@ -118,6 +118,8 @@ def delete_filestore_user(user: User):
             del_user = fsuser
         else:
             return False
+    if del_user["username"] != user.username:
+        return False
     # get auth for removing files
     fs_user_token = use_filestore_auth(user)
     # remove user scope files
