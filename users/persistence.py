@@ -1,40 +1,45 @@
 import json
+import os
 
 import jwt
 import requests
-from django.conf import settings
 from requests.exceptions import HTTPError
 
 
 def delete_scene_objects(scene, token: jwt):
     # delete scene from persist
-    config = settings.PUBSUB
-    host = config["mqtt_server"]["host"]
-    # in docker on localhost this url will fail
+    verify = True
+    if os.environ["HOSTNAME"] == 'localhost':
+        host = "host.docker.internal"
+        verify = False
+    else:
+        host = os.environ["HOSTNAME"]
     url = f"https://{host}/persist/{scene}"
-    result = _urlopen(url, token, "DELETE")
+    result = _urlopen(url, token, "DELETE", verify)
     return result
 
 
 def get_persist_scenes(token: jwt):
     # request all _scenes from persist
-    config = settings.PUBSUB
-    host = config["mqtt_server"]["host"]
-    # in docker on localhost this url will fail
+    verify = True
+    if os.environ["HOSTNAME"] == 'localhost':
+        host = "host.docker.internal"
+        verify = False
+    else:
+        host = os.environ["HOSTNAME"]
     url = f"https://{host}/persist/!allscenes"
-    result = _urlopen(url, token, "GET")
+    result = _urlopen(url, token, "GET", verify)
     if result:
         return json.loads(result)
     return []
 
 
-def _urlopen(url, token: jwt, method):
+def _urlopen(url, token: jwt, method, verify):
     if not token:
         print("Error: mqtt_token for persist not available")
         return None
     headers = {"Cookie": f"mqtt_token={token.decode('utf-8')}"}
     cookies = {"mqtt_token": token.decode("utf-8")}
-    verify = not settings.DEBUG
     try:
         if method == "GET":
             response = requests.get(

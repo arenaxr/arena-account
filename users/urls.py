@@ -47,9 +47,10 @@ urlpatterns = [
     ),
     path("my_scenes", views.my_scenes, name="my_scenes"),
     path("my_namespaces", views.my_namespaces, name="my_namespaces"),
+    # namespace/scenename
     re_path(
         r"^scenes/(?P<pk>[^\/]+\/[^\/]+)$", views.scene_detail
-    ),  # namespace/scenename
+    ),
     # docs
     re_path(
         r"^doc(?P<format>\.json|\.yaml)$",
@@ -65,7 +66,11 @@ urlpatterns = [
                                        cache_timeout=0), name="schema-redoc"),
     # autocomplete
     re_path(
-        r'^user-autocomplete/$',
+        r"^user-autocomplete/$",
         views.UserAutocomplete.as_view(),
         name='user-autocomplete',
-    ), ]
+    ),
+
+    # filebrowser auth
+    path("storelogin", views.storelogin, name="storelogin"),
+]

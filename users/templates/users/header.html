@@ -86,7 +86,7 @@
                         <a class="nav-link" href="{{request.scheme}}://{{request.get_host}}/network">Network</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{request.scheme}}://{{request.get_host}}/storemng">File Store</a>
+                        <a class="nav-link" href="{{request.scheme}}://{{request.get_host}}/files">File Store</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="https://atlas.conix.io">ATLAS</a>
@@ -141,6 +141,15 @@
     <script type="text/javascript" src="{% static 'users/vendor/sweetalert2.min.js' %}"></script>
 
     <script>
+        $(document).ready(function() {
+            // highlight active page in navbar
+            $('.nav-link').filter(function() {
+                const link = new URL(this.href).pathname.replace(/^\/+|\/+$/g, '');
+                const loc = location.pathname.replace(/^\/+|\/+$/g, '');
+                return link == loc;
+            }).addClass('active');
+        });
+
         function returnToRequestedPage() {
             if (localStorage.getItem("request_uri")) {
                 //redirect user to originally requested page

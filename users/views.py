@@ -1,6 +1,5 @@
 import datetime
 import json
-import logging
 import os
 import re
 import secrets
@@ -17,7 +16,7 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
-from google.auth.transport import requests
+from google.auth.transport import requests as grequests
 from google.oauth2 import id_token
 from rest_framework import permissions, status
 from rest_framework.compat import coreapi
@@ -25,15 +24,14 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
 
+from .filestore import (add_filestore_auth, delete_filestore_user,
+                        use_filestore_auth)
 from .forms import SceneForm, SocialSignupForm, UpdateSceneForm
 from .models import Scene
 from .mqtt import (ANON_REGEX, PUBLIC_NAMESPACE, all_scenes_read_token,
                    generate_arena_token)
 from .persistence import delete_scene_objects, get_persist_scenes
 from .serializers import SceneNameSerializer, SceneSerializer
-
-logger = logging.getLogger(__name__)
-logger.info("views.py load test...")
 
 
 def index(request):
@@ -82,7 +80,7 @@ def logout_request(request):
     return redirect("login")
 
 
-@permission_classes([permissions.IsAuthenticated])
+@ permission_classes([permissions.IsAuthenticated])
 def profile_update_scene(request):
     """
     Handle User Profile page, get page load and post submit requests.
@@ -154,8 +152,8 @@ class UserAutocomplete(autocomplete.Select2QuerySetView):
         return qs
 
 
-@api_view(["POST", "GET", "PUT", "DELETE"])
-@permission_classes([permissions.IsAuthenticated])
+@ api_view(["POST", "GET", "PUT", "DELETE"])
+@ permission_classes([permissions.IsAuthenticated])
 def scene_detail(request, pk):
     """
     Scene Permissions headless endpoint for editing permission: POST, GET, PUT, DELETE.
@@ -224,7 +222,7 @@ def scene_detail(request, pk):
         )
 
 
-@api_view(["GET"])
+@ api_view(["GET"])
 def my_namespaces(request):
     """
     Editable entire namespaces headless endpoint for requesting a list of namespaces this user can write to: GET.
@@ -239,7 +237,7 @@ def my_namespaces(request):
     return JsonResponse({"namespaces": namespaces})
 
 
-@api_view(["GET", "POST"])
+@ api_view(["GET", "POST"])
 def my_scenes(request):
     """
     Editable scenes headless endpoint for requesting a list of scenes this user can write to: GET/POST.
@@ -363,6 +361,11 @@ def user_profile(request):
                     messages.error(
                         request, f"Unable to delete {scene.name} objects from persistance database.")
 
+            # delete filestore files/account
+            if not delete_filestore_user(request.user):
+                messages.error(
+                    request, f"Unable to delete account/files from the filestore.")
+
             # Be careful of foreign keys, in that case this is suggested:
             # user.is_active = False
             # user.save()
@@ -416,7 +419,7 @@ class SocialSignupView(SocialSignupViewDefault):
             {"form": social_form, "account": self.sociallogin.account},
         )
 
-    @transaction.atomic
+    @ transaction.atomic
     def form_valid(self, social_form):
         self.request.session.pop("socialaccount_sociallogin", None)
         user = social_form.save(self.request)
@@ -424,7 +427,7 @@ class SocialSignupView(SocialSignupViewDefault):
         return helpers.complete_social_signup(self.request, self.sociallogin)
 
 
-@api_view(["GET", "POST"])
+@ api_view(["GET", "POST"])
 def user_state(request):
     """
     Endpoint request for the user's authenticated status, username, name, email: GET/POST.
@@ -461,6 +464,21 @@ def user_state(request):
         return JsonResponse(
             {"authenticated": user.is_authenticated, }, status=status.HTTP_200_OK
         )
+
+
+def storelogin(request):
+    response = HttpResponse()
+    # try user auth
+    fs_user_token = use_filestore_auth(request.user)
+    if not fs_user_token:
+        # otherwise user needs to be added
+        fs_user_token = add_filestore_auth(request.user)
+
+    if fs_user_token:
+        response.set_cookie("auth", fs_user_token)
+    else:
+        response.set_cookie("auth", None)  # revoke auth
+    return response
 
 
 class ArenaTokenSchema(AutoSchema):
@@ -539,7 +557,7 @@ def get_user_from_id_token(gid_token):
         raise ValueError("Missing token.")
     gclient_ids = [os.environ["GAUTH_CLIENTID"],
                    os.environ["GAUTH_INSTALLED_CLIENTID"]]
-    idinfo = id_token.verify_oauth2_token(gid_token, requests.Request())
+    idinfo = id_token.verify_oauth2_token(gid_token, grequests.Request())
     if idinfo["aud"] not in gclient_ids:
         raise ValueError("Could not verify audience.")
     # ID token is valid. Get the user's Google Account ID from the decoded token.
@@ -563,7 +581,7 @@ def _field_requested(request, field):
     return False
 
 
-@api_view(["POST"])
+@ api_view(["POST"])
 # @schema(ArenaTokenSchema())  # TODO: schema not working yet
 def arena_token(request):
     """
