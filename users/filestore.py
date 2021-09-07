@@ -4,31 +4,28 @@ import os
 import requests
 from django.contrib.auth.models import User
 
-ADDUSER_OPTS = {
+ADDUSER = {
     "what": "user",
     "which": [],
     "data": {
+        "commands": [],
         "locale": "en",
         "lockPassword": True,
-        "viewMode": "mosaic",
         "perm": {
             "admin": False,
-            "execute": True,
             "create": True,
-            "rename": True,
-            "modify": True,
             "delete": True,
+            "download": True,
+            "execute": True,
+            "modify": True,
             "share": True,
-            "download": True
+            "rename": True,
         },
-        "commands": [],
         "sorting": {
+            "asc": False,
             "by": "name",
-            "asc": False
         },
-        "rules": [],
-        "hideDotfiles": False,
-        "singleClick": False,
+        "viewMode": "mosaic",
     }
 }
 
@@ -43,7 +40,7 @@ def get_rest_host():
     return verify, host
 
 
-def get_user_scope(user):
+def get_user_scope(user: User):
     return f"./users/{user.username}"
 
 
@@ -83,17 +80,17 @@ def add_filestore_auth(user: User):
         return None
     admin_token = r_admin.text
     # set new user options
-    ADDUSER_OPTS["data"]["username"] = user.username
-    ADDUSER_OPTS["data"]["password"] = user.password
-    ADDUSER_OPTS["data"]["perm"]["admin"] = user.is_superuser
+    ADDUSER["data"]["username"] = user.username
+    ADDUSER["data"]["password"] = user.password
+    ADDUSER["data"]["perm"]["admin"] = user.is_superuser
     if user.is_superuser:
-        ADDUSER_OPTS["data"]["scope"] = "."
+        ADDUSER["data"]["scope"] = "."
     else:
-        ADDUSER_OPTS["data"]["scope"] = get_user_scope(user)
+        ADDUSER["data"]["scope"] = get_user_scope(user)
     # add new user to filestore db
     try:
         r_useradd = requests.post(f"https://{host}/storemng/api/users",
-                                  data=json.dumps(ADDUSER_OPTS), headers={"X-Auth": admin_token}, verify=verify)
+                                  data=json.dumps(ADDUSER), headers={"X-Auth": admin_token}, verify=verify)
         r_useradd.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
