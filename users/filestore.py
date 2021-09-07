@@ -114,7 +114,7 @@ def delete_filestore_user(user: User):
         return False
     fsusers = r_users.json()
     for fsuser in fsusers:
-        if fsuser["username"] == user.username:
+        if fsuser["username"]:
             del_user = fsuser
         else:
             return False

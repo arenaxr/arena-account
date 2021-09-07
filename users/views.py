@@ -360,11 +360,13 @@ def user_profile(request):
                 if not delete_scene_objects(scene.name, token):
                     messages.error(
                         request, f"Unable to delete {scene.name} objects from persistance database.")
+                    return redirect("user_profile")
 
             # delete filestore files/account
             if not delete_filestore_user(request.user):
                 messages.error(
                     request, f"Unable to delete account/files from the filestore.")
+                return redirect("user_profile")
 
             # Be careful of foreign keys, in that case this is suggested:
             # user.is_active = False
