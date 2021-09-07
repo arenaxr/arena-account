@@ -4,31 +4,6 @@ import os
 import requests
 from django.contrib.auth.models import User
 
-ADDUSER = {
-    "what": "user",
-    "which": [],
-    "data": {
-        "commands": [],
-        "locale": "en",
-        "lockPassword": True,
-        "perm": {
-            "admin": False,
-            "create": True,
-            "delete": True,
-            "download": True,
-            "execute": True,
-            "modify": True,
-            "share": True,
-            "rename": True,
-        },
-        "sorting": {
-            "asc": False,
-            "by": "name",
-        },
-        "viewMode": "mosaic",
-    }
-}
-
 
 def get_rest_host():
     verify = True
@@ -79,18 +54,31 @@ def add_filestore_auth(user: User):
         print("{0}: ".format(err))
         return None
     admin_token = r_admin.text
+    # get user defaults from global settings
+    try:
+        r_gset = requests.get(f"https://{host}/storemng/api/settings",
+                              headers={"X-Auth": admin_token}, verify=verify)
+        r_gset.raise_for_status()
+    except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
+        print("{0}: ".format(err))
+        return False
+    settings = r_gset.json()
     # set new user options
-    ADDUSER["data"]["username"] = user.username
-    ADDUSER["data"]["password"] = user.password
-    ADDUSER["data"]["perm"]["admin"] = user.is_superuser
-    if user.is_superuser:
-        ADDUSER["data"]["scope"] = "."
-    else:
-        ADDUSER["data"]["scope"] = get_user_scope(user)
+    fs_user = {
+        "what": "user",
+        "which": [],
+        "data": settings["defaults"],
+    }
+    fs_user["data"]["username"] = user.username
+    fs_user["data"]["password"] = user.password
+    fs_user["data"]["lockPassword"] = True
+    fs_user["data"]["perm"]["admin"] = user.is_superuser
+    if not user.is_superuser:
+        fs_user["data"]["scope"] = get_user_scope(user)
     # add new user to filestore db
     try:
         r_useradd = requests.post(f"https://{host}/storemng/api/users",
-                                  data=json.dumps(ADDUSER), headers={"X-Auth": admin_token}, verify=verify)
+                                  data=json.dumps(fs_user), headers={"X-Auth": admin_token}, verify=verify)
         r_useradd.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
