@@ -73,7 +73,7 @@ def add_filestore_auth(user: User):
     fs_user["data"]["password"] = user.password
     fs_user["data"]["lockPassword"] = True
     fs_user["data"]["perm"]["admin"] = user.is_superuser
-    if not user.is_superuser:
+    if not user.is_staff:  # admin and staff get edit scope
         fs_user["data"]["scope"] = get_user_scope(user)
     # add new user to filestore db
     try:
