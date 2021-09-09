@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+import sys
 
 from django.contrib.messages import constants as messages
 
@@ -26,9 +27,9 @@ SECRET_KEY = "tc9z5!qsr59+1@(h9v6oa4zhrwyf54vzk4tma@j$ky$mlj^#de"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", "arena-account"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", "arena-account", "host.docker.internal",  "localhost"]
 
-USE_X_FORWARDED_HOST = True
+X_FRAME_OPTIONS = "SAMEORIGIN"
 MQTT_TOKEN_PRIVKEY = os.getenv("MQTT_TOKEN_PRIVKEY")
 
 # TODO (mwfarb): this list can be reduced after webserver refactor
@@ -39,6 +40,7 @@ USERNAME_RESERVED = [
     "aframe",
     "apriltag",
     "ar",
+    "arts",
     "audio",
     "auth",  # proxy
     "build",
@@ -46,9 +48,12 @@ USERNAME_RESERVED = [
     "conf",
     "dist",
     "face-tracking",
+    "files",
+    "goto",
     "icons",
     "images",
     "libs",
+    "media",
     "models",
     "mqtt",  # proxy
     "network",
@@ -60,11 +65,13 @@ USERNAME_RESERVED = [
     "scene",
     "src",
     "signin",
+    "static",
     "store",
     "storemng",  # proxy
     "textures",
     "user",  # proxy
     "vendor",
+    "workers",
 ]
 
 # Application definition
@@ -149,13 +156,24 @@ MESSAGE_TAGS = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler", }, },
-    "root": {"handlers": ["console"], "level": "WARNING", },
+    "formatters": {
+        "verbose": {
+            "format": "%(asctime)s %(name)-12s %(levelname)-8s %(message)s",
+        },
+    },
+    "handlers": {
+        "console": {
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "class": "logging.StreamHandler",
+            "stream": sys.stdout,
+            "formatter": "verbose"
+        },
+    },
     "loggers": {
-        "*": {
+        "": {
             "handlers": ["console"],
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
-            "propagate": False,
+            "propagate": True,
         },
     },
 }
