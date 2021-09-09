@@ -1,19 +1,15 @@
 import json
-import os
 
 import jwt
 import requests
 from requests.exceptions import HTTPError
 
+from .utils import get_rest_host
+
 
 def delete_scene_objects(scene, token: jwt):
     # delete scene from persist
-    verify = True
-    if os.environ["HOSTNAME"] == 'localhost':
-        host = "host.docker.internal"
-        verify = False
-    else:
-        host = os.environ["HOSTNAME"]
+    verify, host = get_rest_host()
     url = f"https://{host}/persist/{scene}"
     result = _urlopen(url, token, "DELETE", verify)
     return result
@@ -21,12 +17,7 @@ def delete_scene_objects(scene, token: jwt):
 
 def get_persist_scenes(token: jwt):
     # request all _scenes from persist
-    verify = True
-    if os.environ["HOSTNAME"] == 'localhost':
-        host = "host.docker.internal"
-        verify = False
-    else:
-        host = os.environ["HOSTNAME"]
+    verify, host = get_rest_host()
     url = f"https://{host}/persist/!allscenes"
     result = _urlopen(url, token, "GET", verify)
     if result:

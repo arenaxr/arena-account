@@ -4,15 +4,7 @@ import os
 import requests
 from django.contrib.auth.models import User
 
-
-def get_rest_host():
-    verify = True
-    if os.environ["HOSTNAME"] == "localhost":
-        host = "host.docker.internal"
-        verify = False
-    else:
-        host = os.environ["HOSTNAME"]
-    return verify, host
+from .utils import get_rest_host
 
 
 def get_user_scope(user: User):
