@@ -37,24 +37,66 @@
             </table>
             <br>
             {% if user.is_superuser %}
-            <!-- Set or Remove user as Staff -->
+            <!-- Admins can set or remove user as Staff -->
             <h5>Admin Functions:</h5>
+            <p>
+                <label for="username">Django:</label>
+                <a id="adminlink" href="{{request.scheme}}://{{request.get_host}}/user/admin"
+                    class="btn btn-primary btn-sm">Admin Page</a>
+            </p>
             <form action="" id="form_admin" method="POST">
+                <p>
+                    <label for="username">Search:</label>
+                    <input type="text" id="username" placeholder="username"
+                        pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$">
+                    <a id="searchlink" href="{{request.scheme}}://{{request.get_host}}/user/admin/auth/user"
+                        class="btn btn-primary btn-sm">Search Users</a>
+                </p>
+            </form>
+            <form action="profile_update_staff" method="POST">
                 {% csrf_token %}
-                <label for="username">Username:</label>
-                <input type="text" id="username" pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$">
-                <a id="searchlink" href="{{request.scheme}}://{{request.get_host}}/user/admin/auth/user"
-                    class="btn btn-primary btn-sm">Search Users</a>
+                <p>
+                    <label for="username">Staff:</label>
+                    <input type="text" name="staff_username" placeholder="username"
+                        pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$">
+                    <button type="submit" class="btn btn-primary btn-sm" name="is_staff" value="true">Add Staff</button>
+                    <button type="submit" class="btn btn-primary btn-sm" name="is_staff" value="false">Remove
+                        Staff</button><br>
+                    <ul>
+                        <li><small><cite>Add Staff/Remove Staff</cite> will allow/disallow write access to public Scenes
+                                and public File Store.</small></li>
+                        <li><small>Using Admin Page to set <cite>Staff status</cite> may not allow write access to
+                                public File Store correctly.</small></li>
+                    </ul>
+                </p>
             </form>
             <script type="text/javascript">
-                var link = document.getElementById('searchlink');
-                var input = document.getElementById('username');
-                input.onchange = input.onkeyup = function() {
-                    link.search = '?q=' + encodeURIComponent(input.value);
-                    document.getElementById("form_admin").action = link.href;
+                var aSearch = document.getElementById('searchlink');
+                var inputSearch = document.getElementById('username');
+                inputSearch.onchange = inputSearch.onkeyup = function() {
+                    aSearch.search = '?q=' + encodeURIComponent(inputSearch.value);
+                    document.getElementById("form_admin").action = aSearch.href;
                 };
             </script>
-            <br>
+            {% endif %}
+            <!-- Staff users can see list of other staff users -->
+            {% if user.is_staff and staff %}
+            <h5>Staff Users:</h5>
+            <table class="table table-sm table-hover sticky-header">
+                <thead class="thead-light">
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    <th>Email</th>
+                </thead>
+                <tbody>
+                    {% for staff_user in staff %}
+                    <tr>
+                        <td><b>{{ staff_user.username }}</b></td>
+                        <td>{{ staff_user.first_name }} {{ staff_user.last_name }}</td>
+                        <td>{{ staff_user.email }}</td>
+                    </tr>
+                    {% endfor %}
+            </table>
             {% endif %}
             <!-- List scenes user can edit, and links -->
             <h5>Scene Permissions:</h5>

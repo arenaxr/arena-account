@@ -25,8 +25,9 @@ from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
 
 from .filestore import (add_filestore_auth, delete_filestore_user,
-                        use_filestore_auth)
-from .forms import SceneForm, SocialSignupForm, UpdateSceneForm
+                        set_filestore_staff, use_filestore_auth)
+from .forms import (SceneForm, SocialSignupForm, UpdateSceneForm,
+                    UpdateStaffForm)
 from .models import Scene
 from .mqtt import (ANON_REGEX, PUBLIC_NAMESPACE, all_scenes_read_token,
                    generate_arena_token)
@@ -220,6 +221,40 @@ def scene_detail(request, pk):
         return JsonResponse(
             {"message": "Scene was deleted successfully!"}, status=status.HTTP_200_OK
         )
+
+
+@permission_classes([permissions.IsAdminUser])
+def profile_update_staff(request):
+    """
+    Profile page GET/POST handler for editing Staff permissions.
+    """
+    # update staff status if allowed
+    if request.method != "POST":
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+    form = UpdateStaffForm(request.POST)
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {"error": "Not authenticated."}, status=status.HTTP_403_FORBIDDEN
+        )
+    if not form.is_valid():
+        return JsonResponse(
+            {"error": "Invalid parameters"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+    staff_username = form.cleaned_data["staff_username"]
+    is_staff = form.cleaned_data["is_staff"]
+    if (request.user.is_superuser and User.objects.filter(username=staff_username).exists()):
+        print(f"Setting Django user {staff_username}, staff={is_staff}")
+        user = User.objects.get(username=staff_username)
+        user.is_staff = is_staff
+        user.save()
+        print(f"Setting Filebrowser user {staff_username}, staff={is_staff}")
+        if not set_filestore_staff(user, user.is_staff):
+            messages.error(
+                request, f"Unable to update user's filestore status.")
+            return redirect("user_profile")
+
+    return redirect("user_profile")
 
 
 @ api_view(["GET"])

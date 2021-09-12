@@ -43,6 +43,9 @@ urlpatterns = [
     path("mqtt_auth", views.arena_token, name="arena_token"),
     path("user_state", views.user_state, name="user_state"),
     path(
+        "profile_update_staff", views.profile_update_staff, name="profile_update_staff"
+    ),
+    path(
         "profile_update_scene", views.profile_update_scene, name="profile_update_scene"
     ),
     path("my_scenes", views.my_scenes, name="my_scenes"),

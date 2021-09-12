@@ -24,6 +24,12 @@ class SocialSignupForm(_SocialSignupForm):
             self.add_error("username", msg)
 
 
+class UpdateStaffForm(forms.Form):
+    staff_username = forms.CharField(label="staff_username", required=True)
+    is_staff = forms.BooleanField(
+        label="is_staff", required=False, initial=False)
+
+
 class UpdateSceneForm(forms.Form):
     edit = forms.CharField(label="edit", required=False)
 
