@@ -74,8 +74,10 @@ def add_filestore_auth(user: User):
     fs_user["data"]["password"] = user.password
     fs_user["data"]["lockPassword"] = True
     fs_user["data"]["perm"]["admin"] = user.is_superuser
-    if not user.is_staff:  # admin and staff get edit scope
-        fs_user["data"]["scope"] = get_user_scope(user)
+    # NOTE: ["data"]["scope"] must be set in PUT, not POST /api/users for staff users.
+    # POST /api/users will automatically overwrite scope with user-only scope when settings.createUserDir=true.
+    # A call in views.storelogin() will do this, using set_filestore_staff() making sure staff users get the root scope.
+
     # add new user to filestore db
     try:
         r_useradd = requests.post(f"https://{host}/storemng/api/users",
@@ -108,9 +110,9 @@ def set_filestore_staff(user: User, is_staff):
         if fsuser["username"] == user.username:
             edit_user = fsuser
             break
-    else: # fs user not found, no need to update, so return true
+    else:  # fs user not found, no need to update, so return true
         return True
-    if is_staff:  # admin and staff get edit scope
+    if is_staff:  # admin and staff get root scope
         edit_user["scope"] = "."
     else:
         edit_user["scope"] = get_user_scope(user)
@@ -154,7 +156,7 @@ def delete_filestore_user(user: User):
         if fsuser["username"] == user.username:
             del_user = fsuser
             break
-    else: # user not found, nothing to delete, so return true
+    else:  # user not found, nothing to delete, so return true
         return True
     # get auth for removing files
     fs_user_token = use_filestore_auth(user)
