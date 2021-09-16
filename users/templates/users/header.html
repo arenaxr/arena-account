@@ -60,7 +60,9 @@
         <!-- Container wrapper -->
         <div class="container-fluid">
             <!-- Navbar brand -->
-            <a class="navbar-brand" href="{{request.scheme}}://{{request.get_host}}">ARENA</a>
+            <a class="navbar-brand" href="{{ request.scheme }}://{{ request.get_host }}">
+                <img alt="arena logo" src="{% static 'users/img/arena-logo-white.png' %}">
+            </a>
 
             <!-- Toggle button -->
             <button class="navbar-toggler" type="button" data-mdb-toggle="collapse"
