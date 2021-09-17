@@ -61,6 +61,7 @@
         function onPageLoad() {
             let checkbox = document.getElementById("id_public_write");
             let select = document.getElementById("id_editors");
+            select.title = "Click Public Write to limit Editors.";
             updatePublicWrite(checkbox, select);
             checkbox.addEventListener('change', function() {
                 updatePublicWrite(checkbox, select);
