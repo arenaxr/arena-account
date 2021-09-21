@@ -33,13 +33,13 @@
                             </select>
                             <label for="provider">Authentication Provider</label>
                         </div>
-                        <div class="form-outline mb-3" id="usernameContainer">
+                        <div class="form-floating mb-3" id="usernameContainer">
                             <input class="form-control" id="usernameInput" type="text">
-                            <label class="form-label" for="usernameInput">User Name</label>
+                            <label for="usernameInput">User Name</label>
                         </div>
-                        <button class="btn btn-white" id="anonBtn" type="submit">Sign In</button>
+                        <button class="btn btn-light" id="anonBtn" type="submit">Sign In</button>
 
-                        <div class="d-none btn" id="googleBtn"
+                        <div class="d-none btn btn-light" id="googleBtn"
                             onclick="location.href='{% provider_login_url 'google' %}';">
                             <div id="customBtnGoogle">
                                 <span class="icon"></span>
