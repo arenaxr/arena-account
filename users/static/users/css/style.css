@@ -67,7 +67,69 @@ span.icon {
 /* table size/scroll management */
 .sticky-header {
     position: sticky;
-    top: 60;
+    top: 60px;
     background: white;
     z-index: 999;
+}
+
+.border-grey {
+    border-color: #BBB;
+}
+
+@media only screen and (min-width: 850px) {
+    .navbar-brand {
+        margin-right: 10%;
+    }
+}
+
+.navbar-brand img {
+    max-height: 16px;
+}
+
+#sceneSelect .nav-item {
+    width: 50%;
+    border: 0;
+    margin-bottom: 10px;
+
+}
+
+#sceneSelect .nav-link {
+    border: none;
+    width: 100%;
+    text-align: left;
+    color: #495057;
+}
+
+#sceneSelect .nav-tabs{
+    border:none;
+}
+
+#sceneSelect .nav-link.active {
+    border-bottom: 3px solid #a42629;
+    color: #a42629;
+}
+
+#sceneSelect .form-floating label {
+    background: none;
+    opacity: 1;
+}
+
+#sceneSelect button.disabled i.fas, #sceneSelect button.disabled i.far {
+    color: #666;
+}
+
+#sceneSelect button i.fas, #sceneSelect button i.far {
+    color: #a42629;
+}
+
+#sceneSelect button.btn-light, #cloneScene button.btn-light {
+    background: none;
+    border:none;
+    box-shadow: none;
+    padding-left: 0.8em;
+    padding-right: 0.8em;
+}
+
+.routePage .rounded {
+    min-height: 350px;
 }
