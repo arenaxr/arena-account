@@ -42,7 +42,7 @@
             <p>
                 <label for="username">Django:</label>
                 <a id="adminlink" href="{{request.scheme}}://{{request.get_host}}/user/admin"
-                    class="btn btn-primary btn-sm">Admin Page</a>
+                    class="btn btn-secondary btn-sm">Admin Page</a>
             </p>
             <form action="" id="form_admin" method="POST">
                 <p>
@@ -50,7 +50,7 @@
                     <input type="text" id="username" placeholder="username"
                         pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$">
                     <a id="searchlink" href="{{request.scheme}}://{{request.get_host}}/user/admin/auth/user"
-                        class="btn btn-primary btn-sm">Search Users</a>
+                        class="btn btn-secondary btn-sm">Search Users</a>
                 </p>
             </form>
             <form action="profile_update_staff" method="POST">
@@ -59,8 +59,8 @@
                     <label for="username">Staff:</label>
                     <input type="text" name="staff_username" placeholder="username"
                         pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$">
-                    <button type="submit" class="btn btn-primary btn-sm" name="is_staff" value="true">Add Staff</button>
-                    <button type="submit" class="btn btn-primary btn-sm" name="is_staff" value="false">Remove
+                    <button type="submit" class="btn btn-secondary btn-sm" name="is_staff" value="true">Add Staff</button>
+                    <button type="submit" class="btn btn-secondary btn-sm" name="is_staff" value="false">Remove
                         Staff</button><br>
                     <ul>
                         <li><small><cite>Add Staff/Remove Staff</cite> will allow/disallow write access to public Scenes
@@ -157,7 +157,7 @@
                                 {{ scene.editors.all|join:", " }}
                                 {% endif %}
                             </td>
-                            <td><button type="submit" class="btn btn-primary btn-sm" name="edit"
+                            <td><button type="submit" class="btn btn-secondary btn-sm" name="edit"
                                     value="{{ scene.name }}">Edit</button></td>
                             </td>
                         </tr>
