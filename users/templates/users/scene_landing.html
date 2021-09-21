@@ -217,22 +217,30 @@
                                         <i class="far fa-check-circle"></i>
                                     </button>
                                 </div>
-                                <div class="col-12 d-none" id="cloneSceneCreated">
-                                    <label class="form-label" for="cloneSceneUrl">New Scene URL</label>
-                                    <div class="input-group mb-3">
-                                        <input
-                                                aria-label="Scene URL"
-                                                class="form-control form-control-sm"
-                                                id="cloneSceneUrl"
-                                                readonly
-                                                type="text"
-                                                value=""
-                                        />
-                                        <button class="btn btn-primary" id="copyCloneSceneUrlBtn">Copy Link</button>
+                                <div class="col d-none mt-3" id="cloneSceneCreated">
+                                    <div class="row">
+                                        <div class="col-9">
+                                            <div class="form-floating">
+                                                <label class="form-label" for="cloneSceneUrl">New Scene URL</label>
+                                                <input
+                                                        aria-label="Scene URL"
+                                                        class="form-control form-control-sm"
+                                                        id="cloneSceneUrl"
+                                                        readonly
+                                                        type="text"
+                                                        value=""
+                                                />
+                                                <div class="col-3 pt-2">
+                                                    <button class="btn btn-light text-primary" id="enterCloneSceneBtn" title="Enter Scene">
+                                                        <i class="fas fa-sign-in-alt"></i>
+                                                    </button>
+                                                    <button class="btn btn-light text-primary" id="copyCloneSceneUrlBtn" title="Copy Scene URL">
+                                                        <i class="far fa-clipboard"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <button class="btn btn-primary w-100" id="enterCloneSceneBtn">
-                                        <i class="fas fa-sign-in-alt"></i> Enter Scene
-                                    </button>
                                 </div>
                             </div>
                         </div>
