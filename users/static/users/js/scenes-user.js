@@ -46,9 +46,9 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
         window.location = userSceneUrl.value
     )
 
-    deleteUserSceneBtn.addEventListener('click', (e) => {
+    deleteUserSceneBtn.addEventListener('click', () => {
         const csrfmiddlewaretoken = document.getElementsByName("csrfmiddlewaretoken")[0].value
-        if (confirm(`Are you sure you want to delete ${e.target.value}?`)) {
+        if (confirm(`Are you sure you want to delete ${deleteUserSceneBtn.value}?`)) {
             const deletes = [
                 axios.delete(`scenes/${deleteUserSceneBtn.value}`, {
                      headers: {'X-CSRFToken': csrfmiddlewaretoken},
