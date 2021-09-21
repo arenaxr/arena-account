@@ -106,13 +106,13 @@
                     <!-- Dropdown menu -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
-                            data-mdb-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            aria-haspopup="true" aria-expanded="false">
                             {{user.get_username}}</a>
-                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                            <a class="dropdown-item" href="{% url 'user_profile' %}">Profile</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
-                        </div>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="{% url 'user_profile' %}">Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+                        </ul>
                     </li>
                     {% else %}
                     <li class="nav-item">
@@ -147,7 +147,7 @@
         $(document).ready(function() {
             // highlight active page in navbar
             $('.nav-link').filter(function() {
-                const link = new URL(this.href).pathname.replace(/^\/+|\/+$/g, '');
+                const link = new URL(document.location).pathname.replace(/^\/+|\/+$/g, '');
                 const loc = location.pathname.replace(/^\/+|\/+$/g, '');
                 return link == loc;
             }).addClass('active');
