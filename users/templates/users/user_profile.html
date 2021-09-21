@@ -106,6 +106,7 @@
                     <th>Scene Name (view)</th>
                     <th>Public Read</th>
                     <th>Public Write</th>
+                    <th>Public Listing</th>
                     <th>Anonymous Users</th>
                     <th>Video Conference</th>
                     <th>Other Editors</th>
@@ -128,6 +129,14 @@
                             <!--public publish objects ok-->
                             <td>
                                 {% if scene.public_write %}
+                                <i class="fas fa-check"></i>
+                                {% else %}
+                                <i class="fas fa-times"></i>
+                                {% endif %}
+                            </td>
+                            <!--public listing scene ok-->
+                            <td>
+                                {% if scene.public_listing %}
                                 <i class="fas fa-check"></i>
                                 {% else %}
                                 <i class="fas fa-times"></i>

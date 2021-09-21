@@ -314,14 +314,17 @@ def get_my_scenes(user):
     # load list of scenes this user can edit
     scenes = Scene.objects.none()
     editor_scenes = Scene.objects.none()
+    publist_scenes = Scene.objects.none()
     if user.is_authenticated:
         if user.is_staff:  # admin/staff
             scenes = Scene.objects.all()
         else:  # standard user
             scenes = Scene.objects.filter(name__startswith=f"{user.username}/")
             editor_scenes = Scene.objects.filter(editors=user)
+            publist_scenes = Scene.objects.filter(public_listing=True)
     # merge 'my' namespaced scenes and extras scenes granted
-    merged_scenes = (scenes | editor_scenes).distinct().order_by("name")
+    merged_scenes = (scenes | editor_scenes | publist_scenes) \
+        .distinct().order_by("name")
     return merged_scenes
 
 

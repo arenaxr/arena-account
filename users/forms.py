@@ -46,6 +46,8 @@ class SceneForm(forms.ModelForm):
         widget=forms.CheckboxInput(attrs={"class": "form-check-input"}), required=False)
     public_write = forms.BooleanField(
         widget=forms.CheckboxInput(attrs={"class": "form-check-input"}), required=False)
+    public_listing = forms.BooleanField(
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}), required=False)
     anonymous_users = forms.BooleanField(
         widget=forms.CheckboxInput(attrs={"class": "form-check-input"}), required=False)
     video_conference = forms.BooleanField(
