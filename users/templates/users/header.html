@@ -89,7 +89,8 @@
                         <a class="nav-link" href="{{request.scheme}}://{{request.get_host}}/files">File Store</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="https://atlas.conix.io">ATLAS</a>
+                        <!--https://atlas.conix.io-->
+                        <a class="nav-link coming-soon" href="/">ATLAS</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="https://arena.conix.io">Documentation</a>
@@ -148,6 +149,11 @@
                 const loc = location.pathname.replace(/^\/+|\/+$/g, '');
                 return link == loc;
             }).addClass('active');
+        });
+
+        $('.coming-soon').on('click', function(e) {
+            e.preventDefault();
+            alert('COMING SOON');
         });
 
         function returnToRequestedPage() {
