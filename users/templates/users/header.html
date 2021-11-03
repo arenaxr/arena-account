@@ -145,9 +145,12 @@
         $(document).ready(function() {
             // highlight active page in navbar
             $('.nav-link').filter(function() {
-                const link = new URL(this.href).pathname.replace(/^\/+|\/+$/g, '');
-                const loc = location.pathname.replace(/^\/+|\/+$/g, '');
-                return link == loc;
+                if (this.href) {
+                    const link = new URL(this.href).pathname.replace(/^\/+|\/+$/g, '');
+                    const loc = location.pathname.replace(/^\/+|\/+$/g, '');
+                    return link == loc;
+                }
+                return false;
             }).addClass('active');
         });
 
