@@ -26,9 +26,9 @@ from rest_framework.schemas import AutoSchema
 
 from .filestore import (add_filestore_auth, delete_filestore_user,
                         set_filestore_staff, use_filestore_auth)
-from .forms import (SceneForm, SocialSignupForm, UpdateSceneForm,
-                    UpdateStaffForm)
-from .models import Scene
+from .forms import (DeviceForm, SceneForm, SocialSignupForm, UpdateDeviceForm,
+                    UpdateSceneForm, UpdateStaffForm)
+from .models import Device, Scene
 from .mqtt import (ANON_REGEX, PUBLIC_NAMESPACE, all_scenes_read_token,
                    generate_arena_token)
 from .persistence import delete_scene_objects, get_persist_scenes
@@ -84,7 +84,7 @@ def logout_request(request):
 @ permission_classes([permissions.IsAuthenticated])
 def profile_update_scene(request):
     """
-    Handle User Profile page, get page load and post submit requests.
+    Handle User Profile page, scene post submit requests.
     """
     if request.method != "POST":
         return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
@@ -96,9 +96,50 @@ def profile_update_scene(request):
     if not form.is_valid():
         messages.error(request, "Invalid parameters")
         return redirect("user_profile")
-    if "edit" in request.POST:
+    if "add" in request.POST:
+        scenename = request.POST.get("scenename", None)
+        s = Scene(
+            name=f"{request.user.username}/{scenename}",
+            summary=f"User {request.user.username} adding new scene {scenename} to account database.",
+        )
+        s.save()
+        messages.success(
+            request, f"Created scene {request.user.username}/{scenename}")
+        return redirect("user_profile")
+    elif "edit" in request.POST:
         name = form.cleaned_data["edit"]
         return redirect(f"profile/scenes/{name}")
+
+    return redirect("user_profile")
+
+
+@ permission_classes([permissions.IsAuthenticated])
+def profile_update_device(request):
+    """
+    Handle User Profile page, device post submit requests.
+    """
+    if request.method != "POST":
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+    if not request.user.is_authenticated:
+        return JsonResponse(
+            {"error": "Not authenticated."}, status=status.HTTP_403_FORBIDDEN
+        )
+    form = UpdateDeviceForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, "Invalid parameters")
+        return redirect("user_profile")
+    if "add" in request.POST:
+        devicename = request.POST.get("devicename", None)
+        s = Device(
+            name=f"{request.user.username}/{devicename}",
+        )
+        s.save()
+        messages.success(
+            request, f"Created device {request.user.username}/{devicename}")
+        return redirect("user_profile")
+    elif "edit" in request.POST:
+        name = form.cleaned_data["edit"]
+        return redirect(f"profile/devices/{name}")
 
     return redirect("user_profile")
 
@@ -115,6 +156,7 @@ def scene_perm_detail(request, pk):
         scene = Scene.objects.get(name=pk)
     except Scene.DoesNotExist:
         messages.error(request, "The scene does not exist")
+        return redirect("user_profile")
     if request.method == 'POST':
         if "save" in request.POST:
             form = SceneForm(instance=scene, data=request.POST)
@@ -137,6 +179,36 @@ def scene_perm_detail(request, pk):
 
     return render(request=request, template_name="users/scene_perm_detail.html",
                   context={"scene": scene, "form": form})
+
+
+def device_perm_detail(request, pk):
+    """
+    Handle Device Permissions Edit page, get page load and post submit requests.
+    - Handles device permissions changes and deletes.
+    """
+    # if not device_permission(user=request.user, device=pk):
+    #     messages.error(request, f"User does not have permission for: {pk}.")
+    # now, make sure device exists before the other commands are tried
+    try:
+        device = Device.objects.get(name=pk)
+    except Device.DoesNotExist:
+        messages.error(request, "The device does not exist")
+        return redirect("user_profile")
+    if request.method == 'POST':
+        if "save" in request.POST:
+            form = DeviceForm(instance=device, data=request.POST)
+            if form.is_valid():
+                form.save()
+                return redirect("user_profile")
+        elif "delete" in request.POST:
+            # delete account device data
+            device.delete()
+            return redirect("user_profile")
+    else:
+        form = DeviceForm(instance=device)
+
+    return render(request=request, template_name="users/device_perm_detail.html",
+                  context={"device": device, "form": form})
 
 
 class UserAutocomplete(autocomplete.Select2QuerySetView):
@@ -323,8 +395,29 @@ def get_my_scenes(user):
     public_scenes = Scene.objects.filter(
         name__startswith=f"{PUBLIC_NAMESPACE}/")
     # merge 'my' namespaced scenes and extras scenes granted
-    merged_scenes = (scenes | editor_scenes | public_scenes).distinct().order_by("name")
+    merged_scenes = (scenes | editor_scenes |
+                     public_scenes).distinct().order_by("name")
     return merged_scenes
+
+
+def get_my_devices(user):
+    """
+    Internal method to update device permissions table:
+    Requests and returns list of user's editable devices from device permissions table.
+    """
+    # load list of devices this user can edit
+    devices = Device.objects.none()
+    if user.is_authenticated:
+        if user.is_staff:  # admin/staff
+            devices = Device.objects.all()
+        else:  # standard user
+            devices = Device.objects.filter(
+                name__startswith=f"{user.username}/")
+    public_devices = Device.objects.filter(
+        name__startswith=f"{PUBLIC_NAMESPACE}/")
+    # merge 'my' namespaced devices and extras devices granted
+    merged_devices = (devices | public_devices).distinct().order_by("name")
+    return merged_devices
 
 
 def scene_permission(user, scene):
@@ -417,13 +510,15 @@ def user_profile(request):
                 messages.error(request, "Unable to complete account delete.")
 
     scenes = get_my_scenes(request.user)
+    devices = get_my_devices(request.user)
     staff = None
     if request.user.is_staff:  # admin/staff
         staff = User.objects.filter(is_staff=True)
     return render(
         request=request,
         template_name="users/user_profile.html",
-        context={"user": request.user, "scenes": scenes, "staff": staff},
+        context={"user": request.user, "scenes": scenes,
+                 "devices": devices, "staff": staff},
     )
 
 
