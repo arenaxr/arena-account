@@ -64,8 +64,8 @@ class SceneForm(forms.ModelForm):
 
 
 class DeviceForm(forms.ModelForm):
-    comment = forms.CharField(
-        widget=forms.Textarea(attrs={"class": "form-control"}), required=False)
+    summary = forms.CharField(
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),  required=False)
 
     class Meta:
         model = Device
