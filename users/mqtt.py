@@ -38,6 +38,7 @@ def generate_arena_token(
     username,
     realm="realm",
     scene=None,
+    device=None,
     camid=None,
     userid=None,
     handleftid=None,
@@ -77,7 +78,8 @@ def generate_arena_token(
             payload["room"] = roomname
 
     # everyone should be able to read all public scenes
-    subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/#")
+    if scene:
+        subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/#")
     # user presence objects
     if user.is_authenticated:
         if user.is_staff:

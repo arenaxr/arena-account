@@ -186,14 +186,15 @@ def device_perm_detail(request, pk):
     Handle Device Permissions Edit page, get page load and post submit requests.
     - Handles device permissions changes and deletes.
     """
-    # if not device_permission(user=request.user, device=pk):
-    #     messages.error(request, f"User does not have permission for: {pk}.")
+    if not device_permission(user=request.user, device=pk):
+        messages.error(request, f"User does not have permission for: {pk}.")
     # now, make sure device exists before the other commands are tried
     try:
         device = Device.objects.get(name=pk)
     except Device.DoesNotExist:
         messages.error(request, "The device does not exist")
         return redirect("user_profile")
+    token = None
     if request.method == 'POST':
         if "save" in request.POST:
             form = DeviceForm(instance=device, data=request.POST)
@@ -204,11 +205,17 @@ def device_perm_detail(request, pk):
             # delete account device data
             device.delete()
             return redirect("user_profile")
-    else:
-        form = DeviceForm(instance=device)
+        elif "token" in request.POST:
+            token = generate_arena_token(
+                user=request.user,
+                username=request.user.username,
+                device=device.name,
+                duration=datetime.timedelta(days=30)
+            ).decode("utf-8")
 
+    form = DeviceForm(instance=device)
     return render(request=request, template_name="users/device_perm_detail.html",
-                  context={"device": device, "form": form})
+                  context={"device": device, "token": token, "form": form})
 
 
 class UserAutocomplete(autocomplete.Select2QuerySetView):
@@ -436,6 +443,18 @@ def scene_permission(user, scene):
                 name=scene, editors=user)  # editor
         except Scene.ObjectDoesNotExist:
             return False
+        return True
+
+
+def device_permission(user, device):
+    """
+    Internal method to check if 'user' can edit 'device'.
+    """
+    if not user.is_authenticated:  # anon
+        return False
+    elif user.is_staff:  # admin/staff
+        return True
+    elif device.startswith(f"{user.username}/"):  # owner
         return True
 
 

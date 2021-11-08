@@ -10,6 +10,20 @@
         <div class="col-md-10 bg-white p-5">
 
             <h1>Edit Device Permissions</h1>
+            {% if token %}
+            <div class="form-group">
+                <label for="token_username">MQTT Username: </label>
+                <input id="token_username" name="token_username" class="form-control" readonly
+                    value="{{ user.get_username }}"></input>
+            </div>
+            <div class="form-group">
+                <label for="token_password">MQTT Password (JWT): </label>
+                <textarea id="token_password" name="token_password" class="form-control" style="word-break: break-all;" rows="5" readonly>{{ token }}</textarea>
+                <small id="tokenHelp" class="form-text text-muted">Keep this MQTT token safe on your device, and do
+                    not share it with anyone.</small>
+            </div>
+            <hr />
+            {% endif %}
             <form id="device_perms_form" action="" method="post">
                 {% csrf_token %}
                 <table class="table">
@@ -25,19 +39,7 @@
                     </tr>
                 </table>
                 <button type="submit" class="btn btn-secondary btn-sm" name="save">Save</button>
-                <hr />
                 <button type="submit" class="btn btn-secondary btn-sm" name="token">Generate MQTT Token</button>
-                <div class="form-group">
-                    <label for="token_username">MQTT Username: </label>
-                    <input id="token_username" name="token_username" class="form-control"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="token_password">MQTT Password: </label>
-                    <textarea id="token_password" name="token_password" class="form-control" rows="4"
-                        cols="50"></textarea>
-                    <small id="tokenHelp" class="form-text text-muted">Keep this MQTT token safe on your device, and do
-                        not share it with anyone.</small>
-                </div>
                 <hr />
                 <input type="button" class="btn btn-danger btn-sm" onclick="clickDelete(this);" value="Delete Device" />
             </form>

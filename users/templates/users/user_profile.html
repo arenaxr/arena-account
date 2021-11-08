@@ -83,7 +83,7 @@
             <!-- Staff users can see list of other staff users -->
             {% if user.is_staff and staff %}
             <h5>Staff Users:</h5>
-            <table class="table table-sm table-hover sticky-header">
+            <table class="table table-sm table-hover">
                 <thead class="thead-light">
                     <th>Username</th>
                     <th>Full Name</th>
@@ -98,6 +98,7 @@
                     </tr>
                     {% endfor %}
             </table>
+            <br>
             {% endif %}
             <!-- List scenes user can edit, and links -->
             <h5>Scene Permissions <button id="button_expand_add_scene" type="button" title="Open: Add Scene"
@@ -107,15 +108,20 @@
             </h5>
             <form action="profile_update_scene" method="POST">
                 {% csrf_token %}
-                <div id="div_add_scene" style="display: none;"> <b>New Scene:</b> {{ user.get_username }}/<input
-                        type="text" name="scenename" placeholder="scenename"
-                        pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){1,38}$">
-                    <button type="submit" class="btn btn-secondary btn-sm" name="add">Add Scene</button>
-                    </td>
+                <div id="div_add_scene" style="display: none;" class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon3">{{ user.get_username }}/</span>
+                    </div>
+                    <input type="text" class="form-control" name="scenename" placeholder="scenename"
+                        pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){1,38}$" aria-label="scenename"
+                        aria-describedby="basic-addon2">
+                    <div class="input-group-append">
+                        <button type="submit" class="btn btn-outline-secondary" name="add">Add Scene</button>
+                    </div>
                 </div>
             </form>
             {% if scenes %}
-            <table class="table table-sm table-hover sticky-header">
+            <table class="table table-sm table-hover">
                 <thead class="thead-light">
                     <th>Scene Name (view)</th>
                     <th>Public Read</th>
@@ -195,15 +201,20 @@
             </h5>
             <form action="profile_update_device" method="POST">
                 {% csrf_token %}
-                <div id="div_add_device" style="display: none;"> <b>New Device:</b> {{ user.get_username }}/<input
-                        type="text" name="devicename" placeholder="devicename"
-                        pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){1,38}$">
-                    <button type="submit" class="btn btn-secondary btn-sm" name="add">Add Device</button>
-                    </td>
+                <div id="div_add_device" style="display: none;" class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" id="basic-addon3">{{ user.get_username }}/</span>
+                    </div>
+                    <input type="text" class="form-control" name="devicename" placeholder="devicename"
+                        pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){1,38}$" aria-label="devicename"
+                        aria-describedby="basic-addon2">
+                    <div class="input-group-append">
+                        <button type="submit" class="btn btn-outline-secondary" name="add">Add Device</button>
+                    </div>
                 </div>
             </form>
             {% if devices %}
-            <table class="table table-sm table-hover sticky-header">
+            <table class="table table-sm table-hover">
                 <thead class="thead-light">
                     <th>Device Name</th>
                     <th style="width: 50%">Description</th>
@@ -247,24 +258,17 @@
         window.onload = onPageLoad();
 
         function onPageLoad() {
-            // expand scene
-            let bExpAddScene = document.getElementById("button_expand_add_scene");
+            createExpandHandler("button_expand_add_scene", "div_add_scene")
+            createExpandHandler("button_expand_add_device", "div_add_device")
+        }
+
+        function createExpandHandler(button_expand_id, div_add_id) {
+            // create show/hide handler for "new" buttons
+            let bExpAddScene = document.getElementById(button_expand_id);
             bExpAddScene.addEventListener('click', function() {
-                let div = document.getElementById("div_add_scene");
-                console.log(bExpAddScene)
+                let div = document.getElementById(div_add_id);
                 if (bExpAddScene.getAttribute('aria-pressed') == "true") {
-                    div.style.display = "inline";
-                } else {
-                    div.style.display = "none";
-                }
-            });
-            // expand device
-            let bExpAddDevice = document.getElementById("button_expand_add_device");
-            bExpAddDevice.addEventListener('click', function() {
-                let div = document.getElementById("div_add_device");
-                console.log(bExpAddDevice)
-                if (bExpAddDevice.getAttribute('aria-pressed') == "true") {
-                    div.style.display = "inline";
+                    div.style.display = "flex";
                 } else {
                     div.style.display = "none";
                 }
