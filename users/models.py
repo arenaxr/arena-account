@@ -11,7 +11,7 @@ SCENE_VIDEO_CONF_DEF = True
 
 
 class Scene(models.Model):
-    """Model representing a scene (but not a specific copy of a scene)."""
+    """Model representing a scene's permissions."""
 
     name = models.CharField(max_length=200, blank=False, unique=True)
     summary = models.TextField(max_length=1000, blank=True)
@@ -42,6 +42,31 @@ class Scene(models.Model):
     def get_absolute_url(self):
         """Returns the url to access a detail record for this scene."""
         return reverse("scene-detail", args=[str(self.name)])
+
+    @property
+    def namespace(self):
+        return self.name.split("/")[0]
+
+
+class Device(models.Model):
+    """Model representing a device's permissions."""
+
+    name = models.CharField(max_length=200, blank=False, unique=True)
+    summary = models.TextField(max_length=1000, blank=True)
+    creation_date = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # performs regular validation then clean()
+        super(Device, self).save(*args, **kwargs)
+
+    def clean(self):
+        if self.name == "":
+            raise ValidationError("Empty device name!")
+        self.name = self.name.strip()
+
+    def __str__(self):
+        """String for representing the device object by name."""
+        return self.name
 
     @property
     def namespace(self):

@@ -39,6 +39,8 @@ urlpatterns = [
     path("login_callback", views.login_callback, name="login_callback"),
     re_path(
         r'^profile/scenes/(?P<pk>[^\/]+\/[^\/]+)$', views.scene_perm_detail),
+    re_path(
+        r'^profile/devices/(?P<pk>[^\/]+\/[^\/]+)$', views.device_perm_detail),
     # endpoints
     path("mqtt_auth", views.arena_token, name="arena_token"),
     path("user_state", views.user_state, name="user_state"),
@@ -47,6 +49,9 @@ urlpatterns = [
     ),
     path(
         "profile_update_scene", views.profile_update_scene, name="profile_update_scene"
+    ),
+    path(
+        "profile_update_device", views.profile_update_device, name="profile_update_device"
     ),
     path("my_scenes", views.my_scenes, name="my_scenes"),
     path("my_namespaces", views.my_namespaces, name="my_namespaces"),
