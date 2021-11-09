@@ -151,6 +151,7 @@ def scene_perm_detail(request, pk):
     """
     if not scene_permission(user=request.user, scene=pk):
         messages.error(request, f"User does not have permission for: {pk}.")
+        return redirect("user_profile")
     # now, make sure scene exists before the other commands are tried
     try:
         scene = Scene.objects.get(name=pk)
@@ -188,6 +189,7 @@ def device_perm_detail(request, pk):
     """
     if not device_permission(user=request.user, device=pk):
         messages.error(request, f"User does not have permission for: {pk}.")
+        return redirect("user_profile")
     # now, make sure device exists before the other commands are tried
     try:
         device = Device.objects.get(name=pk)
