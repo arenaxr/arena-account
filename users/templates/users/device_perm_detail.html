@@ -11,7 +11,10 @@
 
             <h1>Edit Device Permissions</h1>
             {% if token %}
-            <label for="token_username">MQTT Username: </label>
+            <small id="tokenHelp" class="form-text text-muted">Keep this MQTT token safe on your device, and do
+                not share it with anyone.</small>
+            <br>
+            <label for="token_username">MQTT Username:</label>
             <div class="input-group mb-3">
                 <input id="token_username" name="token_username" class="form-control" readonly
                     value="{{ user.get_username }}"></input>
@@ -20,7 +23,7 @@
                         onclick="clickCopy('token_username');"><i class="fas fa-copy"></i></button>
                 </div>
             </div>
-            <label for="token_password">MQTT Password (JWT): </label>
+            <label for="token_password">MQTT Password (JWT):</label>
             <div class="input-group mb-3">
                 <textarea id="token_password" name="token_password" class="form-control" style="word-break: break-all;"
                     rows="4" readonly>{{ token }}</textarea>
@@ -29,8 +32,15 @@
                         onclick="clickCopy('token_password');"><i class="fas fa-copy"></i></button>
                 </div>
             </div>
-            <small id="tokenHelp" class="form-text text-muted">Keep this MQTT token safe on your device, and do
-                not share it with anyone.</small>
+            <label for="token_json">Full JSON:</label>
+            <div class="input-group mb-3">
+                <textarea id="token_json" name="token_json" class="form-control" style="word-break: break-all;" rows="4"
+                    readonly>{"username": "{{ user.get_username }}", "token": "{{ token }}"}</textarea>
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" title="Copy to clipboard"
+                        onclick="clickCopy('token_json');"><i class="fas fa-copy"></i></button>
+                </div>
+            </div>
             <hr />
             {% endif %}
             <form id="device_perms_form" action="" method="post">

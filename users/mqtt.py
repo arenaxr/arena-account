@@ -82,22 +82,34 @@ def generate_arena_token(
         subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/#")
     # user presence objects
     if user.is_authenticated:
-        if user.is_staff:
-            # staff/admin have rights to all scene objects
-            subs.append(f"{realm}/s/#")
-            pubs.append(f"{realm}/s/#")
-            # vio experiments, staff only
-            if scene:
-                pubs.append(f"{realm}/vio/{scene}/#")
-        else:
-            # scene owners have rights to their scene objects only
-            subs.append(f"{realm}/s/{username}/#")
-            pubs.append(f"{realm}/s/{username}/#")
-            # add scenes that have granted by other owners
-            u_scenes = Scene.objects.filter(editors=user)
-            for u_scene in u_scenes:
-                subs.append(f"{realm}/s/{u_scene.name}/#")
-                pubs.append(f"{realm}/s/{u_scene.name}/#")
+        if scene:
+            # scene rights default by namespace
+            if user.is_staff:
+                # staff/admin have rights to all scene objects
+                subs.append(f"{realm}/s/#")
+                pubs.append(f"{realm}/s/#")
+                # vio experiments, staff only
+                if scene:
+                    pubs.append(f"{realm}/vio/{scene}/#")
+            else:
+                # scene owners have rights to their scene objects only
+                subs.append(f"{realm}/s/{username}/#")
+                pubs.append(f"{realm}/s/{username}/#")
+                # add scenes that have been granted by other owners
+                u_scenes = Scene.objects.filter(editors=user)
+                for u_scene in u_scenes:
+                    subs.append(f"{realm}/s/{u_scene.name}/#")
+                    pubs.append(f"{realm}/s/{u_scene.name}/#")
+        if device:
+            # device rights default by namespace
+            if user.is_staff:
+                # staff/admin have rights to all device objects
+                subs.append(f"{realm}/d/#")
+                pubs.append(f"{realm}/d/#")
+            else:
+                # device owners have rights to their device objects only
+                subs.append(f"{realm}/d/{username}/#")
+                pubs.append(f"{realm}/d/{username}/#")
     # anon/non-owners have rights to view scene objects only
     if scene and not user.is_staff:
         scene_opt = Scene.objects.filter(name=scene)
@@ -118,6 +130,7 @@ def generate_arena_token(
                 subs.append(f"{realm}/s/{scene}/#")
             if SCENE_PUBLIC_WRITE_DEF:
                 pubs.append(f"{realm}/s/{scene}/#")
+        # user presence objects
         if camid:  # probable web browser write
             pubs.append(f"{realm}/s/{scene}/{camid}")
             pubs.append(f"{realm}/s/{scene}/{camid}/#")
@@ -137,11 +150,11 @@ def generate_arena_token(
         pubs.append(f"{realm}/c/{namespace}/o/{userhandle}")
         # private messages to user: Write
         pubs.append(f"{realm}/c/{namespace}/p/+/{userhandle}")
-
     # apriltags
-    subs.append(f"{realm}/g/a/#")
-    pubs.append(f"{realm}/g/a/#")
-    # runtime
+    if scene:
+        subs.append(f"{realm}/g/a/#")
+        pubs.append(f"{realm}/g/a/#")
+    # arts runtime-mngr
     subs.append(f"{realm}/proc/#")
     pubs.append(f"{realm}/proc/#")
     # network graph
