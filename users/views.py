@@ -744,7 +744,7 @@ def _field_requested(request, field):
 def arena_token(request):
     """
     Endpoint to request an ARENA with permissions for an anonymous or authenticated user for
-    MQTT and Jitsi resoucres given incoming parameters.
+    MQTT and Jitsi resources given incoming parameters.
     - POST requires id_token for headless clients like Python apps.
     """
     user = request.user
