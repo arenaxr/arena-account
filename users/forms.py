@@ -4,7 +4,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth.models import User
 
-from .models import Scene
+from .models import Device, Scene
 
 
 class SocialSignupForm(_SocialSignupForm):
@@ -31,6 +31,12 @@ class UpdateStaffForm(forms.Form):
 
 
 class UpdateSceneForm(forms.Form):
+    add = forms.CharField(label="add", required=False)
+    edit = forms.CharField(label="edit", required=False)
+
+
+class UpdateDeviceForm(forms.Form):
+    add = forms.CharField(label="add", required=False)
     edit = forms.CharField(label="edit", required=False)
 
 
@@ -55,3 +61,12 @@ class SceneForm(forms.ModelForm):
         model = Scene
         fields = ("public_read", "public_write",
                   "anonymous_users", "video_conference", "editors")
+
+
+class DeviceForm(forms.ModelForm):
+    summary = forms.CharField(
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 3}),  required=False)
+
+    class Meta:
+        model = Device
+        fields = ("summary",)
