@@ -390,7 +390,7 @@ def get_my_scenes(user):
                 name=p_scene,
                 summary="Existing scene name migrated from persistence database.",
             )
-            s.save()
+            # TODO (mwfarb) hot patch 1/25/22: s.save()
 
     # load list of scenes this user can edit
     scenes = Scene.objects.none()
