@@ -30,7 +30,7 @@
                                 {% if user.is_authenticated %}
                                     <!-- anon users may not edit scenesw-->
                                     <li class="nav-item" role="presentation">
-                                        <button class="nav-link active"
+                                        <button class="nav-link"
                                                 id="myscenes-tab"
                                                 data-bs-toggle="tab"
                                                 data-bs-target="#myscenes"
@@ -41,7 +41,7 @@
                                     </li>
                                 {% endif %} <!-- if user.is_authenticated -->
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link"
+                                    <button class="nav-link active"
                                             id="publicscenes-tab"
                                             data-bs-toggle="tab"
                                             data-bs-target="#publicscenes"
@@ -52,7 +52,7 @@
                                 </li>
                             </ul>
                             <div class="tab-content" id="sceneTabs">
-                                <div class="tab-pane fade show active"
+                                <div class="tab-pane fade"
                                      id="myscenes" role="tabpanel"
                                      aria-labelledby="myscenes-tab">
                                     <div class="row text-center mb-3">
@@ -114,7 +114,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="tab-pane fade" id="publicscenes"
+                                <div class="tab-pane fade show" id="publicscenes"
                                      role="tabpanel"
                                      aria-labelledby="publicscenes-tab">
                                     <div class="row text-center">
