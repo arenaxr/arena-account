@@ -7,7 +7,7 @@ from requests.exceptions import HTTPError
 from .utils import get_rest_host
 
 
-def delete_scene_objects(scene, token: jwt):
+def delete_scene_objects(scene, token):
     # delete scene from persist
     verify, host = get_rest_host()
     url = f"https://{host}/persist/{scene}"
@@ -15,7 +15,7 @@ def delete_scene_objects(scene, token: jwt):
     return result
 
 
-def get_persist_scenes_all(token: jwt):
+def get_persist_scenes_all(token):
     # request all scenes from persist
     verify, host = get_rest_host()
     url = f"https://{host}/persist/!allscenes"
@@ -25,7 +25,7 @@ def get_persist_scenes_all(token: jwt):
     return []
 
 
-def get_persist_scenes_ns(token: jwt, namespace):
+def get_persist_scenes_ns(token, namespace):
     # request all namespace scenes from persist
     verify, host = get_rest_host()
     url = f"https://{host}/persist/{namespace}/!allscenes"
@@ -35,12 +35,12 @@ def get_persist_scenes_ns(token: jwt, namespace):
     return []
 
 
-def _urlopen(url, token: jwt, method, verify):
+def _urlopen(url, token, method, verify):
     if not token:
         print("Error: mqtt_token for persist not available")
         return None
-    headers = {"Cookie": f"mqtt_token={token.decode('utf-8')}"}
-    cookies = {"mqtt_token": token.decode("utf-8")}
+    headers = {"Cookie": f"mqtt_token={token}"}
+    cookies = {"mqtt_token": token}
     try:
         if method == "GET":
             response = requests.get(

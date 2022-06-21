@@ -781,7 +781,7 @@ def arena_token(request):
         )
     data = {
         "username": username,
-        "token": token.decode("utf-8"),
+        "token": token,
         "ids": {},
     }
     if userid:
@@ -795,7 +795,7 @@ def arena_token(request):
     response = HttpResponse(json.dumps(data), content_type="application/json")
     response.set_cookie(
         "mqtt_token",
-        token.decode("utf-8"),
+        token,
         max_age=86400000,
         httponly=True,
         secure=True,
