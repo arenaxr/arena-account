@@ -35,7 +35,6 @@ urlpatterns = [
         name="socialaccount_signup",
     ),
     path("profile", views.user_profile, name="user_profile"),
-    path("scenes", views.scene_landing, name="scenes"),
     path("login_callback", views.login_callback, name="login_callback"),
     re_path(
         r'^profile/scenes/(?P<pk>[^\/]+\/[^\/]+)$', views.scene_perm_detail),
