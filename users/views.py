@@ -31,8 +31,12 @@ from .forms import (DeviceForm, SceneForm, SocialSignupForm, UpdateDeviceForm,
 from .models import Device, Scene
 from .mqtt import (ANON_REGEX, PUBLIC_NAMESPACE, all_scenes_read_token,
                    generate_arena_token)
-from .persistence import delete_scene_objects, get_persist_scenes
+from .persistence import (delete_scene_objects, get_persist_scenes_all,
+                          get_persist_scenes_ns)
 from .serializers import SceneNameSerializer, SceneSerializer
+
+# namespaced scene regular expression
+NS_REGEX = re.compile(r'^[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+$')
 
 
 def index(request):
@@ -381,16 +385,21 @@ def get_my_scenes(user):
     2. Requests and returns list of user's editable scenes from scene permissions table.
     """
     # update scene list from object persistance db
-    token = all_scenes_read_token()
-    p_scenes = get_persist_scenes(token)
-    a_scenes = Scene.objects.values_list("name", flat=True)
-    for p_scene in p_scenes:
-        if p_scene not in a_scenes:
-            s = Scene(
-                name=p_scene,
-                summary="Existing scene name migrated from persistence database.",
-            )
-            # TODO (mwfarb) hot patch 1/25/22: s.save()
+    if user.is_authenticated:
+        token = all_scenes_read_token()
+        if user.is_staff:  # admin/staff
+            p_scenes = get_persist_scenes_all(token)
+        else:  # standard user
+            p_scenes = get_persist_scenes_ns(token, user.username)
+        a_scenes = Scene.objects.values_list("name", flat=True)
+
+        for p_scene in p_scenes:
+            if NS_REGEX.match(p_scene) and p_scene not in a_scenes:
+                s = Scene(
+                    name=p_scene,
+                    summary="Existing scene name migrated from persistence database.",
+                )
+                s.save()
 
     # load list of scenes this user can edit
     scenes = Scene.objects.none()
@@ -401,11 +410,8 @@ def get_my_scenes(user):
         else:  # standard user
             scenes = Scene.objects.filter(name__startswith=f"{user.username}/")
             editor_scenes = Scene.objects.filter(editors=user)
-    public_scenes = Scene.objects.filter(
-        name__startswith=f"{PUBLIC_NAMESPACE}/")
     # merge 'my' namespaced scenes and extras scenes granted
-    merged_scenes = (scenes | editor_scenes |
-                     public_scenes).distinct().order_by("name")
+    merged_scenes = (scenes | editor_scenes).distinct().order_by("name")
     return merged_scenes
 
 
@@ -458,34 +464,6 @@ def device_permission(user, device):
         return True
     elif device.startswith(f"{user.username}/"):  # owner
         return True
-
-
-def scene_landing(request):
-    """
-    Scene landing/listing page GET handler for user's editable 'my' scenes and viewable 'public' scenes.
-    1. Requests updated scenes in permissions db from get_my_scenes() call to persistance db, filtered by permissions.
-    2. Requests known public scenes from the permissions db.
-    3. Loads the page with 2 lists of scenes: my_scenes and public_scenes.
-    """
-    my_scenes = get_my_scenes(request.user)
-    public_scenes = Scene.objects.filter(
-        name__startswith=f"{PUBLIC_NAMESPACE}/")
-    response = render(
-        request=request,
-        template_name="users/scene_landing.html",
-        context={"user": request.user, "my_scenes": my_scenes,
-                 "public_scenes": public_scenes, },
-    )
-    token = generate_arena_token(
-        user=request.user, username=request.user.username)
-    response.set_cookie(
-        "mqtt_token",
-        token,
-        max_age=86400000,
-        httponly=True,
-        secure=True,
-    )
-    return response
 
 
 def user_profile(request):

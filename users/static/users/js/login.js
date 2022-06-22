@@ -5,7 +5,7 @@ function returnToRequestedPage() {
         localStorage.removeItem("request_uri");
     } else {
         //redirect user to root page
-        location.href = `${window.location.origin}/user/scenes`;
+        location.href = `${window.location.origin}/scenes`;
     }
 }
 
