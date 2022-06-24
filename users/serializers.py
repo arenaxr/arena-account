@@ -22,6 +22,7 @@ class SceneSerializer(serializers.ModelSerializer):
             "public_write",
             "anonymous_users",
             "video_conference",
+            "users",
             "namespace",
         ]
 
