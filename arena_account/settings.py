@@ -32,14 +32,19 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", "arena-account", "host.docke
 X_FRAME_OPTIONS = "SAMEORIGIN"
 MQTT_TOKEN_PRIVKEY = os.getenv("MQTT_TOKEN_PRIVKEY")
 
-# TODO (mwfarb): this list can be reduced after webserver refactor
 # namespaces that are reserved for the webserver, see ARENA-core and nginx
 USERNAME_RESERVED = [
     ".cache",
+    ".git",
     ".github",
+    ".gitignore",
+    ".gitmodules",
+    ".parcel-cache",
+    ".parcelrc",
     "aframe",
     "apriltag",
     "ar",
+    "arts-api",  # proxy
     "arts",
     "audio",
     "auth",  # proxy
@@ -56,15 +61,19 @@ USERNAME_RESERVED = [
     "media",
     "models",
     "mqtt",  # proxy
+    "mqtt1",  # proxy
+    "mqtt2",  # proxy
     "network",
     "node_modules",
     "persist",  # proxy
     "public",  # public namespace (tentative)
+    "pythonrt",  # proxy
     "runtime-mngr",
-    "screenshare",
     "scene",
-    "src",
+    "scenes",
+    "screenshare",
     "signin",
+    "src",
     "static",
     "store",
     "storemng",  # proxy
