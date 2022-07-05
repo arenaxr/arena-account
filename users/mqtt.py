@@ -7,7 +7,7 @@ import jwt
 from django.conf import settings
 
 from .models import (SCENE_ANON_USERS_DEF, SCENE_PUBLIC_READ_DEF,
-                     SCENE_PUBLIC_WRITE_DEF, SCENE_VIDEO_CONF_DEF, Scene)
+                     SCENE_PUBLIC_WRITE_DEF, SCENE_USERS_DEF, SCENE_VIDEO_CONF_DEF, Scene)
 
 PUBLIC_NAMESPACE = "public"
 ANON_REGEX = "anonymous-(?=.*?[a-zA-Z].*?[a-zA-Z])"
@@ -59,23 +59,29 @@ def generate_arena_token(
     payload["exp"] = datetime.datetime.utcnow() + duration
     headers = None
 
-    # add jitsi server params if a/v scene
-    if scene and camid:
-        video = False
+    p_public_read = SCENE_PUBLIC_READ_DEF
+    p_public_write = SCENE_PUBLIC_WRITE_DEF
+    p_anonymous_users = SCENE_ANON_USERS_DEF
+    p_video = SCENE_VIDEO_CONF_DEF
+    p_users = SCENE_USERS_DEF
+    if scene:
         scene_opt = Scene.objects.filter(name=scene)
         if scene_opt.exists():
-            scene_opt = Scene.objects.get(name=scene)
-            video = scene_opt.video_conference
-        else:
-            video = SCENE_VIDEO_CONF_DEF
-        if video:
-            host = os.getenv("HOSTNAME")
-            headers = {"kid": host}
-            payload["aud"] = "arena"
-            payload["iss"] = "arena-account"
-            # we use the scene name as the jitsi room name, handle RFC 3986 reserved chars as = '_'
-            roomname = re.sub(r"[!#$&'()*+,\/:;=?@[\]]", '_', scene.lower())
-            payload["room"] = roomname
+            p_public_read = scene_opt.public_read
+            p_public_write = scene_opt.public_write
+            p_anonymous_users = scene_opt.anonymous_users
+            p_video = scene_opt.video_conference
+            p_users = scene_opt.users
+
+    # add jitsi server params if a/v scene
+    if scene and camid and p_users and p_video:
+        host = os.getenv("HOSTNAME")
+        headers = {"kid": host}
+        payload["aud"] = "arena"
+        payload["iss"] = "arena-account"
+        # we use the scene name as the jitsi room name, handle RFC 3986 reserved chars as = '_'
+        roomname = re.sub(r"[!#$&'()*+,\/:;=?@[\]]", '_', scene.lower())
+        payload["room"] = roomname
 
     # everyone should be able to read all public scenes
     if not device:  # scene token scenario
@@ -86,7 +92,7 @@ def generate_arena_token(
             # device owners have rights to their device objects only
             subs.append(f"{realm}/d/{device}/#")
             pubs.append(f"{realm}/d/{device}/#")
-        else:  # scene token scenario
+        elif p_users:  # scene token scenario
             # scene rights default by namespace
             if user.is_staff:
                 # staff/admin have rights to all scene objects
@@ -116,24 +122,13 @@ def generate_arena_token(
                 pubs.append(f"{realm}/d/{username}/#")
     # anon/non-owners have rights to view scene objects only
     if scene and not user.is_staff:
-        scene_opt = Scene.objects.filter(name=scene)
-        if scene_opt.exists():
-            # did the user set specific public read or public write?
-            scene_opt = Scene.objects.get(name=scene)
-            if not user.is_authenticated and not scene_opt.anonymous_users:
-                return None  # anonymous not permitted
-            if scene_opt.public_read:
-                subs.append(f"{realm}/s/{scene}/#")
-            if scene_opt.public_write:
-                pubs.append(f"{realm}/s/{scene}/#")
-        else:
-            # otherwise, use public access defaults
-            if not user.is_authenticated and not SCENE_ANON_USERS_DEF:
-                return None  # anonymous not permitted
-            if SCENE_PUBLIC_READ_DEF:
-                subs.append(f"{realm}/s/{scene}/#")
-            if SCENE_PUBLIC_WRITE_DEF:
-                pubs.append(f"{realm}/s/{scene}/#")
+        # did the user set specific public read or public write?
+        if not user.is_authenticated and not p_anonymous_users:
+            return None  # anonymous not permitted
+        if p_public_read:
+            subs.append(f"{realm}/s/{scene}/#")
+        if p_public_write:
+            pubs.append(f"{realm}/s/{scene}/#")
         # user presence objects
         if camid:  # probable web browser write
             pubs.append(f"{realm}/s/{scene}/{camid}")
@@ -143,7 +138,7 @@ def generate_arena_token(
         if handrightid:
             pubs.append(f"{realm}/s/{scene}/{handrightid}")
     # chat messages
-    if scene and userid:
+    if scene and userid and p_users:
         namespace = scene.split("/")[0]
         userhandle = userid + base64.b64encode(userid.encode()).decode()
         # receive private messages: Read
