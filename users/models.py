@@ -8,6 +8,7 @@ SCENE_PUBLIC_READ_DEF = True
 SCENE_PUBLIC_WRITE_DEF = False
 SCENE_ANON_USERS_DEF = True
 SCENE_VIDEO_CONF_DEF = True
+SCENE_USERS_DEF = True
 
 
 class Scene(models.Model):
@@ -25,6 +26,8 @@ class Scene(models.Model):
         default=SCENE_ANON_USERS_DEF, blank=True)
     video_conference = models.BooleanField(
         default=SCENE_VIDEO_CONF_DEF, blank=True)
+    users = models.BooleanField(
+        default=SCENE_USERS_DEF, blank=True)
 
     def save(self, *args, **kwargs):
         self.full_clean()  # performs regular validation then clean()

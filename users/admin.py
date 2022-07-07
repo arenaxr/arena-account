@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Scene
+from .models import Device, Scene
 
 
 class SceneAdmin(admin.ModelAdmin):
@@ -8,3 +8,4 @@ class SceneAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Scene, SceneAdmin)
+admin.site.register(Device)

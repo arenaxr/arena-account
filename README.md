@@ -29,11 +29,10 @@ Django project user account management for the ARENA.
 3. Create an environment file, `.env`, for testing on localhost using your Google auth app "Client id" and "Secret key".
 ```env
 HOSTNAME=localhost
+ARENA_REALM=realm
 EMAIL=nouser@nomail.com
 GAUTH_CLIENTID=Google_OAuth_Web_Client_ID
 GAUTH_CLIENTSECRET=Google_OAuth_Web_Client_Secret
-GAUTH_INSTALLED_CLIENTID=Google_OAuth_Installed_Client_ID
-GAUTH_INSTALLED_CLIENTSECRET=Google_OAuth_Installed_Client_Secret
 MQTT_TOKEN_PRIVKEY=/path/to/your/test/key/file.pem
 ```
 4. Create db: ```make migrate```

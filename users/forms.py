@@ -56,11 +56,13 @@ class SceneForm(forms.ModelForm):
         widget=forms.CheckboxInput(attrs={"class": "form-check-input"}), required=False)
     video_conference = forms.BooleanField(
         widget=forms.CheckboxInput(attrs={"class": "form-check-input"}), required=False)
+    users = forms.BooleanField(
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}), required=False)
 
     class Meta:
         model = Scene
         fields = ("public_read", "public_write",
-                  "anonymous_users", "video_conference", "editors")
+                  "anonymous_users", "video_conference", "users", "editors")
 
 
 class DeviceForm(forms.ModelForm):
