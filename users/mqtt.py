@@ -84,14 +84,17 @@ def generate_arena_token(
 
     # everyone should be able to read all public scenes
     if not device:  # scene token scenario
-        subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/#")
+        if scene and scene.startswith(f"{PUBLIC_NAMESPACE}/"):  # scene token scenario
+            subs.append(f"{realm}/s/{scene}/#")
+        else:
+            subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/#")
     # user presence objects
     if user.is_authenticated:
         if device:  # device token scenario
             # device owners have rights to their device objects only
             subs.append(f"{realm}/d/{device}/#")
             pubs.append(f"{realm}/d/{device}/#")
-        elif p_users:  # scene token scenario
+        else:  # scene token scenario
             # scene rights default by namespace
             if user.is_staff:
                 # staff/admin have rights to all scene objects
@@ -105,9 +108,9 @@ def generate_arena_token(
                 subs.append(f"{realm}/s/{username}/#")
                 pubs.append(f"{realm}/s/{username}/#")
                 # add scenes that have been granted by other owners
-                if scene:
-                    u_scenes = Scene.objects.filter(editors=user)
-                    for u_scene in u_scenes:
+                u_scenes = Scene.objects.filter(editors=user)
+                for u_scene in u_scenes:
+                    if not scene or (scene and u_scene.name == scene):
                         subs.append(f"{realm}/s/{u_scene.name}/#")
                         pubs.append(f"{realm}/s/{u_scene.name}/#")
             # device rights default by namespace
@@ -126,7 +129,7 @@ def generate_arena_token(
             return None  # anonymous not permitted
         if p_public_read:
             subs.append(f"{realm}/s/{scene}/#")
-        if p_public_write and p_users:
+        if p_public_write:
             pubs.append(f"{realm}/s/{scene}/#")
         # user presence objects
         if camid and p_users:  # probable web browser write
