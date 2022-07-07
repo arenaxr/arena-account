@@ -67,6 +67,9 @@ def generate_arena_token(
     if scene:
         scene_opt = Scene.objects.filter(name=scene)
         if scene_opt.exists():
+            print(scene_opt.__dict__)
+            print(scene_opt.video_conference)
+            print(scene_opt.users)
             p_public_read = scene_opt.public_read
             p_public_write = scene_opt.public_write
             p_anonymous_users = scene_opt.anonymous_users

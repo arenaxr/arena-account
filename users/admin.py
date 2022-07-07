@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Scene, Device
+from .models import Device, Scene
 
 
 class SceneAdmin(admin.ModelAdmin):
