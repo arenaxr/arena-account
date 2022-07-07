@@ -64,17 +64,13 @@ def generate_arena_token(
     p_anonymous_users = SCENE_ANON_USERS_DEF
     p_video = SCENE_VIDEO_CONF_DEF
     p_users = SCENE_USERS_DEF
-    if scene:
-        scene_opt = Scene.objects.filter(name=scene)
-        if scene_opt.exists():
-            print(scene_opt.__dict__)
-            print(scene_opt.video_conference)
-            print(scene_opt.users)
-            p_public_read = scene_opt.public_read
-            p_public_write = scene_opt.public_write
-            p_anonymous_users = scene_opt.anonymous_users
-            p_video = scene_opt.video_conference
-            p_users = scene_opt.users
+    if scene and Scene.objects.filter(name=scene).exists():
+        scene_opt = Scene.objects.get(name=scene)
+        p_public_read = scene_opt.public_read
+        p_public_write = scene_opt.public_write
+        p_anonymous_users = scene_opt.anonymous_users
+        p_video = scene_opt.video_conference
+        p_users = scene_opt.users
 
     # add jitsi server params if a/v scene
     if scene and camid and p_users and p_video:
