@@ -65,12 +65,12 @@ def generate_arena_token(
     p_video = SCENE_VIDEO_CONF_DEF
     p_users = SCENE_USERS_DEF
     if scene and Scene.objects.filter(name=scene).exists():
-        scene_opt = Scene.objects.get(name=scene)
-        p_public_read = scene_opt.public_read
-        p_public_write = scene_opt.public_write
-        p_anonymous_users = scene_opt.anonymous_users
-        p_video = scene_opt.video_conference
-        p_users = scene_opt.users
+        scene_perm = Scene.objects.get(name=scene)
+        p_public_read = scene_perm.public_read
+        p_public_write = scene_perm.public_write
+        p_anonymous_users = scene_perm.anonymous_users
+        p_video = scene_perm.video_conference
+        p_users = scene_perm.users
 
     # add jitsi server params if a/v scene
     if scene and camid and p_users and p_video:
@@ -126,15 +126,15 @@ def generate_arena_token(
             return None  # anonymous not permitted
         if p_public_read:
             subs.append(f"{realm}/s/{scene}/#")
-        if p_public_write:
+        if p_public_write and p_users:
             pubs.append(f"{realm}/s/{scene}/#")
         # user presence objects
-        if camid:  # probable web browser write
+        if camid and p_users:  # probable web browser write
             pubs.append(f"{realm}/s/{scene}/{camid}")
             pubs.append(f"{realm}/s/{scene}/{camid}/#")
-        if handleftid:
+        if handleftid and p_users:
             pubs.append(f"{realm}/s/{scene}/{handleftid}")
-        if handrightid:
+        if handrightid and p_users:
             pubs.append(f"{realm}/s/{scene}/{handrightid}")
     # chat messages
     if scene and userid and p_users:
