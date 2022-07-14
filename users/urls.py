@@ -27,6 +27,7 @@ schema_view = get_schema_view(
 urlpatterns = [
     # pages
     path("", views.index, name="index"),
+    path("health", views.health_state, name="health"),
     path("login", views.login_request, name="login"),
     path("logout", views.logout_request, name="logout"),
     path(

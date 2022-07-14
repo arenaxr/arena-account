@@ -798,3 +798,14 @@ def arena_token(request):
         secure=True,
     )
     return response
+
+
+@ api_view(["GET"])
+def health_state(request):
+    """
+    Endpoint request for the arena-account system health: GET.
+    """
+
+    return JsonResponse(
+        {"result": "success"}, status=status.HTTP_200_OK
+    )
