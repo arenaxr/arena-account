@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/arenaxr/arena-account/compare/v1.1.0...v1.1.1) (2022-07-20)
+
+
+### Bug Fixes
+
+* device token generation crash ([4f17826](https://github.com/arenaxr/arena-account/commit/4f178262e93dc937cc4c21901f8f1f990b09d1be))
+
 ## [1.1.0](https://github.com/conix-center/arena-account/compare/v1.0.1...v1.1.0) (2022-07-14)
 
 
