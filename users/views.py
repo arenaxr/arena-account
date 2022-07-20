@@ -214,7 +214,7 @@ def device_perm_detail(request, pk):
                 username=request.user.username,
                 device=device.name,
                 duration=datetime.timedelta(days=30)
-            ).decode("utf-8")
+            )
 
     form = DeviceForm(instance=device)
     return render(request=request, template_name="users/device_perm_detail.html",
