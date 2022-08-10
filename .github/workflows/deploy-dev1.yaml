@@ -1,3 +1,5 @@
+
+
 name: ARENA Dev Staging SSH Deploy
 on:
   # Trigger the workflow on push on master
@@ -5,6 +7,8 @@ on:
     branches:
       - main
 
+  workflow_dispatch:
+  
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -21,8 +25,9 @@ jobs:
           port: ${{ secrets.DEPLOY_PORT }}
           envs: TARGET
           script: |
-            cd  $TARGET
+             cd  $TARGET
              git checkout main
+             git reset --hard HEAD
              git pull
              cd ..
              ./staging.sh down
