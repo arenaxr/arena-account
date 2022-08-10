@@ -22,7 +22,7 @@ jobs:
           envs: TARGET
           script: |
             cd  $TARGET
-             git checkout master
+             git checkout main
              git pull
              cd ..
              ./staging.sh down
