@@ -44,7 +44,7 @@ USERNAME_RESERVED = [
     "aframe",
     "apriltag",
     "ar",
-    "arts-api",  # proxy
+    "orchestrator",  # proxy
     "arts",
     "audio",
     "auth",  # proxy
