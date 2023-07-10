@@ -84,10 +84,7 @@ def generate_arena_token(
 
     # everyone should be able to read all public scenes
     if not device:  # scene token scenario
-        if scene and scene.startswith(f"{PUBLIC_NAMESPACE}/"):  # scene token scenario
-            subs.append(f"{realm}/s/{scene}/#")
-        else:
-            subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/#")
+        subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/#")
     # user presence objects
     if user.is_authenticated:
         if device:  # device token scenario
