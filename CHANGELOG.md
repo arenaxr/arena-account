@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.2](https://github.com/arenaxr/arena-account/compare/v1.1.1...v1.1.2) (2023-07-10)
+
+
+### Bug Fixes
+
+* add new orchestrator endpoint ([0c29eba](https://github.com/arenaxr/arena-account/commit/0c29ebaf23f1a445a5dd543315dfacb903e80ee1))
+* **mqtt:** simplify public scene reads ([21422a4](https://github.com/arenaxr/arena-account/commit/21422a46f41885c36e3ad9a98376d86d32764563))
+
 ## [1.1.1](https://github.com/arenaxr/arena-account/compare/v1.1.0...v1.1.1) (2022-07-20)
 
 
