@@ -11,6 +11,15 @@ SCENE_VIDEO_CONF_DEF = True
 SCENE_USERS_DEF = True
 
 
+class ArenaUser(models.Model):
+    """Model representing ARENA app specific user data outside the User model."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    editors = models.ManyToManyField(User, related_name='editors', blank=True)
+    owners = models.ManyToManyField(User, related_name='owners', blank=True)
+    creation_date = models.DateTimeField(auto_now_add=True)
+
+
 class Scene(models.Model):
     """Model representing a scene's permissions."""
 
@@ -41,10 +50,6 @@ class Scene(models.Model):
     def __str__(self):
         """String for representing the scene object by name."""
         return self.name
-
-    def get_absolute_url(self):
-        """Returns the url to access a detail record for this scene."""
-        return reverse("scene-detail", args=[str(self.name)])
 
     @property
     def namespace(self):
