@@ -25,7 +25,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
 
 from .filestore import (add_filestore_auth, delete_filestore_user,
-                        set_filestore_scope, use_filestore_auth)
+                        set_filestore_staff, use_filestore_auth)
 from .forms import (DeviceForm, SceneForm, SocialSignupForm, UpdateDeviceForm,
                     UpdateSceneForm, UpdateStaffForm)
 from .models import Device, Scene
@@ -331,7 +331,7 @@ def profile_update_staff(request):
         user.is_staff = is_staff
         user.save()
         print(f"Setting Filebrowser user {staff_username}, staff={is_staff}")
-        if not set_filestore_scope(user, user.is_staff):
+        if not set_filestore_staff(user, user.is_staff):
             messages.error(
                 request, f"Unable to update user's filestore status.")
             return redirect("user_profile")
@@ -603,11 +603,9 @@ def storelogin(request):
     if not fs_user_token:
         # otherwise user needs to be added
         fs_user_token = add_filestore_auth(request.user)
-
-    # TODO: filestore scope should return here and be updated if not matching
-    # second, for staff, override automatic user-only scope, so staff users have root scope
-    if request.user.is_staff:
-        set_filestore_scope(request.user, request.user.is_staff)
+        # second, for staff, override automatic user-only scope, so staff users have root scope
+        if request.user.is_staff:
+            set_filestore_staff(request.user, request.user.is_staff)
 
     if fs_user_token:
         response.set_cookie("auth", fs_user_token)

@@ -90,7 +90,7 @@ def add_filestore_auth(user: User):
     return use_filestore_auth(user)
 
 
-def set_filestore_scope(user: User, is_staff):
+def set_filestore_staff(user: User, is_staff):
     verify, host = get_rest_host()
     # get auth for setting new user
     admin_login = get_admin_login()
