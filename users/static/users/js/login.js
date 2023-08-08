@@ -26,6 +26,11 @@ function hideEls(els, flex = false) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {   // document.ready() equiv
+    // localStorage/cookie cleanup moved here from auth.js for canonical cleanup
+    localStorage.removeItem('auth_choice'); // remove user auth
+    localStorage.setItem('jwt', null); // remove filestore jwt
+
+    // init
     const usernameContainer = document.getElementById('usernameContainer');
     const anonBtn = document.getElementById('anonBtn');
     const googleBtn = document.getElementById('googleBtn');
