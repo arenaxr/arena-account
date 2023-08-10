@@ -26,26 +26,23 @@
                 <div class="row">
                     <form id="loginForm">
                         {% csrf_token %}
-                        <div class="form-floating">
-                            <select aria-label="Provider Select" class="form-select mb-3" id="provider">
-                                <option value="google">Google</option>
-                                <option value="anon">Anonymous</option>
-                            </select>
-                            <label for="provider">Authentication Provider</label>
-                        </div>
                         <div class="form-floating mb-3" id="usernameContainer">
                             <input class="form-control" id="usernameInput" type="text">
-                            <label for="usernameInput">User Name</label>
+                            <label for="usernameInput">Display Name</label>
                         </div>
-                        <button class="btn btn-light" id="anonBtn" type="submit">Sign In</button>
 
-                        <div class="d-none btn btn-light" id="googleBtn"
+                        <div class="btn btn-light btn-block" id="googleBtn"
                             onclick="location.href='{% provider_login_url 'google' %}';">
                             <div id="customBtnGoogle">
                                 <span class="icon"></span>
-                                <span class="buttonText">Google Sign In</span>
+                                <span class="buttonText">Continue with Google</span>
                             </div>
                         </div>
+
+                        <a class="btn btn-light btn-block" id="anonBtn" type="submit" style="background-color: #777" href="#!"
+                            role="button">
+                            <i class="fas fa-user-secret me-2"></i>Continue Anonymously
+                        </a>
                     </form>
                 </div>
             </div>
@@ -55,5 +52,5 @@
 {% endblock content %}
 
 {% block extrajs %}
-    <script type="text/javascript" src="{% static 'users/js/login.js' %}"></script>
+<script type="text/javascript" src="{% static 'users/js/login.js' %}"></script>
 {% endblock extrajs %}
