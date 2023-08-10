@@ -31,26 +31,6 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
     localStorage.setItem('jwt', null); // remove filestore jwt
 
     // init
-    const usernameContainer = document.getElementById('usernameContainer');
-    const anonBtn = document.getElementById('anonBtn');
-    const googleBtn = document.getElementById('googleBtn');
-    const providerSelect = document.getElementById('provider');
-    providerSelect.selectedIndex = 0; // Reset for history-nav
-    providerSelect.addEventListener('change', ({target}) => {
-        switch (target.value) {
-            case 'google':
-                hideEls([usernameContainer, anonBtn]);
-                showEl(googleBtn);
-                break;
-            case 'anon':
-                showEl(usernameContainer);
-                hideEls([googleBtn]);
-                showEl(anonBtn);
-                break;
-            default:
-            //
-        }
-    });
     const nameRegex = '^(?=[^A-Za-z]*[A-Za-z]{2,})[ -~]*$';
     const usernameInput = document.getElementById('usernameInput');
     usernameInput.setAttribute('pattern', nameRegex);
@@ -74,5 +54,4 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
         }
     };
     document.getElementById('loginForm').addEventListener('submit', anonFormHandler);
-    providerSelect.dispatchEvent(new Event('change')); // Manually trigger selection effects for default
 });

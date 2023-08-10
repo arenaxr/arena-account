@@ -43,12 +43,18 @@ html {
 span.icon {
     display: inline-block;
     vertical-align: middle;
-    width: 42px;
-    height: 42px;
+    width: 18px;
+    height: 18px;
+}
+span i.fas {
+    display: inline-block;
+    vertical-align: middle;
+    width: 18px;
+    height: 18px;
 }
 
 #customBtnGoogle span.icon {
-    background: url('../img/g-normal.png') transparent 5px 50% no-repeat;
+    background: no-repeat center/100% transparent url('../img/g-normal.png');
 }
 
 .min-vh-75 {
