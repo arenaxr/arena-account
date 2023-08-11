@@ -31,19 +31,17 @@
                             <label for="usernameInput">Display Name</label>
                         </div>
 
-                        <div class="btn-primary btn-sm btn-block" id="googleBtn" style="background-color: #4285F4"
+                        <a class="btn-primary btn-sm btn-block" id="customBtnGoogle" style="background-color: #4285F4"
                             onclick="location.href='{% provider_login_url 'google' %}';">
-                            <div id="customBtnGoogle">
-                                <span class="icon me-2"></span>
-                                <span class="buttonText">Sign In with Google</span>
-                            </div>
-                        </div>
+                            <span class="icon me-2"></span>
+                            <span class="buttonText">Sign In with Google</span>
+                        </a>
 
                         <a class="btn-primary btn-sm btn-block" id="anonBtn" href="!#" type="submit"
                             style="background-color: #777777" role="button">
                             <span class="icon fas fa-user-secret me-2"></span>
                             <span class="buttonText">Continue Anonymously</span>
-                        <!-- <i class="fas fa-user-secret me-2"></i>Continue Anonymously -->
+                            <!-- <i class="fas fa-user-secret me-2"></i>Continue Anonymously -->
                         </a>
                     </form>
                 </div>
