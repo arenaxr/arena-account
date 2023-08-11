@@ -40,17 +40,15 @@ html {
     line-height: 34px;
 }
 
+.text-left {
+    text-align: left !important;
+}
+
 span.icon {
     display: inline-block;
     vertical-align: middle;
-    width: 18px;
-    height: 18px;
-}
-span i.fas {
-    display: inline-block;
-    vertical-align: middle;
-    width: 18px;
-    height: 18px;
+    width: 36px;
+    height: 36px;
 }
 
 #customBtnGoogle span.icon {
