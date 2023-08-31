@@ -78,8 +78,10 @@ def logout_request(request):
     """
     Removes ID and flushes session data, shows login page.
     """
-    logout(request)
-    return redirect("login")
+    logout(request)  # revoke django auth
+    response = redirect("login")
+    response.delete_cookie("auth")  # revoke fs auth
+    return response
 
 
 @ permission_classes([permissions.IsAuthenticated])
@@ -611,7 +613,7 @@ def storelogin(request):
     if fs_user_token:
         response.set_cookie("auth", fs_user_token)
     else:
-        response.set_cookie("auth", None)  # revoke auth
+        response.delete_cookie("auth")  # revoke fs auth
     return response
 
 
