@@ -1,6 +1,7 @@
 import json
 import os
 
+import jwt
 import requests
 from django.contrib.auth.models import User
 
@@ -8,7 +9,7 @@ from .utils import get_rest_host
 
 
 def get_user_scope(user: User):
-    return f"./users/{user.username}"
+    return f"/users/{user.username}"
 
 
 def get_admin_login():
@@ -97,23 +98,19 @@ def set_filestore_staff(user: User, is_staff):
     admin_token = get_filestore_token(admin_login, host, verify)
     if not admin_token:
         return False
-    # find user in list
+    # find user
+    fs_user_token = use_filestore_auth(user)
+    payload = jwt.decode(fs_user_token, options={"verify_signature": False})
     try:
-        r_users = requests.get(f"https://{host}/storemng/api/users",
-                               headers={"X-Auth": admin_token}, verify=verify)
-        r_users.raise_for_status()
+        r_user = requests.get(f"https://{host}/storemng/api/users/{payload['user']['id']}",
+                              headers={"X-Auth": admin_token}, verify=verify)
+        r_user.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
         return False
-    fsusers = r_users.json()
-    for fsuser in fsusers:
-        if fsuser["username"] == user.username:
-            edit_user = fsuser
-            break
-    else:  # fs user not found, no need to update, so return true
-        return True
+    edit_user = r_user.json()
     if is_staff:  # admin and staff get root scope
-        edit_user["scope"] = "."
+        edit_user["scope"] = "/"
     else:
         edit_user["scope"] = get_user_scope(user)
     fs_user = {
@@ -143,23 +140,17 @@ def delete_filestore_user(user: User):
     admin_token = get_filestore_token(admin_login, host, verify)
     if not admin_token:
         return False
-    # find user in list
+    # find user
+    fs_user_token = use_filestore_auth(user)
+    payload = jwt.decode(fs_user_token, options={"verify_signature": False})
     try:
-        r_users = requests.get(f"https://{host}/storemng/api/users",
-                               headers={"X-Auth": admin_token}, verify=verify)
-        r_users.raise_for_status()
+        r_user = requests.get(f"https://{host}/storemng/api/users/{payload['user']['id']}",
+                              headers={"X-Auth": admin_token}, verify=verify)
+        r_user.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
         return False
-    fsusers = r_users.json()
-    for fsuser in fsusers:
-        if fsuser["username"] == user.username:
-            del_user = fsuser
-            break
-    else:  # user not found, nothing to delete, so return true
-        return True
-    # get auth for removing files
-    fs_user_token = use_filestore_auth(user)
+    del_user = r_user.json()
     # remove user scope files
     if del_user['scope'] == get_user_scope(user):
         try:  # only user scope files can be removed, not root
