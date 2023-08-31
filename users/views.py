@@ -587,6 +587,7 @@ def user_state(request):
                 "fullname": user.get_full_name(),
                 "email": user.email,
                 "type": authType,
+                "is_staff": user.is_staff,
             },
             status=status.HTTP_200_OK,
         )
