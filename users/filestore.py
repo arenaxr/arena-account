@@ -91,7 +91,7 @@ def add_filestore_auth(user: User):
     return use_filestore_auth(user)
 
 
-def set_filestore_staff(user: User, is_staff):
+def set_filestore_scope(user: User):
     verify, host = get_rest_host()
     # get auth for setting new user
     admin_login = get_admin_login()
@@ -109,22 +109,24 @@ def set_filestore_staff(user: User, is_staff):
         print("{0}: ".format(err))
         return False
     edit_user = r_user.json()
-    if is_staff:  # admin and staff get root scope
-        edit_user["scope"] = "/"
+    if user.is_staff:  # admin and staff get root scope
+        scope = "/"
     else:
-        edit_user["scope"] = get_user_scope(user)
-    fs_user = {
-        "what": "user",
-        "which": ["all"],
-        "data": edit_user,
-    }
-    try:
-        r_useradd = requests.put(f"https://{host}/storemng/api/users/{edit_user['id']}",
-                                 data=json.dumps(fs_user), headers={"X-Auth": admin_token}, verify=verify)
-        r_useradd.raise_for_status()
-    except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
-        print("{0}: ".format(err))
-        return False
+        scope = get_user_scope(user)
+    if edit_user["scope"] != scope:
+        edit_user["scope"] = scope
+        fs_user = {
+            "what": "user",
+            "which": ["all"],
+            "data": edit_user,
+        }
+        try:
+            r_useradd = requests.put(f"https://{host}/storemng/api/users/{edit_user['id']}",
+                                     data=json.dumps(fs_user), headers={"X-Auth": admin_token}, verify=verify)
+            r_useradd.raise_for_status()
+        except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
+            print("{0}: ".format(err))
+            return False
 
     return True
 
