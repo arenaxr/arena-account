@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.3](https://github.com/arenaxr/arena-account/compare/v1.1.2...v1.1.3) (2023-09-05)
+
+
+### Bug Fixes
+
+* **auth:** return is_staff state in user_state endpoint ([9cfe31b](https://github.com/arenaxr/arena-account/commit/9cfe31b188aae04146ddaefcda6ae8a5ce984039))
+* **fs:** always check scope on filestore login ([b73470a](https://github.com/arenaxr/arena-account/commit/b73470a1ebf29b93e5ad1d1bfcb78dbcb5b5f986))
+* **fs:** improve fs user scope lookup ([f6865c9](https://github.com/arenaxr/arena-account/commit/f6865c9514cbedd756804bc1d4eaf32e29e139bf))
+* **fs:** onl;y use relative scope for all users ([9ff645d](https://github.com/arenaxr/arena-account/commit/9ff645d05c76d6cdbdbad60ec87adee7396d9185))
+* **fs:** revoke filestore auth implicitly on logout ([4f9fffa](https://github.com/arenaxr/arena-account/commit/4f9fffa7fa18710c4a9d06cf457315f521046f01))
+* make all login fields focusable ([9eb5a36](https://github.com/arenaxr/arena-account/commit/9eb5a36324ef8a956006b2c6940ac6745e5a1b3b))
+* move fs logout to site logout ([3abea7e](https://github.com/arenaxr/arena-account/commit/3abea7e5baeb1d7e9faef458ad6315e5458b3d08))
+* show all auth choices by default equal weight ([#78](https://github.com/arenaxr/arena-account/issues/78)) ([0f8e3e7](https://github.com/arenaxr/arena-account/commit/0f8e3e743c3eae4841b6d7e5c3d63195c2399b39))
+* upgrade pyyaml to new supported config ([71e410b](https://github.com/arenaxr/arena-account/commit/71e410b86ed00263d5aadc8cd2a996c1264e5987))
+
 ## [1.1.2](https://github.com/arenaxr/arena-account/compare/v1.1.1...v1.1.2) (2023-07-10)
 
 
