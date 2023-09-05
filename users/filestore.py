@@ -9,7 +9,7 @@ from .utils import get_rest_host
 
 
 def get_user_scope(user: User):
-    return f"/users/{user.username}"
+    return f"./users/{user.username}"
 
 
 def get_admin_login():
@@ -110,7 +110,7 @@ def set_filestore_scope(user: User):
         return False
     edit_user = r_user.json()
     if user.is_staff:  # admin and staff get root scope
-        scope = "/"
+        scope = "."
     else:
         scope = get_user_scope(user)
     if edit_user["scope"] != scope:
