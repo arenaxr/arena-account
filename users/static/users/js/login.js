@@ -51,6 +51,9 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
             localStorage.setItem('display_name', displayName);  // save for next use
             localStorage.setItem('auth_choice', 'anonymous');
             returnToRequestedPage();
+        } else {
+            var form = document.querySelector('form')
+            form.reportValidity();
         }
     };
     document.getElementById('loginForm').addEventListener('submit', anonFormHandler);

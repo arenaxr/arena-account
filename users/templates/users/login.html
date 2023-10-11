@@ -27,7 +27,8 @@
                     <form id="loginForm">
                         {% csrf_token %}
                         <div class="form-floating mb-3" id="usernameContainer">
-                            <input class="form-control" id="usernameInput" type="text">
+                            <input class="form-control" id="usernameInput" type="text" required
+                                pattern="^(?=[^A-Za-z]*[A-Za-z]{2,})[ -~]*$" title="Display Name of at least 2 characters">
                             <label for="usernameInput">Display Name</label>
                         </div>
 
