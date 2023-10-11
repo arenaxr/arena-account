@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/arenaxr/arena-account/compare/v1.1.3...v1.1.4) (2023-10-11)
+
+
+### Bug Fixes
+
+* **login:** fixed missing validation feedback for anonymous display name ([6b364bd](https://github.com/arenaxr/arena-account/commit/6b364bd72dbfb3e190bd11ff79200493e30c6cd5))
+
 ## [1.1.3](https://github.com/arenaxr/arena-account/compare/v1.1.2...v1.1.3) (2023-09-05)
 
 
