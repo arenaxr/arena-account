@@ -85,6 +85,8 @@ def generate_arena_token(
     # everyone should be able to read all public scenes
     if not device:  # scene token scenario
         subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/#")
+        # And transmit env data
+        pubs.append(f"{realm}/env/{PUBLIC_NAMESPACE}/#")
     # user presence objects
     if user.is_authenticated:
         if device:  # device token scenario
@@ -97,6 +99,9 @@ def generate_arena_token(
                 # staff/admin have rights to all scene objects
                 subs.append(f"{realm}/s/#")
                 pubs.append(f"{realm}/s/#")
+                # env data for all scenes
+                subs.append(f"{realm}/env/#")
+                pubs.append(f"{realm}/env/#")
                 # vio experiments, staff only
                 if scene:
                     pubs.append(f"{realm}/vio/{scene}/#")
@@ -104,12 +109,17 @@ def generate_arena_token(
                 # scene owners have rights to their scene objects only
                 subs.append(f"{realm}/s/{username}/#")
                 pubs.append(f"{realm}/s/{username}/#")
+                # scene owners have rights to their scene env only
+                subs.append(f"{realm}/env/{username}/#")
+                pubs.append(f"{realm}/env/{username}/#")
                 # add scenes that have been granted by other owners
                 u_scenes = Scene.objects.filter(editors=user)
                 for u_scene in u_scenes:
                     if not scene or (scene and u_scene.name == scene):
                         subs.append(f"{realm}/s/{u_scene.name}/#")
                         pubs.append(f"{realm}/s/{u_scene.name}/#")
+                        subs.append(f"{realm}/env/{u_scene.name}/#")
+                        pubs.append(f"{realm}/env/{u_scene.name}/#")
             # device rights default by namespace
             if user.is_staff:
                 # staff/admin have rights to all device objects
@@ -126,6 +136,8 @@ def generate_arena_token(
             return None  # anonymous not permitted
         if p_public_read:
             subs.append(f"{realm}/s/{scene}/#")
+            # Interactivity to extent of viewing objects is similar to publishing env
+            pubs.append(f"{realm}/env/{scene}/#")
         if p_public_write:
             pubs.append(f"{realm}/s/{scene}/#")
         # user presence objects
