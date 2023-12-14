@@ -45,6 +45,26 @@ def generate_arena_token(
     handrightid=None,
     duration=DEF_JWT_DURATION
 ):
+    """ MQTT Token Constructor. Topic Notes:
+        /s/: virtual scene objects
+        /d/: device inter-process
+        /env/: physical environment detection
+
+    Args:
+        user (object): User object
+        username (str): _description_
+        realm (str, optional): _description_. Defaults to "realm".
+        scene (str, optional): _description_. Defaults to None.
+        device (str, optional): _description_. Defaults to None.
+        camid (str, optional): _description_. Defaults to None.
+        userid (str, optional): _description_. Defaults to None.
+        handleftid (str, optional): _description_. Defaults to None.
+        handrightid (str, optional): _description_. Defaults to None.
+        duration (integer, optional): _description_. Defaults to DEF_JWT_DURATION.
+
+    Returns:
+        str: JWT or None
+    """
     subs = []
     pubs = []
     privkeyfile = settings.MQTT_TOKEN_PRIVKEY
