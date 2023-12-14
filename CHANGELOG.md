@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.5](https://github.com/arenaxr/arena-account/compare/v1.1.4...v1.1.5) (2023-12-14)
+
+
+### Bug Fixes
+
+* **mqtt:** Add /env/ topic tree that mirrors /s/ ([4f3c224](https://github.com/arenaxr/arena-account/commit/4f3c224b18be637ef0b1737271ff53d13b468a54))
+
 ## [1.1.4](https://github.com/arenaxr/arena-account/compare/v1.1.3...v1.1.4) (2023-10-11)
 
 
