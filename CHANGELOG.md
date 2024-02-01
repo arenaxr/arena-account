@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/arenaxr/arena-account/compare/v1.1.5...v1.2.0) (2024-02-01)
+
+
+### Features
+
+* **filestore:** allow remote filestore auth with id token context ([#86](https://github.com/arenaxr/arena-account/issues/86)) ([c468bb0](https://github.com/arenaxr/arena-account/commit/c468bb09dab1d28f8b412c5c91407a11ec346b28))
+
 ## [1.1.5](https://github.com/arenaxr/arena-account/compare/v1.1.4...v1.1.5) (2023-12-14)
 
 
