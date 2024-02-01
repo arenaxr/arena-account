@@ -599,17 +599,34 @@ def user_state(request):
         )
 
 
+@ api_view(["GET", "POST"])
 def storelogin(request):
+    """
+    Endpoint request for the user's file store token: GET/POST.
+    - POST requires id_token for headless clients like Python apps.
+    """
+    user = request.user
+    if request.method == "POST":
+        gid_token = request.POST.get("id_token", None)
+        if gid_token:
+            try:
+                user = get_user_from_id_token(gid_token)
+            except (ValueError, SocialAccount.DoesNotExist) as err:
+                return JsonResponse(
+                    {"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN
+                )
+
+    if user.is_authenticated:
+        # try user auth
+        fs_user_token = use_filestore_auth(user)
+        if not fs_user_token:
+            # otherwise user needs to be added
+            fs_user_token = add_filestore_auth(user)
+
+        # second, for staff, override automatic user-only scope, so staff users have root scope
+        set_filestore_scope(user)
+
     response = HttpResponse()
-    # try user auth
-    fs_user_token = use_filestore_auth(request.user)
-    if not fs_user_token:
-        # otherwise user needs to be added
-        fs_user_token = add_filestore_auth(request.user)
-
-    # second, for staff, override automatic user-only scope, so staff users have root scope
-    set_filestore_scope(request.user)
-
     if fs_user_token:
         response.set_cookie("auth", fs_user_token)
     else:
@@ -721,7 +738,7 @@ def _field_requested(request, field):
 # @schema(ArenaTokenSchema())  # TODO: schema not working yet
 def arena_token(request):
     """
-    Endpoint to request an ARENA with permissions for an anonymous or authenticated user for
+    Endpoint to request an ARENA token with permissions for an anonymous or authenticated user for
     MQTT and Jitsi resources given incoming parameters.
     - POST requires id_token for headless clients like Python apps.
     """
