@@ -602,7 +602,7 @@ def user_state(request):
 @ api_view(["GET", "POST"])
 def storelogin(request):
     """
-    Endpoint request for the user's authenticated status, username, name, email: GET/POST.
+    Endpoint request for the user's file store token: GET/POST.
     - POST requires id_token for headless clients like Python apps.
     """
     user = request.user
@@ -618,13 +618,13 @@ def storelogin(request):
 
     if user.is_authenticated:
         # try user auth
-        fs_user_token = use_filestore_auth(request.user)
+        fs_user_token = use_filestore_auth(user)
         if not fs_user_token:
             # otherwise user needs to be added
-            fs_user_token = add_filestore_auth(request.user)
+            fs_user_token = add_filestore_auth(user)
 
         # second, for staff, override automatic user-only scope, so staff users have root scope
-        set_filestore_scope(request.user)
+        set_filestore_scope(user)
 
     response = HttpResponse()
     if fs_user_token:
