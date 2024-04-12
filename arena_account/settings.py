@@ -32,7 +32,7 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", "arena-account", "host.docke
 X_FRAME_OPTIONS = "SAMEORIGIN"
 MQTT_TOKEN_PRIVKEY = os.getenv("MQTT_TOKEN_PRIVKEY")
 
-# namespaces that are reserved for the webserver, see ARENA-core and nginx
+# namespaces that are reserved for the webserver, see arena-web-core and nginx
 USERNAME_RESERVED = [
     ".cache",
     ".git",
