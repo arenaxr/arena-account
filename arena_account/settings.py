@@ -126,6 +126,8 @@ REST_FRAMEWORK = {
     ],
 }
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 # allauth general config
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http"  # https for docker, http for localhost:8000
 
