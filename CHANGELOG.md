@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.1](https://github.com/arenaxr/arena-account/compare/v1.2.0...v1.2.1) (2024-04-15)
+
+
+### Bug Fixes
+
+* bump docker python version ([c258469](https://github.com/arenaxr/arena-account/commit/c25846950ed645b2e59ae12de65381b682fcbe8e))
+* upgrade to django 3.2, retaining AutoField key index size ([99d47fc](https://github.com/arenaxr/arena-account/commit/99d47fc465b49089a91f1dfc1d3d806b2b14a4bc))
+
 ## [1.2.0](https://github.com/arenaxr/arena-account/compare/v1.1.5...v1.2.0) (2024-02-01)
 
 
