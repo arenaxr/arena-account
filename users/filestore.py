@@ -100,6 +100,7 @@ def set_filestore_scope(user: User):
         return False
     # find user
     fs_user_token = use_filestore_auth(user)
+    # TODO: dev1 jwt.exceptions.DecodeError: Invalid token type. Token must be a <class 'bytes'>
     payload = jwt.decode(fs_user_token, options={"verify_signature": False})
     try:
         r_user = requests.get(f"https://{host}/storemng/api/users/{payload['user']['id']}",
