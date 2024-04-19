@@ -38,7 +38,7 @@ def use_filestore_auth(user: User):
 
 def get_filestore_token(user_login, host, verify):
     try:
-        r_userlogin = requests.post(f"https://{host}/storemng/api/login",
+        r_userlogin = requests.get(f"https://{host}/storemng/api/login",
                                     data=json.dumps(user_login), verify=verify)
         r_userlogin.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
