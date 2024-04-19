@@ -7,7 +7,8 @@ import jwt
 from django.conf import settings
 
 from .models import (SCENE_ANON_USERS_DEF, SCENE_PUBLIC_READ_DEF,
-                     SCENE_PUBLIC_WRITE_DEF, SCENE_USERS_DEF, SCENE_VIDEO_CONF_DEF, Scene)
+                     SCENE_PUBLIC_WRITE_DEF, SCENE_USERS_DEF,
+                     SCENE_VIDEO_CONF_DEF, Scene)
 
 PUBLIC_NAMESPACE = "public"
 ANON_REGEX = "anonymous-(?=.*?[a-zA-Z].*?[a-zA-Z])"
@@ -20,7 +21,6 @@ def all_scenes_read_token():
     if not os.path.exists(privkeyfile):
         print("Error: keyfile not found" + privkeyfile)
         return None
-    print("Using keyfile at: " + privkeyfile)
     with open(privkeyfile) as privatefile:
         private_key = privatefile.read()
     payload = {
@@ -71,7 +71,6 @@ def generate_arena_token(
     if not os.path.exists(privkeyfile):
         print("Error: keyfile not found")
         return None
-    print("Using keyfile at: " + privkeyfile)
     with open(privkeyfile) as privatefile:
         private_key = privatefile.read()
     payload = {}
