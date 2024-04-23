@@ -39,7 +39,7 @@ def use_filestore_auth(user: User):
 def get_filestore_token(user_login, host, verify):
     try:
         r_userlogin = requests.get(f"https://{host}/storemng/api/login",
-                                    data=json.dumps(user_login), verify=verify)
+                                   data=json.dumps(user_login), verify=verify)
         r_userlogin.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
@@ -75,9 +75,11 @@ def add_filestore_auth(user: User):
     fs_user["data"]["password"] = user.password
     fs_user["data"]["lockPassword"] = True
     fs_user["data"]["perm"]["admin"] = user.is_superuser
-    # NOTE: ["data"]["scope"] must be set in PUT, not POST /api/users for staff users.
-    # POST /api/users will automatically overwrite scope with user-only scope when settings.createUserDir=true.
-    # A call in views.storelogin() will do this, using set_filestore_staff() making sure staff users get the root scope.
+    if user.is_staff:  # admin and staff get root scope
+        fs_user["data"]["scope"] = "."
+    else:
+        # setting scope in users POST will generate user dir
+        fs_user["data"]["scope"] = get_user_scope(user)
 
     # add new user to filestore db
     try:
