@@ -75,11 +75,8 @@ def add_filestore_auth(user: User):
     fs_user["data"]["password"] = user.password
     fs_user["data"]["lockPassword"] = True
     fs_user["data"]["perm"]["admin"] = user.is_superuser
-    if user.is_staff:  # admin and staff get root scope
-        fs_user["data"]["scope"] = "."
-    else:
-        # setting scope in users POST will generate user dir
-        fs_user["data"]["scope"] = get_user_scope(user)
+    # setting scope in users POST will generate user dir
+    fs_user["data"]["scope"] = get_user_scope(user)
 
     # add new user to filestore db
     try:
@@ -89,6 +86,9 @@ def add_filestore_auth(user: User):
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
         return None
+
+    if user.is_staff:  # admin and staff get root scope
+        set_filestore_scope(user)
 
     return use_filestore_auth(user)
 

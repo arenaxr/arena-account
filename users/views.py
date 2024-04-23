@@ -326,8 +326,8 @@ def profile_update_staff(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
     staff_username = form.cleaned_data["staff_username"]
-    is_staff = form.cleaned_data["is_staff"]
     if (request.user.is_superuser and User.objects.filter(username=staff_username).exists()):
+        is_staff = bool(form.cleaned_data["is_staff"])
         print(f"Setting Django user {staff_username}, staff={is_staff}")
         user = User.objects.get(username=staff_username)
         user.is_staff = is_staff
@@ -622,9 +622,6 @@ def storelogin(request):
         if not fs_user_token:
             # otherwise user needs to be added
             fs_user_token = add_filestore_auth(user)
-
-        # second, for staff, override automatic user-only scope, so staff users have root scope
-        set_filestore_scope(user)
 
     response = HttpResponse()
     if fs_user_token:
