@@ -6,6 +6,8 @@ from requests.exceptions import HTTPError
 
 from .utils import get_rest_host
 
+PERSIST_TIMEOUT = 30  # 30 seconds
+
 
 def delete_scene_objects(scene, token):
     # delete scene from persist
@@ -44,11 +46,11 @@ def _urlopen(url, token, method, verify):
     try:
         if method == "GET":
             response = requests.get(
-                url, headers=headers, cookies=cookies, verify=verify
+                url, headers=headers, cookies=cookies, verify=verify, timeout=PERSIST_TIMEOUT
             )
         elif method == "DELETE":
             response = requests.delete(
-                url, headers=headers, cookies=cookies, verify=verify
+                url, headers=headers, cookies=cookies, verify=verify, timeout=PERSIST_TIMEOUT
             )
         return response.text
     except (requests.exceptions.ConnectionError, HTTPError) as err:

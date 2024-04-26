@@ -7,6 +7,8 @@ from django.contrib.auth.models import User
 
 from .utils import get_rest_host
 
+FS_API_TIMEOUT = 15  # 15 seconds
+
 
 def get_user_scope(user: User):
     return f"./users/{user.username}"
@@ -42,7 +44,7 @@ def use_filestore_auth(user: User):
 def get_filestore_token(user_login, host, verify):
     try:
         r_userlogin = requests.get(f"https://{host}/storemng/api/login",
-                                   data=json.dumps(user_login), verify=verify)
+                                   data=json.dumps(user_login), verify=verify, timeout=FS_API_TIMEOUT)
         r_userlogin.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
@@ -62,7 +64,7 @@ def add_filestore_auth(user: User):
     # get user defaults from global settings
     try:
         r_gset = requests.get(f"https://{host}/storemng/api/settings",
-                              headers={"X-Auth": admin_token}, verify=verify)
+                              headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
         r_gset.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
@@ -84,7 +86,7 @@ def add_filestore_auth(user: User):
     # add new user to filestore db
     try:
         r_useradd = requests.post(f"https://{host}/storemng/api/users",
-                                  data=json.dumps(fs_user), headers={"X-Auth": admin_token}, verify=verify)
+                                  data=json.dumps(fs_user), headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
         r_useradd.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
@@ -111,7 +113,7 @@ def set_filestore_scope(user: User):
     payload = jwt.decode(fs_user_token, options={"verify_signature": False})
     try:
         r_user = requests.get(f"https://{host}/storemng/api/users/{payload['user']['id']}",
-                              headers={"X-Auth": admin_token}, verify=verify)
+                              headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
         r_user.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
@@ -130,7 +132,7 @@ def set_filestore_scope(user: User):
         }
         try:
             r_useradd = requests.put(f"https://{host}/storemng/api/users/{edit_user['id']}",
-                                     data=json.dumps(fs_user), headers={"X-Auth": admin_token}, verify=verify)
+                                     data=json.dumps(fs_user), headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
             r_useradd.raise_for_status()
         except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
             print("{0}: ".format(err))
@@ -157,7 +159,7 @@ def delete_filestore_user(user: User):
     payload = jwt.decode(fs_user_token, options={"verify_signature": False})
     try:
         r_user = requests.get(f"https://{host}/storemng/api/users/{payload['user']['id']}",
-                              headers={"X-Auth": admin_token}, verify=verify)
+                              headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
         r_user.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
@@ -167,7 +169,7 @@ def delete_filestore_user(user: User):
     if del_user['scope'] == get_user_scope(user):
         try:  # only user scope files can be removed, not root
             r_filesdel = requests.delete(f"https://{host}/storemng/api/resources",
-                                         headers={"X-Auth": fs_user_token}, verify=verify)
+                                         headers={"X-Auth": fs_user_token}, verify=verify, timeout=FS_API_TIMEOUT)
             r_filesdel.raise_for_status()
         except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
             print("{0}: ".format(err))
@@ -175,7 +177,7 @@ def delete_filestore_user(user: User):
     # delete user from filestore db
     try:
         r_userdel = requests.delete(f"https://{host}/storemng/api/users/{del_user['id']}",
-                                    headers={"X-Auth": fs_user_token}, verify=verify)
+                                    headers={"X-Auth": fs_user_token}, verify=verify, timeout=FS_API_TIMEOUT)
         r_userdel.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
