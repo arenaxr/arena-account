@@ -1,6 +1,5 @@
 import json
 
-import jwt
 import requests
 from requests.exceptions import HTTPError
 
