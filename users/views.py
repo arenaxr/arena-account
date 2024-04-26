@@ -616,6 +616,7 @@ def storelogin(request):
                     {"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN
                 )
 
+    fs_user_token = None
     if user.is_authenticated:
         # try user auth
         fs_user_token = use_filestore_auth(user)
