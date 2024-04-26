@@ -33,7 +33,10 @@ def use_filestore_auth(user: User):
         return None
     verify, host = get_rest_host()
     user_login = get_user_login(user)
-    return get_filestore_token(user_login, host, verify)
+    user_token, status = get_filestore_token(user_login, host, verify)
+    if not user_token:
+        return None
+    return user_token
 
 
 def get_filestore_token(user_login, host, verify):
@@ -43,8 +46,8 @@ def get_filestore_token(user_login, host, verify):
         r_userlogin.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print("{0}: ".format(err))
-        return None
-    return r_userlogin.text
+        return None, r_userlogin.status_code
+    return r_userlogin.text, r_userlogin.status_code
 
 
 def add_filestore_auth(user: User):
@@ -53,7 +56,7 @@ def add_filestore_auth(user: User):
     verify, host = get_rest_host()
     # get auth for setting new user
     admin_login = get_admin_login()
-    admin_token = get_filestore_token(admin_login, host, verify)
+    admin_token, status = get_filestore_token(admin_login, host, verify)
     if not admin_token:
         return False
     # get user defaults from global settings
@@ -90,19 +93,21 @@ def add_filestore_auth(user: User):
     if user.is_staff:  # admin and staff get root scope
         set_filestore_scope(user)
 
-    return use_filestore_auth(user)
+    fs_user_token = use_filestore_auth(user)
+    return fs_user_token
 
 
 def set_filestore_scope(user: User):
     verify, host = get_rest_host()
     # get auth for setting new user
     admin_login = get_admin_login()
-    admin_token = get_filestore_token(admin_login, host, verify)
+    admin_token, status = get_filestore_token(admin_login, host, verify)
     if not admin_token:
         return False
     # find user
     fs_user_token = use_filestore_auth(user)
-    # TODO: dev1 jwt.exceptions.DecodeError: Invalid token type. Token must be a <class 'bytes'>
+    if not fs_user_token:
+        return False
     payload = jwt.decode(fs_user_token, options={"verify_signature": False})
     try:
         r_user = requests.get(f"https://{host}/storemng/api/users/{payload['user']['id']}",
@@ -142,11 +147,13 @@ def delete_filestore_user(user: User):
     verify, host = get_rest_host()
     # get auth for removing user
     admin_login = get_admin_login()
-    admin_token = get_filestore_token(admin_login, host, verify)
+    admin_token, status = get_filestore_token(admin_login, host, verify)
     if not admin_token:
         return False
     # find user
     fs_user_token = use_filestore_auth(user)
+    if not fs_user_token:
+        return False
     payload = jwt.decode(fs_user_token, options={"verify_signature": False})
     try:
         r_user = requests.get(f"https://{host}/storemng/api/users/{payload['user']['id']}",
