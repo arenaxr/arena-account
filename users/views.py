@@ -25,7 +25,8 @@ from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
 
 from .filestore import (add_filestore_auth, delete_filestore_user,
-                        set_filestore_scope, use_filestore_auth)
+                        set_filestore_pass, set_filestore_scope,
+                        use_filestore_auth)
 from .forms import (DeviceForm, SceneForm, SocialSignupForm, UpdateDeviceForm,
                     UpdateSceneForm, UpdateStaffForm)
 from .models import Device, Scene
@@ -335,7 +336,7 @@ def profile_update_staff(request):
         print(f"Setting Filebrowser user {staff_username}, staff={is_staff}")
         if not set_filestore_scope(user):
             messages.error(
-                request, f"Unable to update user's filestore status.")
+                request, "Unable to update user's filestore status.")
             return redirect("user_profile")
 
     return redirect("user_profile")
@@ -369,9 +370,7 @@ def my_scenes(request):
             try:
                 user = get_user_from_id_token(gid_token)
             except (ValueError, SocialAccount.DoesNotExist) as err:
-                return JsonResponse(
-                    {"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN
-                )
+                return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
 
     serializer = SceneNameSerializer(get_my_scenes(user), many=True)
     return JsonResponse(serializer.data, safe=False)
@@ -493,7 +492,7 @@ def user_profile(request):
             # delete filestore files/account
             if not delete_filestore_user(request.user):
                 messages.error(
-                    request, f"Unable to delete account/files from the filestore.")
+                    request, "Unable to delete account/files from the filestore.")
                 return redirect("user_profile")
 
             # Be careful of foreign keys, in that case this is suggested:
@@ -572,9 +571,7 @@ def user_state(request):
             try:
                 user = get_user_from_id_token(gid_token)
             except (ValueError, SocialAccount.DoesNotExist) as err:
-                return JsonResponse(
-                    {"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN
-                )
+                return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
 
     if user.is_authenticated:
         if user.username.startswith("admin"):
@@ -612,14 +609,14 @@ def storelogin(request):
             try:
                 user = get_user_from_id_token(gid_token)
             except (ValueError, SocialAccount.DoesNotExist) as err:
-                return JsonResponse(
-                    {"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN
-                )
+                return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
 
     fs_user_token = None
     if user.is_authenticated:
         # try user auth
-        fs_user_token = use_filestore_auth(user)
+        fs_user_token, status = use_filestore_auth(user)
+        if status == 403:  # if django allauth pass updated by oauth, update pass
+            fs_user_token = set_filestore_pass(user)
         if not fs_user_token:
             # otherwise user needs to be added
             fs_user_token = add_filestore_auth(user)
@@ -746,9 +743,7 @@ def arena_token(request):
         try:
             user = get_user_from_id_token(gid_token)
         except (ValueError, SocialAccount.DoesNotExist) as err:
-            return JsonResponse(
-                {"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN
-            )
+            return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
 
     if user.is_authenticated:
         username = user.username
