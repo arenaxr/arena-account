@@ -370,9 +370,7 @@ def my_scenes(request):
             try:
                 user = get_user_from_id_token(gid_token)
             except (ValueError, SocialAccount.DoesNotExist) as err:
-                return JsonResponse(
-                    {"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN
-                )
+                return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
 
     serializer = SceneNameSerializer(get_my_scenes(user), many=True)
     return JsonResponse(serializer.data, safe=False)
@@ -573,9 +571,7 @@ def user_state(request):
             try:
                 user = get_user_from_id_token(gid_token)
             except (ValueError, SocialAccount.DoesNotExist) as err:
-                return JsonResponse(
-                    {"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN
-                )
+                return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
 
     if user.is_authenticated:
         if user.username.startswith("admin"):
@@ -613,9 +609,7 @@ def storelogin(request):
             try:
                 user = get_user_from_id_token(gid_token)
             except (ValueError, SocialAccount.DoesNotExist) as err:
-                return JsonResponse(
-                    {"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN
-                )
+                return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
 
     fs_user_token = None
     if user.is_authenticated:
@@ -749,9 +743,7 @@ def arena_token(request):
         try:
             user = get_user_from_id_token(gid_token)
         except (ValueError, SocialAccount.DoesNotExist) as err:
-            return JsonResponse(
-                {"error": "{0}".format(err)}, status=status.HTTP_403_FORBIDDEN
-            )
+            return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
 
     if user.is_authenticated:
         username = user.username

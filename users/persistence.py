@@ -53,7 +53,7 @@ def _urlopen(url, token, method, verify):
             )
         return response.text
     except (requests.exceptions.ConnectionError, HTTPError) as err:
-        print("{0}: ".format(err) + url)
+        print(f"{err}: {url}")
     except ValueError as err:
-        print(f"{response.text} {0}: ".format(err) + url)
+        print(f"{response.text} {err}: {url}")
     return None

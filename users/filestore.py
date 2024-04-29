@@ -47,7 +47,7 @@ def get_filestore_token(user_login, host, verify):
                                    data=json.dumps(user_login), verify=verify, timeout=FS_API_TIMEOUT)
         r_userlogin.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
-        print("{0}: ".format(err))
+        print(err)
         return None, r_userlogin.status_code
     return r_userlogin.text, r_userlogin.status_code
 
@@ -67,7 +67,7 @@ def add_filestore_auth(user: User):
                               headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
         r_gset.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
-        print("{0}: ".format(err))
+        print(err)
         return False
     settings = r_gset.json()
     # set new user options
@@ -89,7 +89,7 @@ def add_filestore_auth(user: User):
                                   data=json.dumps(fs_user), headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
         r_useradd.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
-        print("{0}: ".format(err))
+        print(err)
         return None
 
     if user.is_staff:  # admin and staff get root scope
@@ -116,7 +116,7 @@ def set_filestore_scope(user: User):
                               headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
         r_user.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
-        print("{0}: ".format(err))
+        print(err)
         return False
     edit_user = r_user.json()
     if user.is_staff:  # admin and staff get root scope
@@ -135,7 +135,7 @@ def set_filestore_scope(user: User):
                                      data=json.dumps(fs_user), headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
             r_useradd.raise_for_status()
         except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
-            print("{0}: ".format(err))
+            print(err)
             return False
 
     fs_user_token, status = use_filestore_auth(user)
@@ -160,7 +160,7 @@ def set_filestore_pass(user: User):
                                headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
         r_users.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
-        print("{0}: ".format(err))
+        print(err)
         return False
     print(r_users.text)
     for r_user in json.loads(r_users.text):
@@ -180,7 +180,7 @@ def set_filestore_pass(user: User):
                                  data=json.dumps(fs_user), headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
         r_useradd.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
-        print("{0}: ".format(err))
+        print(err)
         return None
 
     fs_user_token, status = use_filestore_auth(user)
@@ -208,7 +208,7 @@ def delete_filestore_user(user: User):
                               headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
         r_user.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
-        print("{0}: ".format(err))
+        print(err)
         return False
     del_user = r_user.json()
     # remove user scope files
@@ -218,7 +218,7 @@ def delete_filestore_user(user: User):
                                          headers={"X-Auth": fs_user_token}, verify=verify, timeout=FS_API_TIMEOUT)
             r_filesdel.raise_for_status()
         except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
-            print("{0}: ".format(err))
+            print(err)
             return False
     # delete user from filestore db
     try:
@@ -226,7 +226,7 @@ def delete_filestore_user(user: User):
                                     headers={"X-Auth": fs_user_token}, verify=verify, timeout=FS_API_TIMEOUT)
         r_userdel.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
-        print("{0}: ".format(err))
+        print(err)
         return False
 
     return True
