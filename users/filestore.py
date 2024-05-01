@@ -226,7 +226,6 @@ def set_filestore_pass(user: User):
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print(err)
         return False
-    print(r_users.text)
     for r_user in json.loads(r_users.text):
         if r_user["username"] == user.username:
             edit_user = r_user
@@ -249,6 +248,25 @@ def set_filestore_pass(user: User):
 
     fs_user_token, status = use_filestore_auth(user)
     return fs_user_token
+
+
+def is_filestore_user(user: User):
+    verify, host = get_rest_host()
+    admin_login = get_admin_login()
+    admin_token, status = get_filestore_token(admin_login, host, verify)
+    # find user, loop through all
+    try:
+        r_users = requests.get(f"https://{host}/storemng/api/users",
+                               headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
+        r_users.raise_for_status()
+    except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
+        print(err)
+        return False
+    for r_user in json.loads(r_users.text):
+        if r_user["username"] == user.username:
+            return True
+
+    return False
 
 
 def delete_filestore_user(user: User):
