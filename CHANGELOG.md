@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.2.2](https://github.com/arenaxr/arena-account/compare/v1.2.1...v1.2.2) (2024-05-06)
+
+
+### Bug Fixes
+
+* **filestore/persist:** add api rest connection timeouts ([d899982](https://github.com/arenaxr/arena-account/commit/d8999826475b56c63bf7cdb692e4450f23a9629f))
+* **filestore:** check for failed token before parsing ([4a03bf9](https://github.com/arenaxr/arena-account/commit/4a03bf9ff7bd8656f0bc67c7dcf902edf96eadd3))
+* **filestore:** correct staff scope for new user login ([79b0621](https://github.com/arenaxr/arena-account/commit/79b06210beb6e982ec210befd0b6146c184a1902))
+* **filestore:** ensure user does not exist before renewing login ([08110e7](https://github.com/arenaxr/arena-account/commit/08110e781eef94240918baceadb8100dc01fb526))
+* **filestore:** handle django allauth oauth pass reset ([7e8aadf](https://github.com/arenaxr/arena-account/commit/7e8aadf89d4a894b0e59c4b7c8622fd6af8c30be))
+* **filestore:** minimize api calls per login ([9c8c74b](https://github.com/arenaxr/arena-account/commit/9c8c74b8a31ba52be919f7282e437af9cebd0e60))
+* **filestore:** prevent code 500 for anonymous login ([b702279](https://github.com/arenaxr/arena-account/commit/b702279378a43fb37296bce5d6bdafc17ab8c65c))
+* **filestore:** use correct scope at new user insert for auto create user dir ([577b8e1](https://github.com/arenaxr/arena-account/commit/577b8e111114ff210dbd5a43a197ead5c55cfece))
+* **filestore:** use http get for fs login per filebrowser v2.22.4 ([09505e4](https://github.com/arenaxr/arena-account/commit/09505e4388bb7c99c6bea0ae8940f06ade90de8f))
+* make release please trigger other workflows (using a PAT) ([10058e7](https://github.com/arenaxr/arena-account/commit/10058e78d0b37a4654eea528123df88f3a038a97))
+
 ## [1.2.1](https://github.com/arenaxr/arena-account/compare/v1.2.0...v1.2.1) (2024-04-15)
 
 
