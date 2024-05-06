@@ -24,9 +24,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
 from rest_framework.schemas import AutoSchema
 
-from .filestore import (add_filestore_auth, delete_filestore_user,
-                        is_filestore_user, set_filestore_pass,
-                        set_filestore_scope, use_filestore_auth)
+from .filestore import (delete_filestore_user, login_filestore_user,
+                        set_filestore_scope)
 from .forms import (DeviceForm, SceneForm, SocialSignupForm, UpdateDeviceForm,
                     UpdateSceneForm, UpdateStaffForm)
 from .models import Device, Scene
@@ -611,16 +610,7 @@ def storelogin(request):
             except (ValueError, SocialAccount.DoesNotExist) as err:
                 return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
 
-    fs_user_token = None
-    if user.is_authenticated:
-        # try user auth
-        if is_filestore_user(user):
-            fs_user_token, status = use_filestore_auth(user)
-            if status == 403:  # if django allauth pass updated by oauth, update pass
-                fs_user_token = set_filestore_pass(user)
-        elif not fs_user_token:
-            # otherwise user needs to be added
-            fs_user_token = add_filestore_auth(user)
+    fs_user_token = login_filestore_user(user)
 
     response = HttpResponse()
     if fs_user_token:

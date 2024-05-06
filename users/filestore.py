@@ -92,7 +92,86 @@ def get_filestore_token(user_login, host, verify):
     return r_userlogin.text, r_userlogin.status_code
 
 
-def add_filestore_auth(user: User):
+def login_filestore_user(user: User):
+    """ Uses the filebrowser api to login the user.username's filebrowser account and return their auth jwt.
+    Handles multiple situations: valid login, add new filebrowser user, update from django password reset.
+
+    Args:
+        user (User): The User model this action is for.
+
+    Returns:
+        fs_user_token (string): Updated filebrowser api jwt for user.username.
+    """
+
+    fs_user_token = None
+    if not user.is_authenticated:
+        return None
+    # try user auth
+    fs_user_token, status = use_filestore_auth(user)
+    if status == 403:
+        # unable to login, new user or old?
+        if user.username == os.environ["STORE_ADMIN_USERNAME"]:
+            return None  # root admin not allowed to alter scope or other properties of itself
+        verify, host = get_rest_host()
+        admin_login = get_admin_login()
+        admin_token, status = get_filestore_token(admin_login, host, verify)
+        if not admin_token:
+            return None
+        fs_user_json = get_filestore_user_json(user, host, verify, admin_token)
+        if fs_user_json:
+            # if django allauth pass updated by oauth, update pass
+            fs_user_token = set_filestore_pass(user, host, verify, admin_token, fs_user_json)
+        elif not fs_user_token:
+            # otherwise user needs to be added
+            fs_user_token = add_filestore_auth(user, host, verify, admin_token)
+
+    return fs_user_token
+
+
+def get_filestore_user_json(user: User, host, verify, admin_token):
+    # find user, they may not have a valid password, loop through all
+    try:
+        r_users = requests.get(f"https://{host}/storemng/api/users",
+                               headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
+        r_users.raise_for_status()
+    except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
+        print(err)
+        return None
+    for r_user in json.loads(r_users.text):
+        if r_user["username"] == user.username:
+            return r_user
+
+    return None
+
+
+def set_filestore_pass(user: User, host, verify, admin_token, fs_user_json):
+    """ Uses the filebrowser api to reset the user.username's filebrowser account password and return their auth jwt.
+
+    Args:
+        user (User): The User model this action is for.
+
+    Returns:
+        fs_user_token (string): Updated filebrowser api jwt for user.username.
+    """
+    fs_user_json["password"] = user.password
+    fs_user = {
+        "what": "user",
+        "which": ["all"],
+        "data": fs_user_json,
+    }
+    try:
+        r_useradd = requests.put(f"https://{host}/storemng/api/users/{fs_user_json['id']}",
+                                 data=json.dumps(fs_user), headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
+        r_useradd.raise_for_status()
+    except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
+        print(err)
+        return None
+
+    fs_user_token, status = use_filestore_auth(user)
+    return fs_user_token
+
+
+def add_filestore_auth(user: User, host, verify, admin_token):
     """ Uses the filebrowser api to add the user.username's filebrowser account and return their auth jwt.
 
     Args:
@@ -101,14 +180,6 @@ def add_filestore_auth(user: User):
     Returns:
         fs_user_token (string): Updated filebrowser api jwt for user.username.
     """
-    if not user.is_authenticated:
-        return None
-    verify, host = get_rest_host()
-    # get auth for setting new user
-    admin_login = get_admin_login()
-    admin_token, status = get_filestore_token(admin_login, host, verify)
-    if not admin_token:
-        return None
     # get user defaults from global settings
     try:
         r_gset = requests.get(f"https://{host}/storemng/api/settings",
@@ -196,77 +267,6 @@ def set_filestore_scope(user: User):
 
     fs_user_token, status = use_filestore_auth(user)
     return fs_user_token
-
-
-def set_filestore_pass(user: User):
-    """ Uses the filebrowser api to reset the user.username's filebrowser account password and return their auth jwt.
-
-    Args:
-        user (User): The User model this action is for.
-
-    Returns:
-        fs_user_token (string): Updated filebrowser api jwt for user.username.
-    """
-    if not user.is_authenticated:
-        return None
-    if user.username == os.environ["STORE_ADMIN_USERNAME"]:
-        return None  # root admin not allowed pass renew
-    verify, host = get_rest_host()
-    # get auth for removing user
-    admin_login = get_admin_login()
-    admin_token, status = get_filestore_token(admin_login, host, verify)
-    if not admin_token:
-        return None
-    # find user without valid pass, loop through all
-    edit_user = {}
-    try:
-        r_users = requests.get(f"https://{host}/storemng/api/users",
-                               headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
-        r_users.raise_for_status()
-    except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
-        print(err)
-        return False
-    for r_user in json.loads(r_users.text):
-        if r_user["username"] == user.username:
-            edit_user = r_user
-            break
-    print(edit_user)
-    # return False
-    edit_user["password"] = user.password
-    fs_user = {
-        "what": "user",
-        "which": ["all"],
-        "data": edit_user,
-    }
-    try:
-        r_useradd = requests.put(f"https://{host}/storemng/api/users/{edit_user['id']}",
-                                 data=json.dumps(fs_user), headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
-        r_useradd.raise_for_status()
-    except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
-        print(err)
-        return None
-
-    fs_user_token, status = use_filestore_auth(user)
-    return fs_user_token
-
-
-def is_filestore_user(user: User):
-    verify, host = get_rest_host()
-    admin_login = get_admin_login()
-    admin_token, status = get_filestore_token(admin_login, host, verify)
-    # find user, loop through all
-    try:
-        r_users = requests.get(f"https://{host}/storemng/api/users",
-                               headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
-        r_users.raise_for_status()
-    except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
-        print(err)
-        return False
-    for r_user in json.loads(r_users.text):
-        if r_user["username"] == user.username:
-            return True
-
-    return False
 
 
 def delete_filestore_user(user: User):
