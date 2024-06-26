@@ -37,7 +37,7 @@ def generate_arena_token(
     user,
     username,
     realm="realm",
-    scene=None,
+    namespaced_scene=None,
     device=None,
     camid=None,
     userid=None,
@@ -83,8 +83,10 @@ def generate_arena_token(
     p_anonymous_users = SCENE_ANON_USERS_DEF
     p_video = SCENE_VIDEO_CONF_DEF
     p_users = SCENE_USERS_DEF
-    if scene and Scene.objects.filter(name=scene).exists():
-        scene_perm = Scene.objects.get(name=scene)
+
+    # create permissions shorthand
+    if namespaced_scene and Scene.objects.filter(name=namespaced_scene).exists():
+        scene_perm = Scene.objects.get(name=namespaced_scene)
         p_public_read = scene_perm.public_read
         p_public_write = scene_perm.public_write
         p_anonymous_users = scene_perm.anonymous_users
@@ -92,13 +94,13 @@ def generate_arena_token(
         p_users = scene_perm.users
 
     # add jitsi server params if a/v scene
-    if scene and camid and p_users and p_video:
+    if namespaced_scene and camid and p_users and p_video:
         host = os.getenv("HOSTNAME")
         headers = {"kid": host}
         payload["aud"] = "arena"
         payload["iss"] = "arena-account"
-        # we use the scene name as the jitsi room name, handle RFC 3986 reserved chars as = '_'
-        roomname = re.sub(r"[!#$&'()*+,\/:;=?@[\]]", '_', scene.lower())
+        # we use the namespace + scene name as the jitsi room name, handle RFC 3986 reserved chars as = '_'
+        roomname = re.sub(r"[!#$&'()*+,\/:;=?@[\]]", '_', namespaced_scene.lower())
         payload["room"] = roomname
 
     # everyone should be able to read all public scenes
@@ -106,6 +108,7 @@ def generate_arena_token(
         subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/#")
         # And transmit env data
         pubs.append(f"{realm}/env/{PUBLIC_NAMESPACE}/#")
+
     # user presence objects
     if user.is_authenticated:
         if device:  # device token scenario
@@ -122,8 +125,8 @@ def generate_arena_token(
                 subs.append(f"{realm}/env/#")
                 pubs.append(f"{realm}/env/#")
                 # vio experiments, staff only
-                if scene:
-                    pubs.append(f"{realm}/vio/{scene}/#")
+                if namespaced_scene:
+                    pubs.append(f"{realm}/vio/{namespaced_scene}/#")
             else:
                 # scene owners have rights to their scene objects only
                 subs.append(f"{realm}/s/{username}/#")
@@ -134,7 +137,7 @@ def generate_arena_token(
                 # add scenes that have been granted by other owners
                 u_scenes = Scene.objects.filter(editors=user)
                 for u_scene in u_scenes:
-                    if not scene or (scene and u_scene.name == scene):
+                    if not namespaced_scene or (namespaced_scene and u_scene.name == namespaced_scene):
                         subs.append(f"{realm}/s/{u_scene.name}/#")
                         pubs.append(f"{realm}/s/{u_scene.name}/#")
                         subs.append(f"{realm}/env/{u_scene.name}/#")
@@ -148,47 +151,52 @@ def generate_arena_token(
                 # device owners have rights to their device objects only
                 subs.append(f"{realm}/d/{username}/#")
                 pubs.append(f"{realm}/d/{username}/#")
+
     # anon/non-owners have rights to view scene objects only
-    if scene and not user.is_staff:
+    if namespaced_scene and not user.is_staff:
         # did the user set specific public read or public write?
         if not user.is_authenticated and not p_anonymous_users:
             return None  # anonymous not permitted
         if p_public_read:
-            subs.append(f"{realm}/s/{scene}/#")
+            subs.append(f"{realm}/s/{namespaced_scene}/#")
             # Interactivity to extent of viewing objects is similar to publishing env
-            pubs.append(f"{realm}/env/{scene}/#")
+            pubs.append(f"{realm}/env/{namespaced_scene}/#")
         if p_public_write:
-            pubs.append(f"{realm}/s/{scene}/#")
+            pubs.append(f"{realm}/s/{namespaced_scene}/#")
         # user presence objects
         if camid and p_users:  # probable web browser write
-            pubs.append(f"{realm}/s/{scene}/{camid}")
-            pubs.append(f"{realm}/s/{scene}/{camid}/#")
+            pubs.append(f"{realm}/s/{namespaced_scene}/{camid}")
+            pubs.append(f"{realm}/s/{namespaced_scene}/{camid}/#")
         if handleftid and p_users:
-            pubs.append(f"{realm}/s/{scene}/{handleftid}")
+            pubs.append(f"{realm}/s/{namespaced_scene}/{handleftid}")
         if handrightid and p_users:
-            pubs.append(f"{realm}/s/{scene}/{handrightid}")
+            pubs.append(f"{realm}/s/{namespaced_scene}/{handrightid}")
+
     # chat messages
-    if scene and userid and p_users:
-        namespace = scene.split("/")[0]
-        userhandle = userid + base64.b64encode(userid.encode()).decode()
+    if namespaced_scene and userid and p_users:
+        namespace = namespaced_scene.split("/")[0]
         # receive private messages: Read
         subs.append(f"{realm}/c/{namespace}/p/{userid}/#")
         # receive open messages to everyone and/or scene: Read
         subs.append(f"{realm}/c/{namespace}/o/#")
         # send open messages (chat keepalive, messages to all/scene): Write
-        pubs.append(f"{realm}/c/{namespace}/o/{userhandle}")
+        pubs.append(f"{realm}/c/{namespace}/o/{userid}")
         # private messages to user: Write
-        pubs.append(f"{realm}/c/{namespace}/p/+/{userhandle}")
+        pubs.append(f"{realm}/c/{namespace}/p/+/{userid}")
+
     # apriltags
-    if scene:
+    if namespaced_scene:
         subs.append(f"{realm}/g/a/#")
         pubs.append(f"{realm}/g/a/#")
-    # arts runtime-mngr
+
+    # runtime manager
     subs.append(f"{realm}/proc/#")
     pubs.append(f"{realm}/proc/#")
-    # network graph
+
+    # network metrics
     subs.append("$NETWORK")
     pubs.append("$NETWORK/latency")
+
     if len(subs) > 0:
         payload["subs"] = clean_topics(subs)
     if len(pubs) > 0:

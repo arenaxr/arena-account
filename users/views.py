@@ -769,7 +769,7 @@ def arena_token(request):
         user=user,
         username=username,
         realm=request.POST.get("realm", "realm"),
-        scene=request.POST.get("scene", None),
+        namespaced_scene=request.POST.get("scene", None),
         camid=camid,
         userid=userid,
         handleftid=handleftid,
