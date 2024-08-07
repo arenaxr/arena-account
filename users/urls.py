@@ -12,14 +12,13 @@ schema_view = get_schema_view(
         title="ARENA Users API",
         default_version="v1",
         description="ARENA Users Django site endpoints.",
-        # TODO: terms_of_service=f"/eula",
+        terms_of_service="../terms.html",
         contact=openapi.Contact(email=os.environ["EMAIL"]),
         license=openapi.License(
             name="BSD 3-Clause License",
             url="https://opensource.org/licenses/BSD-3-Clause",
         ),
     ),
-    # TODO: review permissions
     url=f"https://{os.environ['HOSTNAME']}",
     public=True,
     permission_classes=(permissions.AllowAny,),
