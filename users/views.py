@@ -620,74 +620,6 @@ def storelogin(request):
     return response
 
 
-class ArenaTokenSchema(AutoSchema):
-    def __init__(self):
-        super(ArenaTokenSchema, self).__init__()
-
-    def get_manual_fields(self, path, method):
-        extra_fields = [
-            coreapi.Field(
-                "username",
-                required=True,
-                location="body",
-                type="string",
-                description="ARENA user database username, or like 'anonymous-[name]'.",
-            ),
-            coreapi.Field(
-                "id_token",
-                required=False,
-                location="body",
-                type="string",
-                description="JWT id_token from social account authentication service, \
-                                    if forwarding from remote client like arena-py.",
-            ),
-            coreapi.Field(
-                "realm",
-                required=False,
-                location="body",
-                type="string",
-                description="Name of the ARENA realm used in the topic string (default: 'realm').",
-            ),
-            coreapi.Field(
-                "scene",
-                required=False,
-                location="body",
-                type="string",
-                description="Name of the ARENA scene: '[namespace]/[scene]'.",
-            ),
-            coreapi.Field(
-                "userid",
-                required=False,
-                location="body",
-                type="string",
-                description="Name of the user's ARENA web client id.",
-            ),
-            coreapi.Field(
-                "camid",
-                required=False,
-                location="body",
-                type="string",
-                description="Name of the user's ARENA camera object id.",
-            ),
-            coreapi.Field(
-                "handleftid",
-                required=False,
-                location="body",
-                type="string",
-                description="Name of the user's ARENA controller object left hand.",
-            ),
-            coreapi.Field(
-                "handrightid",
-                required=False,
-                location="body",
-                type="string",
-                description="Name of the user's ARENA controller object right hand.",
-            ),
-        ]
-        manual_fields = super().get_manual_fields(path, method)
-        return manual_fields + extra_fields
-
-
 def get_user_from_id_token(gid_token):
     """
     Internal method to validate id_tokens from remote authentication.
@@ -729,7 +661,6 @@ def deprecated_token(request):
 
 
 @ api_view(["POST"])
-# @schema(ArenaTokenSchema())  # TODO: schema not working yet
 def arena_token_v1(request):
     """
     Endpoint to request an ARENA token with permissions for an anonymous or authenticated user for
@@ -777,7 +708,7 @@ def arena_token_v1(request):
         user=user,
         username=username,
         realm=request.POST.get("realm", "realm"),
-        namespaced_scene=request.POST.get("scene", None),
+        ns_scene=request.POST.get("scene", None),
         camid=camid,
         userid=userid,
         handleftid=handleftid,
