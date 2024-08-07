@@ -10,9 +10,11 @@ from .models import (SCENE_ANON_USERS_DEF, SCENE_PUBLIC_READ_DEF,
                      SCENE_PUBLIC_WRITE_DEF, SCENE_USERS_DEF,
                      SCENE_VIDEO_CONF_DEF, Scene)
 
+# topic constants
 PUBLIC_NAMESPACE = "public"
 ANON_REGEX = "anonymous-(?=.*?[a-zA-Z].*?[a-zA-Z])"
 DEF_JWT_DURATION = datetime.timedelta(minutes=1)
+TOPIC_SUPPORTED_API_VERSIONS = ["v1", "v2"]  # TODO(mwfarb): remove v1
 
 
 def all_scenes_read_token():
@@ -32,7 +34,7 @@ def all_scenes_read_token():
     return token
 
 
-def generate_arena_token_v1(
+def generate_arena_token(
     *,
     user,
     username,

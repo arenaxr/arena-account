@@ -16,6 +16,7 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from google.auth.transport import requests as grequests
 from google.oauth2 import id_token
 from rest_framework import permissions, status
@@ -29,8 +30,8 @@ from .filestore import (delete_filestore_user, login_filestore_user,
 from .forms import (DeviceForm, SceneForm, SocialSignupForm, UpdateDeviceForm,
                     UpdateSceneForm, UpdateStaffForm)
 from .models import Device, Scene
-from .mqtt import (ANON_REGEX, PUBLIC_NAMESPACE, all_scenes_read_token,
-                   generate_arena_token_v1)
+from .mqtt import (ANON_REGEX, PUBLIC_NAMESPACE, TOPIC_SUPPORTED_API_VERSIONS,
+                   all_scenes_read_token, generate_arena_token)
 from .persistence import (delete_scene_objects, get_persist_scenes_all,
                           get_persist_scenes_ns)
 from .serializers import SceneNameSerializer, SceneSerializer
@@ -168,7 +169,7 @@ def scene_perm_detail(request, pk):
                 form.save()
                 return redirect("users:user_profile")
         elif "delete" in request.POST:
-            token = generate_arena_token_v1(
+            token = generate_arena_token(
                 user=request.user, username=request.user.username)
             # delete account scene data
             scene.delete()
@@ -211,7 +212,7 @@ def device_perm_detail(request, pk):
             device.delete()
             return redirect("users:user_profile")
         elif "token" in request.POST:
-            token = generate_arena_token_v1(
+            token = generate_arena_token(
                 user=request.user,
                 username=request.user.username,
                 device=device.name,
@@ -362,6 +363,9 @@ def my_scenes(request):
     Editable scenes headless endpoint for requesting a list of scenes this user can write to: GET/POST.
     - POST requires id_token for headless clients like Python apps.
     """
+    if request.version not in TOPIC_SUPPORTED_API_VERSIONS:
+        return deprecated_token(request)
+
     user = request.user
     if request.method == "POST":
         gid_token = request.POST.get("id_token", None)
@@ -470,12 +474,15 @@ def user_profile(request):
     - Shows scenes that the user has permissions to edit and a button to edit them.
     - Handles account deletes.
     """
+    # TODO (mwfarb): make remote post status 426, local post redirect to valid
+    # if request.version not in TOPIC_SUPPORTED_API_VERSIONS:
+    #     return reverse("users:user_profile", current_app="users")
 
     if request.method == 'POST':
         # account delete request
         confirm_text = f'delete {request.user.username} account and scenes'
         if confirm_text in request.POST:
-            token = generate_arena_token_v1(
+            token = generate_arena_token(
                 user=request.user, username=request.user.username)
             u_scenes = Scene.objects.filter(
                 name__startswith=f'{request.user.username}/')
@@ -655,18 +662,21 @@ def _field_requested(request, field):
 @ api_view(["POST"])
 def deprecated_token(request):
     return JsonResponse(
-        {"error": "ARENA v2 token required. You may need to update your client's ARENA library."},
+        {"error": f"ARENA User API {TOPIC_SUPPORTED_API_VERSIONS[0]} token required. You may need to update your client's ARENA library."},
         status=status.HTTP_426_UPGRADE_REQUIRED
     )
 
 
 @ api_view(["POST"])
-def arena_token_v1(request):
+def arena_token(request):
     """
     Endpoint to request an ARENA token with permissions for an anonymous or authenticated user for
     MQTT and Jitsi resources given incoming parameters.
     - POST requires id_token for headless clients like Python apps.
     """
+    if request.version not in TOPIC_SUPPORTED_API_VERSIONS:
+        return deprecated_token(request)
+
     user = request.user
     gid_token = request.POST.get("id_token", None)
     if gid_token:
@@ -704,7 +714,7 @@ def arena_token_v1(request):
         duration = datetime.timedelta(days=1)
     else:
         duration = datetime.timedelta(hours=6)
-    token = generate_arena_token_v1(
+    token = generate_arena_token(
         user=user,
         username=username,
         realm=request.POST.get("realm", "realm"),

@@ -43,9 +43,7 @@ urlpatterns = [
     re_path(
         r'^profile/devices/(?P<pk>[^\/]+\/[^\/]+)$', views.device_perm_detail),
     # endpoints
-    path("mqtt_auth", views.arena_token_v1, name="arena_token_v1"),
-    # path("mqtt_auth", views.deprecated_token, name="deprecated_token"),
-    # path("arena_token", views.arena_token_v1, name="arena_token_v1"),
+    path("mqtt_auth", views.arena_token, name="arena_token"),
     path("user_state", views.user_state, name="user_state"),
     path(
         "profile_update_staff", views.profile_update_staff, name="profile_update_staff"
