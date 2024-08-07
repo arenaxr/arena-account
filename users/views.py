@@ -30,7 +30,7 @@ from .forms import (DeviceForm, SceneForm, SocialSignupForm, UpdateDeviceForm,
                     UpdateSceneForm, UpdateStaffForm)
 from .models import Device, Scene
 from .mqtt import (ANON_REGEX, PUBLIC_NAMESPACE, all_scenes_read_token,
-                   generate_arena_token)
+                   generate_arena_token_v1)
 from .persistence import (delete_scene_objects, get_persist_scenes_all,
                           get_persist_scenes_ns)
 from .serializers import SceneNameSerializer, SceneSerializer
@@ -168,7 +168,7 @@ def scene_perm_detail(request, pk):
                 form.save()
                 return redirect("user_profile")
         elif "delete" in request.POST:
-            token = generate_arena_token(
+            token = generate_arena_token_v1(
                 user=request.user, username=request.user.username)
             # delete account scene data
             scene.delete()
@@ -211,7 +211,7 @@ def device_perm_detail(request, pk):
             device.delete()
             return redirect("user_profile")
         elif "token" in request.POST:
-            token = generate_arena_token(
+            token = generate_arena_token_v1(
                 user=request.user,
                 username=request.user.username,
                 device=device.name,
@@ -475,7 +475,7 @@ def user_profile(request):
         # account delete request
         confirm_text = f'delete {request.user.username} account and scenes'
         if confirm_text in request.POST:
-            token = generate_arena_token(
+            token = generate_arena_token_v1(
                 user=request.user, username=request.user.username)
             u_scenes = Scene.objects.filter(
                 name__startswith=f'{request.user.username}/')
@@ -721,8 +721,16 @@ def _field_requested(request, field):
 
 
 @ api_view(["POST"])
+def deprecated_token(request):
+    return JsonResponse(
+        {"error": "ARENA v2 token required. You may need to update your client's ARENA library."},
+        status=status.HTTP_426_UPGRADE_REQUIRED
+    )
+
+
+@ api_view(["POST"])
 # @schema(ArenaTokenSchema())  # TODO: schema not working yet
-def arena_token(request):
+def arena_token_v1(request):
     """
     Endpoint to request an ARENA token with permissions for an anonymous or authenticated user for
     MQTT and Jitsi resources given incoming parameters.
@@ -765,7 +773,7 @@ def arena_token(request):
         duration = datetime.timedelta(days=1)
     else:
         duration = datetime.timedelta(hours=6)
-    token = generate_arena_token(
+    token = generate_arena_token_v1(
         user=user,
         username=username,
         realm=request.POST.get("realm", "realm"),

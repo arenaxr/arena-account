@@ -32,7 +32,7 @@ def all_scenes_read_token():
     return token
 
 
-def generate_arena_token(
+def generate_arena_token_v1(
     *,
     user,
     username,
