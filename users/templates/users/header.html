@@ -26,7 +26,7 @@
 </head>
 
 <body>
-    {% url 'login' as login_url %}
+    {% url 'users:login' as login_url %}
     <!-- avoid navbar for users who have not logged in on login form yet-->
     {% if user.is_authenticated or request.get_full_path != login_url %}
 
@@ -108,13 +108,13 @@
                             {{user.get_username}}</a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                             <li><a class="dropdown-item" href="{{request.scheme}}://{{request.get_host}}/conf/versions.html">Version</a></li>
-                            <li><a class="dropdown-item" href="{% url 'user_profile' %}">Profile</a></li>
-                            <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+                            <li><a class="dropdown-item" href="{% url 'users:user_profile' %}">Profile</a></li>
+                            <li><a class="dropdown-item" href="{% url 'users:logout' %}">Logout</a></li>
                         </ul>
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        <a class="nav-link" href="{% url 'users:login' %}">Login</a>
                     </li>
                     {% endif %}
                 </ul>

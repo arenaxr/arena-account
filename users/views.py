@@ -43,7 +43,7 @@ def index(request):
     """
     Root page load, index is treated as Login page.
     """
-    return redirect("login")
+    return redirect("users:login")
 
 
 def login_request(request):
@@ -63,7 +63,7 @@ def login_request(request):
                     login(request, user)
                     messages.info(
                         request, f"You are now logged in as {username}.")
-                    return redirect("login_callback")
+                    return redirect("users:login_callback")
                 else:
                     messages.error(request, "Invalid username or password.")
             else:
@@ -79,7 +79,7 @@ def logout_request(request):
     Removes ID and flushes session data, shows login page.
     """
     logout(request)  # revoke django auth
-    response = redirect("login")
+    response = redirect("users:login")
     response.delete_cookie("auth")  # revoke fs auth
     return response
 
@@ -98,7 +98,7 @@ def profile_update_scene(request):
     form = UpdateSceneForm(request.POST)
     if not form.is_valid():
         messages.error(request, "Invalid parameters")
-        return redirect("user_profile")
+        return redirect("users:user_profile")
     if "add" in request.POST:
         scenename = request.POST.get("scenename", None)
         s = Scene(
@@ -108,12 +108,12 @@ def profile_update_scene(request):
         s.save()
         messages.success(
             request, f"Created scene {request.user.username}/{scenename}")
-        return redirect("user_profile")
+        return redirect("users:user_profile")
     elif "edit" in request.POST:
         name = form.cleaned_data["edit"]
         return redirect(f"profile/scenes/{name}")
 
-    return redirect("user_profile")
+    return redirect("users:user_profile")
 
 
 @ permission_classes([permissions.IsAuthenticated])
@@ -130,7 +130,7 @@ def profile_update_device(request):
     form = UpdateDeviceForm(request.POST)
     if not form.is_valid():
         messages.error(request, "Invalid parameters")
-        return redirect("user_profile")
+        return redirect("users:user_profile")
     if "add" in request.POST:
         devicename = request.POST.get("devicename", None)
         s = Device(
@@ -139,12 +139,12 @@ def profile_update_device(request):
         s.save()
         messages.success(
             request, f"Created device {request.user.username}/{devicename}")
-        return redirect("user_profile")
+        return redirect("users:user_profile")
     elif "edit" in request.POST:
         name = form.cleaned_data["edit"]
         return redirect(f"profile/devices/{name}")
 
-    return redirect("user_profile")
+    return redirect("users:user_profile")
 
 
 def scene_perm_detail(request, pk):
@@ -154,19 +154,19 @@ def scene_perm_detail(request, pk):
     """
     if not scene_permission(user=request.user, scene=pk):
         messages.error(request, f"User does not have permission for: {pk}.")
-        return redirect("user_profile")
+        return redirect("users:user_profile")
     # now, make sure scene exists before the other commands are tried
     try:
         scene = Scene.objects.get(name=pk)
     except Scene.DoesNotExist:
         messages.error(request, "The scene does not exist")
-        return redirect("user_profile")
+        return redirect("users:user_profile")
     if request.method == 'POST':
         if "save" in request.POST:
             form = SceneForm(instance=scene, data=request.POST)
             if form.is_valid():
                 form.save()
-                return redirect("user_profile")
+                return redirect("users:user_profile")
         elif "delete" in request.POST:
             token = generate_arena_token_v1(
                 user=request.user, username=request.user.username)
@@ -177,7 +177,7 @@ def scene_perm_detail(request, pk):
                 messages.error(
                     request, f"Unable to delete {pk} objects from persistance database.")
 
-            return redirect("user_profile")
+            return redirect("users:user_profile")
     else:
         form = SceneForm(instance=scene)
 
@@ -192,24 +192,24 @@ def device_perm_detail(request, pk):
     """
     if not device_permission(user=request.user, device=pk):
         messages.error(request, f"User does not have permission for: {pk}.")
-        return redirect("user_profile")
+        return redirect("users:user_profile")
     # now, make sure device exists before the other commands are tried
     try:
         device = Device.objects.get(name=pk)
     except Device.DoesNotExist:
         messages.error(request, "The device does not exist")
-        return redirect("user_profile")
+        return redirect("users:user_profile")
     token = None
     if request.method == 'POST':
         if "save" in request.POST:
             form = DeviceForm(instance=device, data=request.POST)
             if form.is_valid():
                 form.save()
-                return redirect("user_profile")
+                return redirect("users:user_profile")
         elif "delete" in request.POST:
             # delete account device data
             device.delete()
-            return redirect("user_profile")
+            return redirect("users:user_profile")
         elif "token" in request.POST:
             token = generate_arena_token_v1(
                 user=request.user,
@@ -336,9 +336,9 @@ def profile_update_staff(request):
         if not set_filestore_scope(user):
             messages.error(
                 request, "Unable to update user's filestore status.")
-            return redirect("user_profile")
+            return redirect("users:user_profile")
 
-    return redirect("user_profile")
+    return redirect("users:user_profile")
 
 
 @ api_view(["GET"])
@@ -486,13 +486,13 @@ def user_profile(request):
                 if not delete_scene_objects(scene.name, token):
                     messages.error(
                         request, f"Unable to delete {scene.name} objects from persistance database.")
-                    return redirect("user_profile")
+                    return redirect("users:user_profile")
 
             # delete filestore files/account
             if not delete_filestore_user(request.user):
                 messages.error(
                     request, "Unable to delete account/files from the filestore.")
-                return redirect("user_profile")
+                return redirect("users:user_profile")
 
             # Be careful of foreign keys, in that case this is suggested:
             # user.is_active = False
