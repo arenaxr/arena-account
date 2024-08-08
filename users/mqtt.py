@@ -14,10 +14,12 @@ from .models import (SCENE_ANON_USERS_DEF, SCENE_PUBLIC_READ_DEF,
 PUBLIC_NAMESPACE = "public"
 ANON_REGEX = "anonymous-(?=.*?[a-zA-Z].*?[a-zA-Z])"
 DEF_JWT_DURATION = datetime.timedelta(minutes=1)
-TOPIC_SUPPORTED_API_VERSIONS = ["v1", "v2"]  # TODO(mwfarb): remove v1
+API_V1 = "v1"
+API_V2 = "v2"
+TOPIC_SUPPORTED_API_VERSIONS = [API_V1, API_V2]  # TODO (mwfarb): remove v1
 
 
-def all_scenes_read_token():
+def all_scenes_read_token(version):
     config = settings.PUBSUB
     privkeyfile = settings.MQTT_TOKEN_PRIVKEY
     if not os.path.exists(privkeyfile):
@@ -25,11 +27,20 @@ def all_scenes_read_token():
         return None
     with open(privkeyfile) as privatefile:
         private_key = privatefile.read()
-    payload = {
-        "sub": config["mqtt_username"],
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=5),
-        "subs": [f"{config['mqtt_realm']}/s/#"],
-    }
+
+    realm = config["mqtt_realm"]
+    username = config["mqtt_username"]
+    duration = datetime.timedelta(minutes=1)
+
+    payload = {}
+    payload["sub"] = username
+    payload["exp"] = datetime.datetime.utcnow() + duration
+
+    if version == API_V2:
+        payload["subs"] = [f"{realm}/s/+/+/o/#"]  # v2
+    else:
+        payload["subs"] = [f"{realm}/s/#"]  # v1
+
     token = jwt.encode(payload, private_key, algorithm="RS256")
     return token
 

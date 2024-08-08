@@ -4,7 +4,6 @@ import os
 import re
 import secrets
 
-import coreapi
 from allauth.socialaccount import helpers
 from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.views import SignupView as SocialSignupViewDefault
@@ -16,14 +15,11 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
-from django.urls import reverse
 from google.auth.transport import requests as grequests
 from google.oauth2 import id_token
 from rest_framework import permissions, status
-from rest_framework.compat import coreapi
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
-from rest_framework.schemas import AutoSchema
 
 from .filestore import (delete_filestore_user, login_filestore_user,
                         set_filestore_scope)
@@ -375,11 +371,11 @@ def my_scenes(request):
             except (ValueError, SocialAccount.DoesNotExist) as err:
                 return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
 
-    serializer = SceneNameSerializer(get_my_scenes(user), many=True)
+    serializer = SceneNameSerializer(get_my_scenes(user, request.version), many=True)
     return JsonResponse(serializer.data, safe=False)
 
 
-def get_my_scenes(user):
+def get_my_scenes(user, version):
     """
     Internal method to update scene permissions table:
     1. Requests list of any scenes with objects saved from /persist/!allscenes to add to scene permissions table.
@@ -387,7 +383,7 @@ def get_my_scenes(user):
     """
     # update scene list from object persistance db
     if user.is_authenticated:
-        token = all_scenes_read_token()
+        token = all_scenes_read_token(version)
         if user.is_staff:  # admin/staff
             p_scenes = get_persist_scenes_all(token)
         else:  # standard user
@@ -474,9 +470,8 @@ def user_profile(request):
     - Shows scenes that the user has permissions to edit and a button to edit them.
     - Handles account deletes.
     """
-    # TODO (mwfarb): make remote post status 426, local post redirect to valid
-    # if request.version not in TOPIC_SUPPORTED_API_VERSIONS:
-    #     return reverse("users:user_profile", current_app="users")
+    if request.version not in TOPIC_SUPPORTED_API_VERSIONS:
+        return redirect(f"/{TOPIC_SUPPORTED_API_VERSIONS[0]}/user_profile/")
 
     if request.method == 'POST':
         # account delete request
@@ -512,7 +507,7 @@ def user_profile(request):
             except User.DoesNotExist:
                 messages.error(request, "Unable to complete account delete.")
 
-    scenes = get_my_scenes(request.user)
+    scenes = get_my_scenes(request.user, request.version)
     devices = get_my_devices(request.user)
     staff = None
     if request.user.is_staff:  # admin/staff
