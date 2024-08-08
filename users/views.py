@@ -26,8 +26,9 @@ from .filestore import (delete_filestore_user, login_filestore_user,
 from .forms import (DeviceForm, SceneForm, SocialSignupForm, UpdateDeviceForm,
                     UpdateSceneForm, UpdateStaffForm)
 from .models import Device, Scene
-from .mqtt import (ANON_REGEX, PUBLIC_NAMESPACE, TOPIC_SUPPORTED_API_VERSIONS,
-                   all_scenes_read_token, generate_arena_token)
+from .mqtt import (ANON_REGEX, API_V2, PUBLIC_NAMESPACE,
+                   TOPIC_SUPPORTED_API_VERSIONS, all_scenes_read_token,
+                   generate_arena_token)
 from .persistence import (delete_scene_objects, get_persist_scenes_all,
                           get_persist_scenes_ns)
 from .serializers import SceneNameSerializer, SceneSerializer
@@ -211,7 +212,7 @@ def device_perm_detail(request, pk):
             token = generate_arena_token(
                 user=request.user,
                 username=request.user.username,
-                device=device.name,
+                ns_device=device.name,
                 duration=datetime.timedelta(days=30)
             )
 
@@ -371,7 +372,8 @@ def my_scenes(request):
             except (ValueError, SocialAccount.DoesNotExist) as err:
                 return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
 
-    serializer = SceneNameSerializer(get_my_scenes(user, request.version), many=True)
+    serializer = SceneNameSerializer(
+        get_my_scenes(user, request.version), many=True)
     return JsonResponse(serializer.data, safe=False)
 
 
@@ -470,7 +472,8 @@ def user_profile(request):
     - Shows scenes that the user has permissions to edit and a button to edit them.
     - Handles account deletes.
     """
-    if request.version not in TOPIC_SUPPORTED_API_VERSIONS:
+    version = "v1"  # TODO (mwfarb): resolve missing request.version
+    if version not in TOPIC_SUPPORTED_API_VERSIONS:
         return redirect(f"/{TOPIC_SUPPORTED_API_VERSIONS[0]}/user_profile/")
 
     if request.method == 'POST':
@@ -507,7 +510,7 @@ def user_profile(request):
             except User.DoesNotExist:
                 messages.error(request, "Unable to complete account delete.")
 
-    scenes = get_my_scenes(request.user, request.version)
+    scenes = get_my_scenes(request.user, version)
     devices = get_my_devices(request.user)
     staff = None
     if request.user.is_staff:  # admin/staff
@@ -696,15 +699,18 @@ def arena_token(request):
     # produce nonce with 32-bits secure randomness
     nonce = f"{secrets.randbits(32):010d}"
     # define user object_ids server-side to prevent spoofing
-    userid = camid = handleftid = handrightid = None
+    ids = None
     if _field_requested(request, "userid"):
         userid = f"{nonce}_{username}"
-    if _field_requested(request, "camid"):
-        camid = f"{nonce}_{username}"
-    if _field_requested(request, "handleftid"):
-        handleftid = f"handLeft_{nonce}_{username}"
-    if _field_requested(request, "handrightid"):
-        handrightid = f"handRight_{nonce}_{username}"
+        ids = {}
+        ids["userid"] = userid
+        if request.version == API_V2:
+            ids["camid"] = userid  # v2
+        else:
+            ids["camid"] = f"camera_{userid}"  # v1
+        ids["handleftid"] = f"handLeft_{userid}"
+        ids["handrightid"] = f"handRight_{userid}"
+
     if user.is_authenticated:
         duration = datetime.timedelta(days=1)
     else:
@@ -712,12 +718,11 @@ def arena_token(request):
     token = generate_arena_token(
         user=user,
         username=username,
-        realm=request.POST.get("realm", "realm"),
+        # TODO: realm cannot contain any /
+        realm=request.POST.get("realm", None),
+        # TODO: scene can/must contain one /
         ns_scene=request.POST.get("scene", None),
-        camid=camid,
-        userid=userid,
-        handleftid=handleftid,
-        handrightid=handrightid,
+        ids=ids,
         duration=duration
     )
     if not token:
@@ -727,16 +732,8 @@ def arena_token(request):
     data = {
         "username": username,
         "token": token,
-        "ids": {},
+        "ids": ids,
     }
-    if userid:
-        data["ids"]["userid"] = userid
-    if camid:
-        data["ids"]["camid"] = camid
-    if handleftid:
-        data["ids"]["handleftid"] = handleftid
-    if handrightid:
-        data["ids"]["handrightid"] = handrightid
     response = HttpResponse(json.dumps(data), content_type="application/json")
     response.set_cookie(
         "mqtt_token",

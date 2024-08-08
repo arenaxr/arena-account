@@ -10,12 +10,13 @@ from .models import (SCENE_ANON_USERS_DEF, SCENE_PUBLIC_READ_DEF,
                      SCENE_PUBLIC_WRITE_DEF, SCENE_USERS_DEF,
                      SCENE_VIDEO_CONF_DEF, Scene)
 
-# topic constants
 PUBLIC_NAMESPACE = "public"
 ANON_REGEX = "anonymous-(?=.*?[a-zA-Z].*?[a-zA-Z])"
 DEF_JWT_DURATION = datetime.timedelta(minutes=1)
-API_V1 = "v1"
-API_V2 = "v2"
+
+# version constants
+API_V1 = "v1"  # url /user/, first version
+API_V2 = "v2"  # url /user/v2/, full topic structure refactor
 TOPIC_SUPPORTED_API_VERSIONS = [API_V1, API_V2]  # TODO (mwfarb): remove v1
 
 
@@ -30,11 +31,10 @@ def all_scenes_read_token(version):
 
     realm = config["mqtt_realm"]
     username = config["mqtt_username"]
-    duration = datetime.timedelta(minutes=1)
 
     payload = {}
     payload["sub"] = username
-    payload["exp"] = datetime.datetime.utcnow() + duration
+    payload["exp"] = datetime.datetime.utcnow() + DEF_JWT_DURATION
 
     if version == API_V2:
         payload["subs"] = [f"{realm}/s/+/+/o/#"]  # v2
@@ -49,37 +49,20 @@ def generate_arena_token(
     *,
     user,
     username,
-    realm="realm",
+    realm=None,
     ns_scene=None,
-    device=None,
-    camid=None,
-    userid=None,
-    handleftid=None,
-    handrightid=None,
+    ns_device=None,
+    ids=None,
     duration=DEF_JWT_DURATION
 ):
-    """ MQTT Token Constructor. Topic Notes:
-        /s/: virtual scene objects
-        /d/: device inter-process
-        /env/: physical environment detection
-
-    Args:
-        user (object): User object
-        username (str): _description_
-        realm (str, optional): _description_. Defaults to "realm".
-        ns_scene (str, optional): _description_. Defaults to None.
-        device (str, optional): _description_. Defaults to None.
-        camid (str, optional): _description_. Defaults to None.
-        userid (str, optional): _description_. Defaults to None.
-        handleftid (str, optional): _description_. Defaults to None.
-        handrightid (str, optional): _description_. Defaults to None.
-        duration (integer, optional): _description_. Defaults to DEF_JWT_DURATION.
+    """ MQTT Token Constructor.
 
     Returns:
         str: JWT or None
     """
-    subs = []
-    pubs = []
+    config = settings.PUBSUB
+    if not realm:
+        realm = config["mqtt_realm"]
     privkeyfile = settings.MQTT_TOKEN_PRIVKEY
     if not os.path.exists(privkeyfile):
         print("Error: keyfile not found")
@@ -91,43 +74,75 @@ def generate_arena_token(
     payload["exp"] = datetime.datetime.utcnow() + duration
     headers = None
 
-    p_public_read = SCENE_PUBLIC_READ_DEF
-    p_public_write = SCENE_PUBLIC_WRITE_DEF
-    p_anonymous_users = SCENE_ANON_USERS_DEF
-    p_video = SCENE_VIDEO_CONF_DEF
-    p_users = SCENE_USERS_DEF
-
-    # create permissions shorthand
+    perm = {
+        "public_read": SCENE_PUBLIC_READ_DEF,
+        "public_write": SCENE_PUBLIC_WRITE_DEF,
+        "anonymous_users": SCENE_ANON_USERS_DEF,
+        "video": SCENE_VIDEO_CONF_DEF,
+        "users": SCENE_USERS_DEF,
+    }
     if ns_scene and Scene.objects.filter(name=ns_scene).exists():
-        scene_perm = Scene.objects.get(name=ns_scene)
-        p_public_read = scene_perm.public_read
-        p_public_write = scene_perm.public_write
-        p_anonymous_users = scene_perm.anonymous_users
-        p_video = scene_perm.video_conference
-        p_users = scene_perm.users
+        p = Scene.objects.get(name=ns_scene)
+        perm["public_read"] = p.public_read
+        perm["public_write"] = p.public_write
+        perm["anonymous_users"] = p.anonymous_users
+        perm["video"] = p.video_conference
+        perm["users"] = p.users
 
     # add jitsi server params if a/v scene
-    if ns_scene and camid and p_users and p_video:
+    if ns_scene and ids and perm["users"] and perm["video"]:
         host = os.getenv("HOSTNAME")
         headers = {"kid": host}
         payload["aud"] = "arena"
         payload["iss"] = "arena-account"
-        # we use the namespace + scene name as the jitsi room name, handle RFC 3986 reserved chars as = '_'
+        # we use the scene name as the jitsi room name, handle RFC 3986 reserved chars as = '_'
         roomname = re.sub(r"[!#$&'()*+,\/:;=?@[\]]", '_', ns_scene.lower())
         payload["room"] = roomname
 
+    pubs, subs = get_pubsub_topics_api_v1(
+        user,
+        username,
+        realm,
+        ns_scene,
+        ns_device,
+        ids,
+        perm,
+    )
+    if len(subs) > 0:
+        payload["subs"] = clean_topics(subs)
+    if len(pubs) > 0:
+        payload["publ"] = clean_topics(pubs)
+
+    return jwt.encode(payload, private_key, algorithm="RS256", headers=headers)
+
+
+def get_pubsub_topics_api_v1(
+        user,
+        username,
+        realm,
+        ns_scene,
+        ns_device,
+        ids,
+        perm,
+):
+    """ V1 Topic Notes:
+        /s/: virtual scene objects
+        /d/: device inter-process
+        /env/: physical environment detection
+    """
+    pubs = []
+    subs = []
     # everyone should be able to read all public scenes
-    if not device:  # scene token scenario
+    if not ns_device:  # scene token scenario
         subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/#")
         # And transmit env data
         pubs.append(f"{realm}/env/{PUBLIC_NAMESPACE}/#")
-
     # user presence objects
     if user.is_authenticated:
-        if device:  # device token scenario
+        if ns_device:  # device token scenario
             # device owners have rights to their device objects only
-            subs.append(f"{realm}/d/{device}/#")
-            pubs.append(f"{realm}/d/{device}/#")
+            subs.append(f"{realm}/d/{ns_device}/#")
+            pubs.append(f"{realm}/d/{ns_device}/#")
         else:  # scene token scenario
             # scene rights default by namespace
             if user.is_staff:
@@ -164,58 +179,47 @@ def generate_arena_token(
                 # device owners have rights to their device objects only
                 subs.append(f"{realm}/d/{username}/#")
                 pubs.append(f"{realm}/d/{username}/#")
-
     # anon/non-owners have rights to view scene objects only
     if ns_scene and not user.is_staff:
         # did the user set specific public read or public write?
-        if not user.is_authenticated and not p_anonymous_users:
+        if not user.is_authenticated and not perm["anonymous_users"]:
             return None  # anonymous not permitted
-        if p_public_read:
+        if perm["public_read"]:
             subs.append(f"{realm}/s/{ns_scene}/#")
             # Interactivity to extent of viewing objects is similar to publishing env
             pubs.append(f"{realm}/env/{ns_scene}/#")
-        if p_public_write:
+        if perm["public_write"]:
             pubs.append(f"{realm}/s/{ns_scene}/#")
         # user presence objects
-        if camid and p_users:  # probable web browser write
-            pubs.append(f"{realm}/s/{ns_scene}/{camid}")
-            pubs.append(f"{realm}/s/{ns_scene}/{camid}/#")
-        if handleftid and p_users:
-            pubs.append(f"{realm}/s/{ns_scene}/{handleftid}")
-        if handrightid and p_users:
-            pubs.append(f"{realm}/s/{ns_scene}/{handrightid}")
-
+        if ids and perm["users"]:  # probable web browser write
+            pubs.append(f"{realm}/s/{ns_scene}/{ids['camid']}")
+            pubs.append(f"{realm}/s/{ns_scene}/{ids['camid']}/#")
+            pubs.append(f"{realm}/s/{ns_scene}/{ids['handleftid']}")
+            pubs.append(f"{realm}/s/{ns_scene}/{ids['handrightid']}")
     # chat messages
-    if ns_scene and userid and p_users:
+    if ns_scene and ids and perm["users"]:
         namespace = ns_scene.split("/")[0]
+        userhandle = ids["userid"] + \
+            base64.b64encode(ids["userid"].encode()).decode()
         # receive private messages: Read
-        subs.append(f"{realm}/c/{namespace}/p/{userid}/#")
+        subs.append(f"{realm}/c/{namespace}/p/{ids['userid']}/#")
         # receive open messages to everyone and/or scene: Read
         subs.append(f"{realm}/c/{namespace}/o/#")
         # send open messages (chat keepalive, messages to all/scene): Write
-        pubs.append(f"{realm}/c/{namespace}/o/{userid}")
+        pubs.append(f"{realm}/c/{namespace}/o/{userhandle}")
         # private messages to user: Write
-        pubs.append(f"{realm}/c/{namespace}/p/+/{userid}")
-
+        pubs.append(f"{realm}/c/{namespace}/p/+/{userhandle}")
     # apriltags
     if ns_scene:
         subs.append(f"{realm}/g/a/#")
         pubs.append(f"{realm}/g/a/#")
-
-    # runtime manager
+    # arts runtime-mngr
     subs.append(f"{realm}/proc/#")
     pubs.append(f"{realm}/proc/#")
-
-    # network metrics
+    # network graph
     subs.append("$NETWORK")
     pubs.append("$NETWORK/latency")
-
-    if len(subs) > 0:
-        payload["subs"] = clean_topics(subs)
-    if len(pubs) > 0:
-        payload["publ"] = clean_topics(pubs)
-
-    return jwt.encode(payload, private_key, algorithm="RS256", headers=headers)
+    return pubs, subs
 
 
 def clean_topics(topics):
