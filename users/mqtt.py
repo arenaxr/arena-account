@@ -60,6 +60,7 @@ def generate_arena_token(
     Returns:
         str: JWT or None
     """
+    # TODO: realm cannot contain any /
     config = settings.PUBSUB
     if not realm:
         realm = config["mqtt_realm"]
@@ -99,15 +100,24 @@ def generate_arena_token(
         roomname = re.sub(r"[!#$&'()*+,\/:;=?@[\]]", '_', ns_scene.lower())
         payload["room"] = roomname
 
-    pubs, subs = get_pubsub_topics_api_v1(
-        user,
-        username,
-        realm,
-        ns_scene,
-        ns_device,
-        ids,
-        perm,
-    )
+    # ns_scene, ns_device can/must contain only one '/'
+    namespace = scene = device = None
+    if ns_scene:
+        parts = ns_scene.split("/")
+        if len(parts) != 2:
+            return None
+        namespace = parts[0]
+        scene = parts[1]
+    elif ns_device:
+        parts = ns_device.split("/")
+        if len(parts) != 2:
+            return None
+        namespace = parts[0]
+        device = parts[1]
+
+    pubs, subs = pubsub_api_v1(
+        user, username, realm, namespace, scene, device, ids, perm)
+
     if len(subs) > 0:
         payload["subs"] = clean_topics(subs)
     if len(pubs) > 0:
@@ -116,12 +126,13 @@ def generate_arena_token(
     return jwt.encode(payload, private_key, algorithm="RS256", headers=headers)
 
 
-def get_pubsub_topics_api_v1(
+def pubsub_api_v1(
         user,
         username,
         realm,
-        ns_scene,
-        ns_device,
+        namespace,
+        scene,
+        device,
         ids,
         perm,
 ):
@@ -133,16 +144,16 @@ def get_pubsub_topics_api_v1(
     pubs = []
     subs = []
     # everyone should be able to read all public scenes
-    if not ns_device:  # scene token scenario
+    if not device:  # scene token scenario
         subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/#")
         # And transmit env data
         pubs.append(f"{realm}/env/{PUBLIC_NAMESPACE}/#")
     # user presence objects
     if user.is_authenticated:
-        if ns_device:  # device token scenario
+        if device:  # device token scenario
             # device owners have rights to their device objects only
-            subs.append(f"{realm}/d/{ns_device}/#")
-            pubs.append(f"{realm}/d/{ns_device}/#")
+            subs.append(f"{realm}/d/{namespace}/{device}/#")
+            pubs.append(f"{realm}/d/{namespace}/{device}/#")
         else:  # scene token scenario
             # scene rights default by namespace
             if user.is_staff:
@@ -153,8 +164,8 @@ def get_pubsub_topics_api_v1(
                 subs.append(f"{realm}/env/#")
                 pubs.append(f"{realm}/env/#")
                 # vio experiments, staff only
-                if ns_scene:
-                    pubs.append(f"{realm}/vio/{ns_scene}/#")
+                if scene:
+                    pubs.append(f"{realm}/vio/{namespace}/{scene}/#")
             else:
                 # scene owners have rights to their scene objects only
                 subs.append(f"{realm}/s/{username}/#")
@@ -165,7 +176,7 @@ def get_pubsub_topics_api_v1(
                 # add scenes that have been granted by other owners
                 u_scenes = Scene.objects.filter(editors=user)
                 for u_scene in u_scenes:
-                    if not ns_scene or (ns_scene and u_scene.name == ns_scene):
+                    if not scene or (scene and u_scene.name == f"{namespace}/{scene}"):
                         subs.append(f"{realm}/s/{u_scene.name}/#")
                         pubs.append(f"{realm}/s/{u_scene.name}/#")
                         subs.append(f"{realm}/env/{u_scene.name}/#")
@@ -180,25 +191,24 @@ def get_pubsub_topics_api_v1(
                 subs.append(f"{realm}/d/{username}/#")
                 pubs.append(f"{realm}/d/{username}/#")
     # anon/non-owners have rights to view scene objects only
-    if ns_scene and not user.is_staff:
+    if scene and not user.is_staff:
         # did the user set specific public read or public write?
         if not user.is_authenticated and not perm["anonymous_users"]:
             return None  # anonymous not permitted
         if perm["public_read"]:
-            subs.append(f"{realm}/s/{ns_scene}/#")
+            subs.append(f"{realm}/s/{namespace}/{scene}/#")
             # Interactivity to extent of viewing objects is similar to publishing env
-            pubs.append(f"{realm}/env/{ns_scene}/#")
+            pubs.append(f"{realm}/env/{namespace}/{scene}/#")
         if perm["public_write"]:
-            pubs.append(f"{realm}/s/{ns_scene}/#")
+            pubs.append(f"{realm}/s/{namespace}/{scene}/#")
         # user presence objects
         if ids and perm["users"]:  # probable web browser write
-            pubs.append(f"{realm}/s/{ns_scene}/{ids['camid']}")
-            pubs.append(f"{realm}/s/{ns_scene}/{ids['camid']}/#")
-            pubs.append(f"{realm}/s/{ns_scene}/{ids['handleftid']}")
-            pubs.append(f"{realm}/s/{ns_scene}/{ids['handrightid']}")
+            pubs.append(f"{realm}/s/{namespace}/{scene}/{ids['camid']}")
+            pubs.append(f"{realm}/s/{namespace}/{scene}/{ids['camid']}/#")
+            pubs.append(f"{realm}/s/{namespace}/{scene}/{ids['handleftid']}")
+            pubs.append(f"{realm}/s/{namespace}/{scene}/{ids['handrightid']}")
     # chat messages
-    if ns_scene and ids and perm["users"]:
-        namespace = ns_scene.split("/")[0]
+    if scene and ids and perm["users"]:
         userhandle = ids["userid"] + \
             base64.b64encode(ids["userid"].encode()).decode()
         # receive private messages: Read
@@ -210,7 +220,7 @@ def get_pubsub_topics_api_v1(
         # private messages to user: Write
         pubs.append(f"{realm}/c/{namespace}/p/+/{userhandle}")
     # apriltags
-    if ns_scene:
+    if scene:
         subs.append(f"{realm}/g/a/#")
         pubs.append(f"{realm}/g/a/#")
     # arts runtime-mngr

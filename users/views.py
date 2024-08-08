@@ -718,9 +718,7 @@ def arena_token(request):
     token = generate_arena_token(
         user=user,
         username=username,
-        # TODO: realm cannot contain any /
         realm=request.POST.get("realm", None),
-        # TODO: scene can/must contain one /
         ns_scene=request.POST.get("scene", None),
         ids=ids,
         duration=duration
