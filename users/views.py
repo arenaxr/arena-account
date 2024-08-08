@@ -700,7 +700,7 @@ def arena_token(request):
     if _field_requested(request, "userid"):
         userid = f"{nonce}_{username}"
     if _field_requested(request, "camid"):
-        camid = f"camera_{nonce}_{username}"
+        camid = f"{nonce}_{username}"
     if _field_requested(request, "handleftid"):
         handleftid = f"handLeft_{nonce}_{username}"
     if _field_requested(request, "handrightid"):
