@@ -721,7 +721,8 @@ def arena_token(request):
         realm=request.POST.get("realm", None),
         ns_scene=request.POST.get("scene", None),
         ids=ids,
-        duration=duration
+        duration=duration,
+        version=request.version
     )
     if not token:
         return JsonResponse(
