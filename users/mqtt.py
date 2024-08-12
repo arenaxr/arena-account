@@ -262,9 +262,7 @@ def pubsub_api_v2(
     subs = []
     # everyone should be able to read all public scenes
     if not deviceid:  # scene token scenario
-        subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/o/#")
-        # And transmit env data
-        pubs.append(f"{realm}/e/{PUBLIC_NAMESPACE}/#")
+        subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/+/+/+")
     # user presence objects
     if user.is_authenticated:
         if deviceid:  # device token scenario
@@ -274,30 +272,19 @@ def pubsub_api_v2(
         else:  # scene token scenario
             # scene rights default by namespace
             if user.is_staff:
-                # staff/admin have rights to all scene objects
-                subs.append(f"{realm}/s/#")
-                pubs.append(f"{realm}/s/#")
-                # env data for all scenes
-                subs.append(f"{realm}/e/#")
-                pubs.append(f"{realm}/e/#")
-                # vio experiments, staff only
-                if sceneid:
-                    pubs.append(f"{realm}/vio/{namespace}/{sceneid}/#")
+                # staff/admin have rights to all scene data
+                subs.append(f"{realm}/s/+/+/+/+")
+                pubs.append(f"{realm}/s/+/+/+/+/#")
             else:
                 # scene owners have rights to their scene objects only
-                subs.append(f"{realm}/s/{username}/#")
-                pubs.append(f"{realm}/s/{username}/#")
-                # scene owners have rights to their scene env only
-                subs.append(f"{realm}/e/{username}/#")
-                pubs.append(f"{realm}/e/{username}/#")
+                subs.append(f"{realm}/s/{username}/+/+/+")
+                pubs.append(f"{realm}/s/{username}/+/+/+/#")
                 # add scenes that have been granted by other owners
                 u_scenes = Scene.objects.filter(editors=user)
                 for u_scene in u_scenes:
                     if not sceneid or (sceneid and u_scene.name == f"{namespace}/{sceneid}"):
-                        subs.append(f"{realm}/s/{u_scene.name}/#")
-                        pubs.append(f"{realm}/s/{u_scene.name}/#")
-                        subs.append(f"{realm}/e/{u_scene.name}/#")
-                        pubs.append(f"{realm}/e/{u_scene.name}/#")
+                        subs.append(f"{realm}/s/{u_scene.name}/+/+/+/#")
+                        pubs.append(f"{realm}/s/{u_scene.name}/+/+/+/#")
             # device rights default by namespace
             if user.is_staff:
                 # staff/admin have rights to all device objects
@@ -313,26 +300,22 @@ def pubsub_api_v2(
         if not user.is_authenticated and not perm["anonymous_users"]:
             return None  # anonymous not permitted
         if perm["public_read"]:
-            subs.append(f"{realm}/s/{namespace}/{sceneid}/#")
+            subs.append(f"{realm}/s/{namespace}/{sceneid}/o/+")
             # Interactivity to extent of viewing objects is similar to publishing env
-            pubs.append(f"{realm}/e/{namespace}/{sceneid}/#")
+            pubs.append(f"{realm}/s/{namespace}/{sceneid}/e/+")
         if perm["public_write"]:
-            pubs.append(f"{realm}/s/{namespace}/{sceneid}/#")
+            pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/+")
         # user presence objects
         if ids and perm["users"]:  # probable web browser write
-            pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids['camid']}")
-            pubs.append(
-                f"{realm}/s/{namespace}/{sceneid}/u/{ids['handleftid']}")
-            pubs.append(
-                f"{realm}/s/{namespace}/{sceneid}/u/{ids['handrightid']}")
+            for userobj in ids:
+                pubs.append(
+                    f"{realm}/s/{namespace}/{sceneid}/u/{ids[userobj]}")
     # presence/chat
     if sceneid and ids and perm["users"]:
-        subs.append(f"{realm}/c/{namespace}/x/+")
-        subs.append(f"{realm}/c/{namespace}/x/+/{ids['userid']}/#")
-        pubs.append(f"{realm}/c/{namespace}/x/{ids['userid']}/#")
-        subs.append(f"{realm}/c/{namespace}/c/+")
-        subs.append(f"{realm}/c/{namespace}/c/+/{ids['userid']}/#")
-        pubs.append(f"{realm}/c/{namespace}/c/{ids['userid']}/#")
+        subs.append(f"{realm}/s/{namespace}/{sceneid}/x/+")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/{ids['userid']}/#")
+        subs.append(f"{realm}/s/{namespace}/{sceneid}/c/+")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/c/{ids['userid']}/#")
     # runtime manager
     subs.append(f"{realm}/proc/#")
     pubs.append(f"{realm}/proc/#")
