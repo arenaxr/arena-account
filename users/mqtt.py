@@ -10,6 +10,8 @@ from .models import (SCENE_ANON_USERS_DEF, SCENE_PUBLIC_READ_DEF,
                      SCENE_PUBLIC_WRITE_DEF, SCENE_USERS_DEF,
                      SCENE_VIDEO_CONF_DEF, Scene)
 
+from .topics import SUBSCRIBE_TOPICS, PUBLISH_TOPICS, ADMIN_TOPICS
+
 PUBLIC_NAMESPACE = "public"
 ANON_REGEX = "anonymous-(?=.*?[a-zA-Z].*?[a-zA-Z])"
 DEF_JWT_DURATION = datetime.timedelta(minutes=1)
@@ -158,9 +160,9 @@ def pubsub_api_v1(
     subs = []
     # everyone should be able to read all public scenes
     if not deviceid:  # scene token scenario
-        subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/#")
-        # And transmit env data
-        pubs.append(f"{realm}/env/{PUBLIC_NAMESPACE}/#")
+        subs.append(SUBSCRIBE_TOPICS.SCENE_OBJECTS.substitute(
+            {"realm": realm, "nameSpace": PUBLIC_NAMESPACE, "sceneName": "+"}
+        ))
     # user presence objects
     if user.is_authenticated:
         if deviceid:  # device token scenario
