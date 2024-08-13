@@ -127,9 +127,11 @@ def generate_arena_token(
         pubs, subs = pubsub_api_v1(
             user, username, realm, namespace, sceneid, deviceid, ids, perm)
 
-    # non-api-versioned topics
     # network graph
-    subs.append("$NETWORK")
+    # only non-specific scene/device should monitor latency data
+    if not sceneid:
+        subs.append("$NETWORK")
+    # every client can/should publish latency data
     pubs.append("$NETWORK/latency")
 
     if len(subs) > 0:
