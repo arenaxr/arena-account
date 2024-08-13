@@ -9,8 +9,7 @@ from django.conf import settings
 from .models import (SCENE_ANON_USERS_DEF, SCENE_PUBLIC_READ_DEF,
                      SCENE_PUBLIC_WRITE_DEF, SCENE_USERS_DEF,
                      SCENE_VIDEO_CONF_DEF, Scene)
-
-from .topics import SUBSCRIBE_TOPICS, PUBLISH_TOPICS, ADMIN_TOPICS
+from .topics import ADMIN_TOPICS, PUBLISH_TOPICS, SUBSCRIBE_TOPICS
 
 PUBLIC_NAMESPACE = "public"
 ANON_REGEX = "anonymous-(?=.*?[a-zA-Z].*?[a-zA-Z])"
@@ -160,9 +159,9 @@ def pubsub_api_v1(
     subs = []
     # everyone should be able to read all public scenes
     if not deviceid:  # scene token scenario
-        subs.append(SUBSCRIBE_TOPICS.SCENE_OBJECTS.substitute(
-            {"realm": realm, "nameSpace": PUBLIC_NAMESPACE, "sceneName": "+"}
-        ))
+        subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/#")
+        # And transmit env data
+        pubs.append(f"{realm}/env/{PUBLIC_NAMESPACE}/#")
     # user presence objects
     if user.is_authenticated:
         if deviceid:  # device token scenario
@@ -264,7 +263,9 @@ def pubsub_api_v2(
     subs = []
     # everyone should be able to read all public scenes
     if not deviceid:  # scene token scenario
-        subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/+/+/+")
+        subs.append(SUBSCRIBE_TOPICS.SCENE_OBJECTS.substitute(
+            {"realm": realm, "nameSpace": PUBLIC_NAMESPACE, "sceneName": "+"}
+        ))
     # user presence objects
     if user.is_authenticated:
         if deviceid:  # device token scenario
