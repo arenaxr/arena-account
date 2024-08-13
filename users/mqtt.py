@@ -9,6 +9,7 @@ from django.conf import settings
 from .models import (SCENE_ANON_USERS_DEF, SCENE_PUBLIC_READ_DEF,
                      SCENE_PUBLIC_WRITE_DEF, SCENE_USERS_DEF,
                      SCENE_VIDEO_CONF_DEF, Scene)
+from .mqtt_match import topic_matches_sub
 from .topics import ADMIN_TOPICS, PUBLISH_TOPICS, SUBSCRIBE_TOPICS
 
 PUBLIC_NAMESPACE = "public"
@@ -328,19 +329,17 @@ def pubsub_api_v2(
 
 def clean_topics(topics):
     """
-    Sort and remove list duplicates.
+    Sort and remove list redundancies.
     """
     topics = list(dict.fromkeys(topics))
     topics.sort()
     # after sort, collapse overlapping topic levels to reduce size
     _topics = []
-    high_topic = ""
-    for i, topic in enumerate(topics):
+    for topic in topics:
         add = True
-        if i > 0 and high_topic.endswith("/#"):
-            if topic.startswith(high_topic[0:-1]):
-                add = False  # higher topic level already granted
+        for have in _topics:
+            if topic_matches_sub(have, topic):
+                add = False
         if add:
-            high_topic = topic
             _topics.append(topic)
     return _topics

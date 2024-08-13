@@ -1,5 +1,5 @@
-from types import SimpleNamespace
 from string import Template
+from types import SimpleNamespace
 
 TOPIC_TYPES = SimpleNamespace(**{
     'SCENE': 's',
