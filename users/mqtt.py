@@ -272,10 +272,10 @@ def pubsub_api_v2(
     subs = []
     # everyone should be able to read all public scenes
     if not deviceid:  # scene token scenario
-        subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/+/+/+")
-        # subs.append(SUBSCRIBE_TOPICS.SCENE_OBJECTS.substitute(
-        #     {"realm": realm, "nameSpace": PUBLIC_NAMESPACE, "sceneName": "+"}
-        # ))
+        # subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/+/+/+")
+        subs.append(SUBSCRIBE_TOPICS.SCENE_PUBLIC.substitute(
+            {"realm": realm, "nameSpace": PUBLIC_NAMESPACE, "sceneName": "+"}
+        ))
     # user presence objects
     if user.is_authenticated:
         if deviceid:  # device token scenario
