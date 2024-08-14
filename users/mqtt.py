@@ -119,7 +119,7 @@ def generate_arena_token(
         namespace = parts[0]
         deviceid = parts[1]
 
-    # api-versioned topics
+    # -- VERSIONED API TOPICS --
     if version == API_V2:
         pubs, subs = pubsub_api_v2(
             user, username, realm, namespace, sceneid, deviceid, ids, perm)
@@ -127,13 +127,22 @@ def generate_arena_token(
         pubs, subs = pubsub_api_v1(
             user, username, realm, namespace, sceneid, deviceid, ids, perm)
 
-    # network graph
+    # -- NON-VERSIONED API TOPICS --
+
+    # runtime manager
+    # only rendered scenes need the runtime manager
+    if sceneid:
+        subs.append(f"{realm}/proc/#")
+        pubs.append(f"{realm}/proc/#")
+
+    # network metrics
     # only non-specific scene/device should monitor latency data
     if not sceneid:
         subs.append("$NETWORK")
     # every client can/should publish latency data
     pubs.append("$NETWORK/latency")
 
+    # consolidate topics and issue token
     if len(subs) > 0:
         payload["subs"] = clean_topics(subs)
     if len(pubs) > 0:
@@ -241,9 +250,6 @@ def pubsub_api_v1(
     if sceneid:
         subs.append(f"{realm}/g/a/#")
         pubs.append(f"{realm}/g/a/#")
-    # arts runtime-mngr
-    subs.append(f"{realm}/proc/#")
-    pubs.append(f"{realm}/proc/#")
 
     return pubs, subs
 
@@ -314,6 +320,7 @@ def pubsub_api_v2(
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/+")
         # user presence objects
         if ids and perm["users"]:  # probable web browser write
+            subs.append(f"{realm}/s/{namespace}/{sceneid}/u/+")
             for userobj in ids:
                 pubs.append(
                     f"{realm}/s/{namespace}/{sceneid}/u/{ids[userobj]}")
@@ -323,9 +330,6 @@ def pubsub_api_v2(
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/{ids['userid']}/#")
         subs.append(f"{realm}/s/{namespace}/{sceneid}/c/+")
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/c/{ids['userid']}/#")
-    # runtime manager
-    subs.append(f"{realm}/proc/#")
-    pubs.append(f"{realm}/proc/#")
 
     return pubs, subs
 
