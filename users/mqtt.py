@@ -39,7 +39,7 @@ def all_scenes_read_token(version):
     payload["exp"] = datetime.datetime.utcnow() + DEF_JWT_DURATION
 
     if version == API_V2:
-        payload["subs"] = [f"{realm}/s/+/+/o/#"]  # v2
+        payload["subs"] = [f"{realm}/s/+/+/o/+"]  # v2
     else:
         payload["subs"] = [f"{realm}/s/#"]  # v1
 
@@ -129,8 +129,24 @@ def generate_arena_token(
 
     # -- NON-VERSIONED API TOPICS --
 
+    # device token
+    if user.is_authenticated:
+        if deviceid:  # device token scenario
+            # device owners have rights to their device objects only
+            subs.append(f"{realm}/d/{namespace}/{deviceid}/#")
+            pubs.append(f"{realm}/d/{namespace}/{deviceid}/#")
+        elif sceneid:  # scene token scenario
+            # device rights default by namespace
+            if user.is_staff:
+                # staff/admin have rights to all device objects
+                subs.append(f"{realm}/d/#")
+                pubs.append(f"{realm}/d/#")
+            else:
+                # device owners have rights to their device objects only
+                subs.append(f"{realm}/d/{username}/#")
+                pubs.append(f"{realm}/d/{username}/#")
     # scene apriltags/render-fusion
-    # TODO: close general topic with new scoped "r" render-fusion topic
+    # TODO (mwfarb): close general topic with new scoped "r" render-fusion topic
     if sceneid:
         subs.append(f"{realm}/g/a/#")
         pubs.append(f"{realm}/g/a/#")
@@ -140,7 +156,7 @@ def generate_arena_token(
         pubs.append(f"{realm}/proc/#")
     # global network metrics
     # only non-specific scene/device should monitor latency data
-    if not sceneid:
+    if not sceneid and not deviceid:
         subs.append("$NETWORK")
     # every client can/should publish latency data
     pubs.append("$NETWORK/latency")
@@ -179,46 +195,32 @@ def pubsub_api_v1(
         pubs.append(f"{realm}/env/{PUBLIC_NAMESPACE}/#")
     # user presence objects
     if user.is_authenticated:
-        if deviceid:  # device token scenario
-            # device owners have rights to their device objects only
-            subs.append(f"{realm}/d/{namespace}/{deviceid}/#")
-            pubs.append(f"{realm}/d/{namespace}/{deviceid}/#")
-        else:  # scene token scenario
-            # scene rights default by namespace
-            if user.is_staff:
-                # staff/admin have rights to all scene objects
-                subs.append(f"{realm}/s/#")
-                pubs.append(f"{realm}/s/#")
-                # env data for all scenes
-                subs.append(f"{realm}/env/#")
-                pubs.append(f"{realm}/env/#")
-                # vio experiments, staff only
-                if sceneid:
-                    pubs.append(f"{realm}/vio/{namespace}/{sceneid}/#")
-            else:
-                # scene owners have rights to their scene objects only
-                subs.append(f"{realm}/s/{username}/#")
-                pubs.append(f"{realm}/s/{username}/#")
-                # scene owners have rights to their scene env only
-                subs.append(f"{realm}/env/{username}/#")
-                pubs.append(f"{realm}/env/{username}/#")
-                # add scenes that have been granted by other owners
-                u_scenes = Scene.objects.filter(editors=user)
-                for u_scene in u_scenes:
-                    if not sceneid or (sceneid and u_scene.name == f"{namespace}/{sceneid}"):
-                        subs.append(f"{realm}/s/{u_scene.name}/#")
-                        pubs.append(f"{realm}/s/{u_scene.name}/#")
-                        subs.append(f"{realm}/env/{u_scene.name}/#")
-                        pubs.append(f"{realm}/env/{u_scene.name}/#")
-            # device rights default by namespace
-            if user.is_staff:
-                # staff/admin have rights to all device objects
-                subs.append(f"{realm}/d/#")
-                pubs.append(f"{realm}/d/#")
-            else:
-                # device owners have rights to their device objects only
-                subs.append(f"{realm}/d/{username}/#")
-                pubs.append(f"{realm}/d/{username}/#")
+        # scene rights default by namespace
+        if user.is_staff:
+            # staff/admin have rights to all scene objects
+            subs.append(f"{realm}/s/#")
+            pubs.append(f"{realm}/s/#")
+            # env data for all scenes
+            subs.append(f"{realm}/env/#")
+            pubs.append(f"{realm}/env/#")
+            # vio experiments, staff only
+            if sceneid:
+                pubs.append(f"{realm}/vio/{namespace}/{sceneid}/#")
+        else:
+            # scene owners have rights to their scene objects only
+            subs.append(f"{realm}/s/{username}/#")
+            pubs.append(f"{realm}/s/{username}/#")
+            # scene owners have rights to their scene env only
+            subs.append(f"{realm}/env/{username}/#")
+            pubs.append(f"{realm}/env/{username}/#")
+            # add scenes that have been granted by other owners
+            u_scenes = Scene.objects.filter(editors=user)
+            for u_scene in u_scenes:
+                if not sceneid or (sceneid and u_scene.name == f"{namespace}/{sceneid}"):
+                    subs.append(f"{realm}/s/{u_scene.name}/#")
+                    pubs.append(f"{realm}/s/{u_scene.name}/#")
+                    subs.append(f"{realm}/env/{u_scene.name}/#")
+                    pubs.append(f"{realm}/env/{u_scene.name}/#")
     # anon/non-owners have rights to view scene objects only
     if sceneid and not user.is_staff:
         # did the user set specific public read or public write?
@@ -270,64 +272,60 @@ def pubsub_api_v2(
     subs = []
     # everyone should be able to read all public scenes
     if not deviceid:  # scene token scenario
-        # subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/+/+/+")
-        subs.append(SUBSCRIBE_TOPICS.SCENE_PUBLIC.substitute(
-            {"realm": realm, "nameSpace": PUBLIC_NAMESPACE, "sceneName": "+"}
-        ))
+        subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/+/+/+")
+        # subs.append(SUBSCRIBE_TOPICS.SCENE_PUBLIC.substitute(
+        #     {"realm": realm, "nameSpace": PUBLIC_NAMESPACE, "sceneName": "+"}
+        # ))
     # user presence objects
     if user.is_authenticated:
-        if deviceid:  # device token scenario
-            # device owners have rights to their device objects only
-            subs.append(f"{realm}/d/{namespace}/{deviceid}/#")
-            pubs.append(f"{realm}/d/{namespace}/{deviceid}/#")
-        else:  # scene token scenario
-            # scene rights default by namespace
-            if user.is_staff:
-                # staff/admin have rights to all scene data
-                subs.append(f"{realm}/s/+/+/+/+")
-                pubs.append(f"{realm}/s/+/+/+/+/#")
-            else:
-                # scene owners have rights to their scene objects only
-                subs.append(f"{realm}/s/{username}/+/+/+")
-                pubs.append(f"{realm}/s/{username}/+/+/+/#")
-                # add scenes that have been granted by other owners
-                u_scenes = Scene.objects.filter(editors=user)
-                for u_scene in u_scenes:
-                    if not sceneid or (sceneid and u_scene.name == f"{namespace}/{sceneid}"):
-                        subs.append(f"{realm}/s/{u_scene.name}/+/+/+/#")
-                        pubs.append(f"{realm}/s/{u_scene.name}/+/+/+/#")
-            # device rights default by namespace
-            if user.is_staff:
-                # staff/admin have rights to all device objects
-                subs.append(f"{realm}/d/#")
-                pubs.append(f"{realm}/d/#")
-            else:
-                # device owners have rights to their device objects only
-                subs.append(f"{realm}/d/{username}/#")
-                pubs.append(f"{realm}/d/{username}/#")
+        # scene rights default by namespace
+        if user.is_staff:
+            # staff/admin have rights to all scene data
+            subs.append(f"{realm}/s/#")
+            pubs.append(f"{realm}/s/#")
+        else:
+            # scene owners have rights to their scene objects only
+            subs.append(f"{realm}/s/{username}/+/o/+")
+            if ids and 'userid' in ids:
+                subs.append(f"{realm}/s/{username}/+/o/+/{ids['userid']}")
+            pubs.append(f"{realm}/s/{username}/+/+/+")
+            pubs.append(f"{realm}/s/{username}/+/+/+/+")
+            # add scenes that have been granted by other owners
+            u_scenes = Scene.objects.filter(editors=user)
+            for u_scene in u_scenes:
+                if not sceneid or (sceneid and u_scene.name == f"{namespace}/{sceneid}"):
+                    subs.append(f"{realm}/s/{u_scene.name}/o/+")
+                    if ids and 'userid' in ids:
+                        subs.append(f"{realm}/s/{u_scene.name}/o/+/{ids['userid']}")
+                    pubs.append(f"{realm}/s/{u_scene.name}/+/+")
+                    pubs.append(f"{realm}/s/{u_scene.name}/+/+/+")
     # anon/non-owners have rights to view scene objects only
     if sceneid and not user.is_staff:
         # did the user set specific public read or public write?
         if not user.is_authenticated and not perm["anonymous_users"]:
             return None  # anonymous not permitted
         if perm["public_read"]:
-            subs.append(f"{realm}/s/{namespace}/{sceneid}/o/+")
-            # Interactivity to extent of viewing objects is similar to publishing env
-            pubs.append(f"{realm}/s/{namespace}/{sceneid}/e/+")
+            subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+")
+            if ids and 'userid' in ids:
+                subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+/{ids['userid']}")
         if perm["public_write"]:
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/+")
+            pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/+/+")
         # user presence objects
         if ids and perm["users"]:  # probable web browser write
             subs.append(f"{realm}/s/{namespace}/{sceneid}/u/+")
             for userobj in ids:
                 pubs.append(
                     f"{realm}/s/{namespace}/{sceneid}/u/{ids[userobj]}")
-    # presence/chat
+                pubs.append(
+                    f"{realm}/s/{namespace}/{sceneid}/u/{ids[userobj]}/+")
+    # user presence/chat
     if sceneid and ids and perm["users"]:
         subs.append(f"{realm}/s/{namespace}/{sceneid}/x/+")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/{ids['userid']}/#")
         subs.append(f"{realm}/s/{namespace}/{sceneid}/c/+")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/c/{ids['userid']}/#")
+        if 'userid' in ids:
+            pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/{ids['userid']}/#")
+            pubs.append(f"{realm}/s/{namespace}/{sceneid}/c/{ids['userid']}/#")
 
     return pubs, subs
 
