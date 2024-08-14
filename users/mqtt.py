@@ -129,13 +129,16 @@ def generate_arena_token(
 
     # -- NON-VERSIONED API TOPICS --
 
-    # runtime manager
-    # only rendered scenes need the runtime manager
+    # scene apriltags/render-fusion
+    # TODO: close general topic with new scoped "r" render-fusion topic
+    if sceneid:
+        subs.append(f"{realm}/g/a/#")
+        pubs.append(f"{realm}/g/a/#")
+    # scene runtime manager
     if sceneid:
         subs.append(f"{realm}/proc/#")
         pubs.append(f"{realm}/proc/#")
-
-    # network metrics
+    # global network metrics
     # only non-specific scene/device should monitor latency data
     if not sceneid:
         subs.append("$NETWORK")
@@ -246,10 +249,6 @@ def pubsub_api_v1(
         pubs.append(f"{realm}/c/{namespace}/o/{userhandle}")
         # private messages to user: Write
         pubs.append(f"{realm}/c/{namespace}/p/+/{userhandle}")
-    # apriltags
-    if sceneid:
-        subs.append(f"{realm}/g/a/#")
-        pubs.append(f"{realm}/g/a/#")
 
     return pubs, subs
 
@@ -267,7 +266,6 @@ def pubsub_api_v2(
     """ V2 Topic Notes:
         See ./topics.py
     """
-    # TODO: Reference api v2 version topics from topics.py.
     pubs = []
     subs = []
     # everyone should be able to read all public scenes
