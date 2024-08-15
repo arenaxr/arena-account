@@ -145,11 +145,6 @@ def generate_arena_token(
                 # device owners have rights to their device objects only
                 subs.append(f"{realm}/d/{username}/#")
                 pubs.append(f"{realm}/d/{username}/#")
-    # scene apriltags/render-fusion
-    # TODO (mwfarb): close general topic with new scoped "r" render-fusion topic
-    if sceneid:
-        subs.append(f"{realm}/g/a/#")
-        pubs.append(f"{realm}/g/a/#")
     # scene runtime manager
     if sceneid:
         subs.append(f"{realm}/proc/#")
@@ -251,6 +246,10 @@ def pubsub_api_v1(
         pubs.append(f"{realm}/c/{namespace}/o/{userhandle}")
         # private messages to user: Write
         pubs.append(f"{realm}/c/{namespace}/p/+/{userhandle}")
+    # scene apriltags/render-fusion
+    if sceneid:
+        subs.append(f"{realm}/g/a/#")
+        pubs.append(f"{realm}/g/a/#")
 
     return pubs, subs
 
@@ -286,7 +285,7 @@ def pubsub_api_v2(
         else:
             # scene owners have rights to their scene objects only
             subs.append(f"{realm}/s/{username}/+/o/+")
-            if ids and 'userid' in ids:
+            if ids:
                 subs.append(f"{realm}/s/{username}/+/o/+/{ids['userid']}")
             pubs.append(f"{realm}/s/{username}/+/+/+")
             pubs.append(f"{realm}/s/{username}/+/+/+/+")
@@ -295,7 +294,7 @@ def pubsub_api_v2(
             for u_scene in u_scenes:
                 if not sceneid or (sceneid and u_scene.name == f"{namespace}/{sceneid}"):
                     subs.append(f"{realm}/s/{u_scene.name}/o/+")
-                    if ids and 'userid' in ids:
+                    if ids:
                         subs.append(f"{realm}/s/{u_scene.name}/o/+/{ids['userid']}")
                     pubs.append(f"{realm}/s/{u_scene.name}/+/+")
                     pubs.append(f"{realm}/s/{u_scene.name}/+/+/+")
@@ -306,7 +305,7 @@ def pubsub_api_v2(
             return None  # anonymous not permitted
         if perm["public_read"]:
             subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+")
-            if ids and 'userid' in ids:
+            if ids:
                 subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+/{ids['userid']}")
         if perm["public_write"]:
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/+")
@@ -323,9 +322,15 @@ def pubsub_api_v2(
     if sceneid and ids and perm["users"]:
         subs.append(f"{realm}/s/{namespace}/{sceneid}/x/+")
         subs.append(f"{realm}/s/{namespace}/{sceneid}/c/+")
-        if 'userid' in ids:
+        if ids:
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/{ids['userid']}/#")
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/c/{ids['userid']}/#")
+    # scene apriltags/render-fusion
+    if sceneid and ids:
+        # to-many/pseudo-group sub and pub special permission
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/r/+/{ids['userid']}")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/e/+/{ids['userid']}")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/d/+/{ids['userid']}")
 
     return pubs, subs
 
