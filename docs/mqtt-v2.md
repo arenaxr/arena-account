@@ -51,7 +51,14 @@ Page (scenes, build, network)
 
 ### General Unprivileged
 
-None
+User: anonymous-mike
+
+MQTT Publish topics:
+- $NETWORK/latency
+
+MQTT Subscribe topics:
+- $NETWORK
+- realm/s/public/+/+/+
 
 ### General Privileged
 
