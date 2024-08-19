@@ -299,7 +299,7 @@ def pubsub_api_v2(
                 subs.append(f"{realm}/s/{namespace}/{sceneid}/o/+/{ids['userid']}")
         if perm["public_write"]:
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/+")
-            pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/+/+")
+            pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/+/{ids['userid']}")
     # (all) sub: public all categories, private all categories to self
     if sceneid:
         subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+")
@@ -320,7 +320,7 @@ def pubsub_api_v2(
         # userid - u
         for userobj in ids:
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids[userobj]}")
-            pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/+/{ids[userobj]}")
+            pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/+/{ids['userid']}")
     # (all) render-fusion/env/debug
     if sceneid and ids:
         # to-many/pseudo-group sub and pub special permission
