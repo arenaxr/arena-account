@@ -310,20 +310,21 @@ def pubsub_api_v2(
         subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/+/+/+")
     # (all) user presence/chat
     if sceneid and ids and perm["users"]:
-        # idtag - x/c/p/r/e/d
+        # idtag - x/c/p
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/{ids['userid']}")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/{ids['userid']}/+")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/+/{ids['userid']}")
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/c/{ids['userid']}")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/c/{ids['userid']}/+")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/c/+/{ids['userid']}")
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/p/{ids['userid']}")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/p/{ids['userid']}/+")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/p/+/{ids['userid']}")
         # userid - u
         for userobj in ids:
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids[userobj]}")
-            pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids[userobj]}/+")
+            pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/+/{ids[userobj]}")
     # (all) render-fusion/env/debug
     if sceneid and ids:
         # to-many/pseudo-group sub and pub special permission
+        # idtag - r/e/d
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/r/+/{ids['userid']}")
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/e/+/{ids['userid']}")
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/d/+/{ids['userid']}")
