@@ -67,11 +67,8 @@ User: mwfarbnook
 MQTT Publish topics:
 - $NETWORK/latency
 - realm/s/mwfarb/allow-editors/+/+
-- realm/s/mwfarb/allow-editors/+/+/+
 - realm/s/mwfarb/json8/+/+
-- realm/s/mwfarb/json8/+/+/+
 - realm/s/mwfarbnook/+/+/+
-- realm/s/mwfarbnook/+/+/+/+
 
 MQTT Subscribe topics:
 - $NETWORK
