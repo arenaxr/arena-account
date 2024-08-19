@@ -122,10 +122,10 @@ def generate_arena_token(
     # -- VERSIONED API TOPICS --
     if version == API_V2:
         pubs, subs = pubsub_api_v2(
-            user, username, realm, namespace, sceneid, deviceid, ids, perm)
+            user, username, realm, namespace, sceneid, ids, perm)
     else:
         pubs, subs = pubsub_api_v1(
-            user, username, realm, namespace, sceneid, deviceid, ids, perm)
+            user, username, realm, namespace, sceneid, ids, perm)
 
     # -- NON-VERSIONED API TOPICS --
 
@@ -171,7 +171,6 @@ def pubsub_api_v1(
         realm,
         namespace,
         sceneid,
-        deviceid,
         ids,
         perm,
 ):
@@ -259,7 +258,6 @@ def pubsub_api_v2(
         realm,
         namespace,
         sceneid,
-        deviceid,
         ids,
         perm,
 ):
@@ -280,14 +278,20 @@ def pubsub_api_v2(
             pubs.append(f"{realm}/s/#")
         else:
             # scene owners have rights to their scene objects only
-            subs.append(f"{realm}/s/{username}/+/+/#")
-            pubs.append(f"{realm}/s/{username}/+/+/#")
+            subs.append(f"{realm}/s/{username}/+/+/+")
+            if ids:
+                subs.append(f"{realm}/s/{username}/+/+/+/{ids['userid']}")
+            pubs.append(f"{realm}/s/{username}/+/+/+")
+            pubs.append(f"{realm}/s/{username}/+/+/+/+")
             # add scenes that have been granted by other owners
             u_scenes = Scene.objects.filter(editors=user)
             for u_scene in u_scenes:
                 if not sceneid or (sceneid and u_scene.name == f"{namespace}/{sceneid}"):
-                    subs.append(f"{realm}/s/{u_scene.name}/+/#")
-                    pubs.append(f"{realm}/s/{u_scene.name}/+/#")
+                    subs.append(f"{realm}/s/{u_scene.name}/+/+")
+                    if ids:
+                        subs.append(f"{realm}/s/{u_scene.name}/+/+/{ids['userid']}")
+                    pubs.append(f"{realm}/s/{u_scene.name}/+/+")
+                    pubs.append(f"{realm}/s/{u_scene.name}/+/+/+")
     # anon/non-owners have rights to view scene objects only
     if sceneid and not user.is_staff:
         # did the user set specific public read or public write?
@@ -299,7 +303,7 @@ def pubsub_api_v2(
                 subs.append(f"{realm}/s/{namespace}/{sceneid}/o/+/{ids['userid']}")
         if perm["public_write"]:
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/+")
-            pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/+/{ids['userid']}")
+            pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/+/+")
     # (all) sub: public all categories, private all categories to self
     if sceneid:
         subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+")

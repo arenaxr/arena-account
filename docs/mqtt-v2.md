@@ -37,12 +37,14 @@ MQTT Publish topics:
 - $NETWORK/latency
 - realm/d/mwfarbnook/#
 - realm/proc/#
-- realm/s/mwfarbnook/+/+/#
+- realm/s/mwfarbnook/+/+/+
+- realm/s/mwfarbnook/+/+/+/+
 
 MQTT Subscribe topics:
 - realm/d/mwfarbnook/#
 - realm/proc/#
-- realm/s/mwfarbnook/+/+/#
+- realm/s/mwfarbnook/+/+/+
+- realm/s/mwfarbnook/+/+/+/0799265009_mwfarbnook
 
 ## General Context
 Page (scenes, build, network)
@@ -64,13 +66,16 @@ User: mwfarbnook
 
 MQTT Publish topics:
 - $NETWORK/latency
-- realm/s/mwfarb/allow-editors/+/#
-- realm/s/mwfarb/json8/+/#
-- realm/s/mwfarbnook/+/+/#
+- realm/s/mwfarb/allow-editors/+/+
+- realm/s/mwfarb/allow-editors/+/+/+
+- realm/s/mwfarb/json8/+/+
+- realm/s/mwfarb/json8/+/+/+
+- realm/s/mwfarbnook/+/+/+
+- realm/s/mwfarbnook/+/+/+/+
 
 MQTT Subscribe topics:
 - $NETWORK
-- realm/s/mwfarb/allow-editors/+/#
-- realm/s/mwfarb/json8/+/#
-- realm/s/mwfarbnook/+/+/#
+- realm/s/mwfarb/allow-editors/+/+
+- realm/s/mwfarb/json8/+/+
+- realm/s/mwfarbnook/+/+/+
 - realm/s/public/+/+/+
