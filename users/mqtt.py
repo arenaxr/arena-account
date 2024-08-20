@@ -297,6 +297,7 @@ def pubsub_api_v2(
         # did the user set specific public read or public write?
         if not user.is_authenticated and not perm["anonymous_users"]:
             return None  # anonymous not permitted
+        # objectid - o
         if perm["public_read"]:
             subs.append(f"{realm}/s/{namespace}/{sceneid}/o/+")
             if ids:
@@ -317,22 +318,22 @@ def pubsub_api_v2(
     if sceneid and ids and perm["users"]:
         # idtag - x/c/p
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/{ids['userid']}")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/+/{ids['userid']}")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/{ids['userid']}/+")
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/c/{ids['userid']}")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/c/+/{ids['userid']}")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/c/{ids['userid']}/+")
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/p/{ids['userid']}")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/p/+/{ids['userid']}")
-        # userid - u
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/p/{ids['userid']}/+")
+        # userobjectid - u
         for userobj in ids:
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids[userobj]}")
-            pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/+/{ids['userid']}")
+            pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids[userobj]}/+")
     # (all) render-fusion/env/debug
     if sceneid and ids:
         # to-many/pseudo-group sub and pub special permission
         # idtag - r/e/d
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/r/+/{ids['userid']}")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/e/+/{ids['userid']}")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/d/+/{ids['userid']}")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/r/{ids['userid']}/-")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/e/{ids['userid']}/-")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/d/{ids['userid']}/-")
 
     return pubs, subs
 
