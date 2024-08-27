@@ -120,12 +120,13 @@ def generate_arena_token(
         deviceid = parts[1]
 
     # -- VERSIONED API TOPICS --
-    if version == API_V2:
-        pubs, subs = pubsub_api_v2(
-            user, username, realm, namespace, sceneid, ids, perm)
-    else:
-        pubs, subs = pubsub_api_v1(
-            user, username, realm, namespace, sceneid, ids, perm)
+    if sceneid:
+        if version == API_V2:
+            pubs, subs = add_scene_perms_api_v2(
+                user, username, realm, namespace, sceneid, ids, perm)
+        else:
+            pubs, subs = add_scene_perms_api_v1(
+                user, username, realm, namespace, sceneid, ids, perm)
 
     # -- NON-VERSIONED API TOPICS --
 
@@ -165,7 +166,7 @@ def generate_arena_token(
     return jwt.encode(payload, private_key, algorithm="RS256", headers=headers)
 
 
-def pubsub_api_v1(
+def add_scene_perms_api_v1(
         user,
         username,
         realm,
@@ -252,7 +253,7 @@ def pubsub_api_v1(
     return pubs, subs
 
 
-def pubsub_api_v2(
+def add_scene_perms_api_v2(
         user,
         username,
         realm,
