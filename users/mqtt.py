@@ -308,9 +308,10 @@ def set_scene_perms_api_v2(
             return pubs, subs  # anonymous not permitted
         # objectid - o
         if perm["public_read"]:
-            subs.append(f"{realm}/s/{namespace}/{sceneid}/o/+")
+            # (all) sub: public all categories, private all categories to self
+            subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+")
             if ids:
-                subs.append(f"{realm}/s/{namespace}/{sceneid}/o/+/{ids['userid']}")
+                subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+/{ids['userid']}")
         if perm["public_write"]:
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/+")
             if ids:
@@ -318,11 +319,6 @@ def set_scene_perms_api_v2(
     # (all) everyone should be able to read all public scenes
     if not sceneid:
         subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/+/o/+")
-    # (all) sub: public all categories, private all categories to self
-    if sceneid:
-        subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+")
-        if ids:
-            subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+/{ids['userid']}")
     # (all) user presence/chat
     if sceneid and ids and perm["users"]:
         # idtag - x/c/p
