@@ -119,18 +119,21 @@ def generate_arena_token(
         namespace = parts[0]
         deviceid = parts[1]
 
+    pubs = []
+    subs = []
+
     # -- VERSIONED API TOPICS --
-    if sceneid:
+    # scene and user session permissions
+    if not deviceid:
         if version == API_V2:
-            pubs, subs = add_scene_perms_api_v2(
+            pubs, subs = set_scene_perms_api_v2(
                 user, username, realm, namespace, sceneid, ids, perm)
         else:
-            pubs, subs = add_scene_perms_api_v1(
+            pubs, subs = set_scene_perms_api_v1(
                 user, username, realm, namespace, sceneid, ids, perm)
 
     # -- NON-VERSIONED API TOPICS --
-
-    # device token
+    # device permissions
     if user.is_authenticated:
         if deviceid:  # device token scenario
             # device owners have rights to their device objects only
@@ -166,7 +169,7 @@ def generate_arena_token(
     return jwt.encode(payload, private_key, algorithm="RS256", headers=headers)
 
 
-def add_scene_perms_api_v1(
+def set_scene_perms_api_v1(
         user,
         username,
         realm,
@@ -219,7 +222,7 @@ def add_scene_perms_api_v1(
     if sceneid and not user.is_staff:
         # did the user set specific public read or public write?
         if not user.is_authenticated and not perm["anonymous_users"]:
-            return None  # anonymous not permitted
+            return pubs, subs  # anonymous not permitted
         if perm["public_read"]:
             subs.append(f"{realm}/s/{namespace}/{sceneid}/#")
             # Interactivity to extent of viewing objects is similar to publishing env
@@ -253,7 +256,7 @@ def add_scene_perms_api_v1(
     return pubs, subs
 
 
-def add_scene_perms_api_v2(
+def set_scene_perms_api_v2(
         user,
         username,
         realm,
@@ -274,18 +277,20 @@ def add_scene_perms_api_v2(
     if user.is_authenticated:
         # scene rights default by namespace
         if user.is_staff:
+            # objectid - o
             # staff/admin have rights to all scene data
             subs.append(f"{realm}/s/+/+/o/+")
             pubs.append(f"{realm}/s/+/+/o/+")
             if ids:
-                subs.append(f"{realm}/s/+/+/o/+/{ids['userid']}")
+                # subs.append(f"{realm}/s/+/+/o/+/{ids['userid']}")
                 pubs.append(f"{realm}/s/+/+/o/+/+")
         else:
+            # objectid - o
             # scene owners have rights to their scene objects only
             subs.append(f"{realm}/s/{username}/+/o/+")
             pubs.append(f"{realm}/s/{username}/+/o/+")
             if ids:
-                subs.append(f"{realm}/s/{username}/+/o/+/{ids['userid']}")
+                # subs.append(f"{realm}/s/{username}/+/o/+/{ids['userid']}")
                 pubs.append(f"{realm}/s/{username}/+/o/+/+")
             # add scenes that have been granted by other owners
             u_scenes = Scene.objects.filter(editors=user)
@@ -294,13 +299,13 @@ def add_scene_perms_api_v2(
                     subs.append(f"{realm}/s/{u_scene.name}/o/+")
                     pubs.append(f"{realm}/s/{u_scene.name}/o/+")
                     if ids:
-                        subs.append(f"{realm}/s/{u_scene.name}/o/+/{ids['userid']}")
+                        # subs.append(f"{realm}/s/{u_scene.name}/o/+/{ids['userid']}")
                         pubs.append(f"{realm}/s/{u_scene.name}/o/+/+")
     # anon/non-owners have rights to view scene objects only
     if sceneid and not user.is_staff:
         # did the user set specific public read or public write?
         if not user.is_authenticated and not perm["anonymous_users"]:
-            return None  # anonymous not permitted
+            return pubs, subs  # anonymous not permitted
         # objectid - o
         if perm["public_read"]:
             subs.append(f"{realm}/s/{namespace}/{sceneid}/o/+")
@@ -310,14 +315,14 @@ def add_scene_perms_api_v2(
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/+")
             if ids:
                 pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/+/+")
+    # (all) everyone should be able to read all public scenes
+    if not sceneid:
+        subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/+/o/+")
     # (all) sub: public all categories, private all categories to self
     if sceneid:
-        subs.append(f"{realm}/s/{namespace}/{sceneid}/o/+")
+        subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+")
         if ids:
-            subs.append(f"{realm}/s/{namespace}/{sceneid}/o/+/{ids['userid']}")
-    else:
-        # (all) everyone should be able to read all public scenes
-        subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/+/o/+")
+            subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+/{ids['userid']}")
     # (all) user presence/chat
     if sceneid and ids and perm["users"]:
         # idtag - x/c/p
