@@ -124,6 +124,8 @@ def generate_arena_token(
                 # vio experiments, staff only
                 if scene:
                     pubs.append(f"{realm}/vio/{scene}/#")
+                if p_video:
+                    payload["moderator"] = True
             else:
                 # scene owners have rights to their scene objects only
                 subs.append(f"{realm}/s/{username}/#")
@@ -139,6 +141,8 @@ def generate_arena_token(
                         pubs.append(f"{realm}/s/{u_scene.name}/#")
                         subs.append(f"{realm}/env/{u_scene.name}/#")
                         pubs.append(f"{realm}/env/{u_scene.name}/#")
+                    if p_video and u_scene.name == scene:
+                        payload["moderator"] = True
             # device rights default by namespace
             if user.is_staff:
                 # staff/admin have rights to all device objects
@@ -179,6 +183,8 @@ def generate_arena_token(
         pubs.append(f"{realm}/c/{namespace}/o/{userhandle}")
         # private messages to user: Write
         pubs.append(f"{realm}/c/{namespace}/p/+/{userhandle}")
+        if p_video and username == namespace:
+            payload["moderator"] = True
     # apriltags
     if scene:
         subs.append(f"{realm}/g/a/#")
