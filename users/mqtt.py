@@ -19,7 +19,7 @@ DEF_JWT_DURATION = datetime.timedelta(minutes=1)
 # version constants
 API_V1 = "v1"  # url /user/, first version
 API_V2 = "v2"  # url /user/v2/, full topic structure refactor
-TOPIC_SUPPORTED_API_VERSIONS = [API_V1, API_V2]  # TODO (mwfarb): remove v1
+TOPIC_SUPPORTED_API_VERSIONS = [API_V2]
 
 
 def all_scenes_read_token(version):
@@ -56,8 +56,7 @@ def generate_arena_token(
     ns_device=None,
     ids=None,
     duration=DEF_JWT_DURATION,
-    # TODO(mwfarb): /mqtt_auth/ is versioned now, but need to correct upstream version for all request types
-    version=API_V1,
+    version=API_V2,
 ):
     """ MQTT Token Constructor.
 

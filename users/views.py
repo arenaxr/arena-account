@@ -167,7 +167,7 @@ def scene_perm_detail(request, pk):
                 return redirect("users:user_profile")
         elif "delete" in request.POST:
             token = generate_arena_token(
-                user=request.user, username=request.user.username)
+                user=request.user, username=request.user.username, version=request.version)
             # delete account scene data
             scene.delete()
             # delete persist scene data
@@ -213,7 +213,8 @@ def device_perm_detail(request, pk):
                 user=request.user,
                 username=request.user.username,
                 ns_device=device.name,
-                duration=datetime.timedelta(days=30)
+                duration=datetime.timedelta(days=30),
+                version=request.version
             )
 
     form = DeviceForm(instance=device)
@@ -472,16 +473,14 @@ def user_profile(request):
     - Shows scenes that the user has permissions to edit and a button to edit them.
     - Handles account deletes.
     """
-    version = "v1"  # TODO (mwfarb): resolve missing request.version
-    if version not in TOPIC_SUPPORTED_API_VERSIONS:
-        return redirect(f"/{TOPIC_SUPPORTED_API_VERSIONS[0]}/user_profile/")
+    version = TOPIC_SUPPORTED_API_VERSIONS[0]  # TODO (mwfarb): resolve missing request.version
 
     if request.method == 'POST':
         # account delete request
         confirm_text = f'delete {request.user.username} account and scenes'
         if confirm_text in request.POST:
             token = generate_arena_token(
-                user=request.user, username=request.user.username)
+                user=request.user, username=request.user.username, version=version)
             u_scenes = Scene.objects.filter(
                 name__startswith=f'{request.user.username}/')
             for scene in u_scenes:
