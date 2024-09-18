@@ -4,6 +4,7 @@ from django.urls import path, re_path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
+
 from . import views
 
 schema_view = get_schema_view(
@@ -41,6 +42,7 @@ urlpatterns = [
         r'^profile/scenes/(?P<pk>[^\/]+\/[^\/]+)$', views.scene_perm_detail),
     re_path(
         r'^profile/devices/(?P<pk>[^\/]+\/[^\/]+)$', views.device_perm_detail),
+    path("code", views.user_code, name="user_code"),
     # endpoints
     path("mqtt_auth", views.arena_token, name="arena_token"),
     path("user_state", views.user_state, name="user_state"),

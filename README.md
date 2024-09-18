@@ -31,8 +31,12 @@ Django project user account management for the ARENA.
 HOSTNAME=localhost
 ARENA_REALM=realm
 EMAIL=nouser@nomail.com
-GAUTH_CLIENTID=Google_OAuth_Web_Client_ID
-GAUTH_CLIENTSECRET=Google_OAuth_Web_Client_Secret
+GAUTH_CLIENTID=Google_OAuth_Web_application_Client_ID
+GAUTH_CLIENTSECRET=Google_OAuth_Web_application_Client_Secret
+GAUTH_INSTALLED_CLIENTID=Google_OAuth_Desktop_Client_ID
+GAUTH_INSTALLED_CLIENTSECRET=Google_OAuth_Desktop_Client_Secret
+GAUTH_DEVICE_CLIENTID=Google_OAuth_TV_and_Limited_Input_Client_ID
+GAUTH_DEVICE_CLIENTSECRET=Google_OAuth_TV_and_Limited_Input_Client_Secret
 MQTT_TOKEN_PRIVKEY=/path/to/your/test/key/file.pem
 ```
 4. Create db: ```make migrate```

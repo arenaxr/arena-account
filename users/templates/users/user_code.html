@@ -1,0 +1,57 @@
+{% extends "users/header.html" %}
+{% load static %}
+
+<title>ARENA User Connect Device</title>
+
+{% block content %}
+
+<!--Login-->
+
+{% include 'users/includes/messages.html' %}
+{% csrf_token %} <!-- TODO: keep csrf_token for python apps temporarily -->
+<div class="d-flex align-items-center min-vh-100">
+    <div class="container">
+        {% if user.is_authenticated %}
+        <div class="row d-flex justify-content-center align-items-center">
+            <div class="col-lg-4 col-md-6 bg-light border-grey border-1 border shadow-sm shadow p-5">
+                <div class="row mb-3">
+                    <h3>Connect a device</h3>
+                </div>
+                <div class="row mb-5 text-center">
+                    <div class="col">
+                        <img alt="conix logo" class="top-logo" src="{% static 'users/img/xr-logo-v8.png' %}" />
+                    </div>
+
+                </div>
+                <div class="row text-center">
+                    <form action="add_usercode_device" method="POST">
+                        {% csrf_token %}
+                        <div class="col">
+                            Enter the code displayed on your device
+                        </div>
+                        <div class="form-floating mb-3" id="usercodeContainer">
+                            <input class="form-control" id="usercodeInput" type="text" required
+                                title="Enter the code displayed on your device">
+                            <label for="usercodeInput">Device Code</label>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% if not user.is_authenticated %}
+    <script data-login-url="{% url 'login' %}">
+        const data = document.currentScript.dataset;
+        window.onload = () => {
+            // login, then return to this page after login
+            localStorage.setItem("request_uri", location.href);
+            setTimeout(() => {
+                location.href = data.loginUrl;
+            }, 3000);
+        };
+    </script>
+    {% endif %}
+</div>
+{% endblock content %}

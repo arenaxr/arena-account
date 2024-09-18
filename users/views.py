@@ -518,6 +518,16 @@ def user_profile(request):
     )
 
 
+def user_code(request):
+    """
+    User Code for device auth flow entry page GET handler.
+    """
+    if not request.user.is_authenticated:
+        messages.info(
+            request, "Device code requires login. Redirecting to login...")
+    return render(request=request, template_name="users/user_code.html")
+
+
 def login_callback(request):
     """
     Callback page endpoint for successful social auth login, and handles some submit errors.
