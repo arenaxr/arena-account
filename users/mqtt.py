@@ -281,7 +281,7 @@ def set_scene_perms_api_v2(
             subs.append(f"{realm}/s/+/+/o/+")
             pubs.append(f"{realm}/s/+/+/o/+")
             if ids:
-                # subs.append(f"{realm}/s/+/+/o/+/{ids['userid']}")
+                # subs.append(f"{realm}/s/+/+/o/+/{ids['userid']}/#")
                 pubs.append(f"{realm}/s/+/+/o/+/+")
         else:
             # objectid - o
@@ -289,7 +289,7 @@ def set_scene_perms_api_v2(
             subs.append(f"{realm}/s/{username}/+/o/+")
             pubs.append(f"{realm}/s/{username}/+/o/+")
             if ids:
-                # subs.append(f"{realm}/s/{username}/+/o/+/{ids['userid']}")
+                # subs.append(f"{realm}/s/{username}/+/o/+/{ids['userid']}/#")
                 pubs.append(f"{realm}/s/{username}/+/o/+/+")
             # add scenes that have been granted by other owners
             u_scenes = Scene.objects.filter(editors=user)
@@ -298,7 +298,7 @@ def set_scene_perms_api_v2(
                     subs.append(f"{realm}/s/{u_scene.name}/o/+")
                     pubs.append(f"{realm}/s/{u_scene.name}/o/+")
                     if ids:
-                        # subs.append(f"{realm}/s/{u_scene.name}/o/+/{ids['userid']}")
+                        # subs.append(f"{realm}/s/{u_scene.name}/o/+/{ids['userid']}/#")
                         pubs.append(f"{realm}/s/{u_scene.name}/o/+/+")
     # anon/non-owners have rights to view scene objects only
     if sceneid and not user.is_staff:
@@ -310,7 +310,7 @@ def set_scene_perms_api_v2(
             # (all) sub: public all categories, private all categories to self
             subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+")
             if ids:
-                subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+/{ids['userid']}")
+                subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+/{ids['userid']}/#")
         if perm["public_write"]:
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/+")
             if ids:
