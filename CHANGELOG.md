@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/arenaxr/arena-account/compare/v1.2.2...v1.3.0) (2024-09-20)
+
+
+### Features
+
+* **auth:** allow device auth flow google id verification ([3f5d567](https://github.com/arenaxr/arena-account/commit/3f5d5675d1f8c65aeeedc777654906460707f8ae))
+
 ## [1.2.2](https://github.com/arenaxr/arena-account/compare/v1.2.1...v1.2.2) (2024-05-06)
 
 
