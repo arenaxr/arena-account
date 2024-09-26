@@ -279,27 +279,27 @@ def set_scene_perms_api_v2(
         if user.is_staff:
             # objectid - o
             # staff/admin have rights to all scene data
-            subs.append(f"{realm}/s/+/+/o/+")
+            subs.append(f"{realm}/s/+/+/+/+")
             pubs.append(f"{realm}/s/+/+/o/+")
             if ids:
-                subs.append(f"{realm}/s/+/+/o/+/{ids['userid']}/#")
+                subs.append(f"{realm}/s/+/+/+/+/{ids['userid']}/#")
                 pubs.append(f"{realm}/s/+/+/o/+/+")
         else:
             # objectid - o
             # scene owners have rights to their scene objects only
-            subs.append(f"{realm}/s/{username}/+/o/+")
+            subs.append(f"{realm}/s/{username}/+/+/+")
             pubs.append(f"{realm}/s/{username}/+/o/+")
             if ids:
-                subs.append(f"{realm}/s/{username}/+/o/+/{ids['userid']}/#")
+                subs.append(f"{realm}/s/{username}/+/+/+/{ids['userid']}/#")
                 pubs.append(f"{realm}/s/{username}/+/o/+/+")
             # add scenes that have been granted by other owners
             u_scenes = Scene.objects.filter(editors=user)
             for u_scene in u_scenes:
                 if not sceneid or (sceneid and u_scene.name == f"{namespace}/{sceneid}"):
-                    subs.append(f"{realm}/s/{u_scene.name}/o/+")
+                    subs.append(f"{realm}/s/{u_scene.name}/+/+")
                     pubs.append(f"{realm}/s/{u_scene.name}/o/+")
                     if ids:
-                        subs.append(f"{realm}/s/{u_scene.name}/o/+/{ids['userid']}/#")
+                        subs.append(f"{realm}/s/{u_scene.name}/+/+/{ids['userid']}/#")
                         pubs.append(f"{realm}/s/{u_scene.name}/o/+/+")
     # anon/non-owners have rights to view scene objects only
     if sceneid and not user.is_staff:
@@ -308,10 +308,9 @@ def set_scene_perms_api_v2(
             return pubs, subs  # anonymous not permitted
         # objectid - o
         if perm["public_read"]:
-            # (all) sub: public all categories, private all categories to self
-            subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+")
+            subs.append(f"{realm}/s/{namespace}/{sceneid}/o/+")
             if ids:
-                subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+/{ids['userid']}/#")
+                subs.append(f"{realm}/s/{namespace}/{sceneid}/o/+/{ids['userid']}/#")
         if perm["public_write"]:
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/+")
             if ids:
