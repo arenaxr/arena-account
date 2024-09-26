@@ -6,9 +6,14 @@ import re
 import jwt
 from django.conf import settings
 
-from .models import (SCENE_ANON_USERS_DEF, SCENE_PUBLIC_READ_DEF,
-                     SCENE_PUBLIC_WRITE_DEF, SCENE_USERS_DEF,
-                     SCENE_VIDEO_CONF_DEF, Scene)
+from .models import (
+    SCENE_ANON_USERS_DEF,
+    SCENE_PUBLIC_READ_DEF,
+    SCENE_PUBLIC_WRITE_DEF,
+    SCENE_USERS_DEF,
+    SCENE_VIDEO_CONF_DEF,
+    Scene,
+)
 from .mqtt_match import topic_matches_sub
 from .topics import ADMIN_TOPICS, PUBLISH_TOPICS, SUBSCRIBE_TOPICS
 
@@ -58,7 +63,7 @@ def generate_arena_token(
     duration=DEF_JWT_DURATION,
     version=API_V2,
 ):
-    """ MQTT Token Constructor.
+    """MQTT Token Constructor.
 
     Returns:
         str: JWT or None
@@ -100,7 +105,7 @@ def generate_arena_token(
         payload["aud"] = "arena"
         payload["iss"] = "arena-account"
         # we use the scene name as the jitsi room name, handle RFC 3986 reserved chars as = '_'
-        roomname = re.sub(r"[!#$&'()*+,\/:;=?@[\]]", '_', ns_scene.lower())
+        roomname = re.sub(r"[!#$&'()*+,\/:;=?@[\]]", "_", ns_scene.lower())
         payload["room"] = roomname
 
     # ns_scene, ns_device can/must contain only one '/'
@@ -125,11 +130,9 @@ def generate_arena_token(
     # scene and user session permissions
     if not deviceid:
         if version == API_V2:
-            pubs, subs = set_scene_perms_api_v2(
-                user, username, realm, namespace, sceneid, ids, perm)
+            pubs, subs = set_scene_perms_api_v2(user, username, realm, namespace, sceneid, ids, perm)
         else:
-            pubs, subs = set_scene_perms_api_v1(
-                user, username, realm, namespace, sceneid, ids, perm)
+            pubs, subs = set_scene_perms_api_v1(user, username, realm, namespace, sceneid, ids, perm)
 
     # -- NON-VERSIONED API TOPICS --
     # device permissions
@@ -169,19 +172,19 @@ def generate_arena_token(
 
 
 def set_scene_perms_api_v1(
-        user,
-        username,
-        realm,
-        namespace,
-        sceneid,
-        ids,
-        perm,
+    user,
+    username,
+    realm,
+    namespace,
+    sceneid,
+    ids,
+    perm,
 ):
-    """ V1 Topic Notes:
-        Does _NOT_ use ./topics.py
-        /s/: virtual scene objects
-        /d/: device inter-process
-        /env/: physical environment detection
+    """V1 Topic Notes:
+    Does _NOT_ use ./topics.py
+    /s/: virtual scene objects
+    /d/: device inter-process
+    /env/: physical environment detection
     """
     pubs = []
     subs = []
@@ -233,12 +236,10 @@ def set_scene_perms_api_v1(
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/{ids['camid']}")
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/{ids['camid']}/#")
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/{ids['handleftid']}")
-            pubs.append(
-                f"{realm}/s/{namespace}/{sceneid}/{ids['handrightid']}")
+            pubs.append(f"{realm}/s/{namespace}/{sceneid}/{ids['handrightid']}")
     # chat messages
     if sceneid and ids and perm["users"]:
-        userhandle = ids["userid"] + \
-            base64.b64encode(ids["userid"].encode()).decode()
+        userhandle = ids["userid"] + base64.b64encode(ids["userid"].encode()).decode()
         # receive private messages: Read
         subs.append(f"{realm}/c/{namespace}/p/{ids['userid']}/#")
         # receive open messages to everyone and/or scene: Read
@@ -256,16 +257,16 @@ def set_scene_perms_api_v1(
 
 
 def set_scene_perms_api_v2(
-        user,
-        username,
-        realm,
-        namespace,
-        sceneid,
-        ids,
-        perm,
+    user,
+    username,
+    realm,
+    namespace,
+    sceneid,
+    ids,
+    perm,
 ):
-    """ V2 Topic Notes:
-        See ./topics.py
+    """V2 Topic Notes:
+    See ./topics.py
     """
     # TODO (mwfarb): subs.append(SUBSCRIBE_TOPICS.SCENE_PUBLIC.substitute(
     #     {"realm": realm, "nameSpace": PUBLIC_NAMESPACE, "sceneName": "+"}
