@@ -18,7 +18,11 @@ from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
 urlpatterns = [
-    path("user/", include("users.urls")),
+    # configure user api version based endpoints
+    path("user/", include("users.urls", namespace="v1")),
+    path("user/v2/", include("users.urls", namespace="v2")),
+
+    # include admin paths
     path("user/admin/", admin.site.urls),
     path("user/accounts/", include("allauth.urls")),
 ]

@@ -44,7 +44,7 @@ class SceneForm(forms.ModelForm):
     editors = forms.ModelMultipleChoiceField(
         queryset=User.objects.all().order_by('username'),
         widget=autocomplete.ModelSelect2Multiple(
-            url='user-autocomplete',
+            url='users:user-autocomplete',
             forward=(forward.Self(), ),
             attrs={'data-minimum-input-length': 2},
         ), required=False)

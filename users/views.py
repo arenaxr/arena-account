@@ -4,7 +4,6 @@ import os
 import re
 import secrets
 
-import coreapi
 from allauth.socialaccount import helpers
 from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.views import SignupView as SocialSignupViewDefault
@@ -19,17 +18,16 @@ from django.shortcuts import redirect, render
 from google.auth.transport import requests as grequests
 from google.oauth2 import id_token
 from rest_framework import permissions, status
-from rest_framework.compat import coreapi
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
-from rest_framework.schemas import AutoSchema
 
 from .filestore import (delete_filestore_user, login_filestore_user,
                         set_filestore_scope)
 from .forms import (DeviceForm, SceneForm, SocialSignupForm, UpdateDeviceForm,
                     UpdateSceneForm, UpdateStaffForm)
 from .models import Device, Scene
-from .mqtt import (ANON_REGEX, PUBLIC_NAMESPACE, all_scenes_read_token,
+from .mqtt import (ANON_REGEX, API_V2, PUBLIC_NAMESPACE,
+                   TOPIC_SUPPORTED_API_VERSIONS, all_scenes_read_token,
                    generate_arena_token)
 from .persistence import (delete_scene_objects, get_persist_scenes_all,
                           get_persist_scenes_ns)
@@ -43,7 +41,7 @@ def index(request):
     """
     Root page load, index is treated as Login page.
     """
-    return redirect("login")
+    return redirect("users:login")
 
 
 def login_request(request):
@@ -63,7 +61,7 @@ def login_request(request):
                     login(request, user)
                     messages.info(
                         request, f"You are now logged in as {username}.")
-                    return redirect("login_callback")
+                    return redirect("users:login_callback")
                 else:
                     messages.error(request, "Invalid username or password.")
             else:
@@ -79,7 +77,7 @@ def logout_request(request):
     Removes ID and flushes session data, shows login page.
     """
     logout(request)  # revoke django auth
-    response = redirect("login")
+    response = redirect("users:login")
     response.delete_cookie("auth")  # revoke fs auth
     return response
 
@@ -98,7 +96,7 @@ def profile_update_scene(request):
     form = UpdateSceneForm(request.POST)
     if not form.is_valid():
         messages.error(request, "Invalid parameters")
-        return redirect("user_profile")
+        return redirect("users:user_profile")
     if "add" in request.POST:
         scenename = request.POST.get("scenename", None)
         s = Scene(
@@ -108,12 +106,12 @@ def profile_update_scene(request):
         s.save()
         messages.success(
             request, f"Created scene {request.user.username}/{scenename}")
-        return redirect("user_profile")
+        return redirect("users:user_profile")
     elif "edit" in request.POST:
         name = form.cleaned_data["edit"]
         return redirect(f"profile/scenes/{name}")
 
-    return redirect("user_profile")
+    return redirect("users:user_profile")
 
 
 @ permission_classes([permissions.IsAuthenticated])
@@ -130,7 +128,7 @@ def profile_update_device(request):
     form = UpdateDeviceForm(request.POST)
     if not form.is_valid():
         messages.error(request, "Invalid parameters")
-        return redirect("user_profile")
+        return redirect("users:user_profile")
     if "add" in request.POST:
         devicename = request.POST.get("devicename", None)
         s = Device(
@@ -139,12 +137,12 @@ def profile_update_device(request):
         s.save()
         messages.success(
             request, f"Created device {request.user.username}/{devicename}")
-        return redirect("user_profile")
+        return redirect("users:user_profile")
     elif "edit" in request.POST:
         name = form.cleaned_data["edit"]
         return redirect(f"profile/devices/{name}")
 
-    return redirect("user_profile")
+    return redirect("users:user_profile")
 
 
 def scene_perm_detail(request, pk):
@@ -154,22 +152,22 @@ def scene_perm_detail(request, pk):
     """
     if not scene_permission(user=request.user, scene=pk):
         messages.error(request, f"User does not have permission for: {pk}.")
-        return redirect("user_profile")
+        return redirect("users:user_profile")
     # now, make sure scene exists before the other commands are tried
     try:
         scene = Scene.objects.get(name=pk)
     except Scene.DoesNotExist:
         messages.error(request, "The scene does not exist")
-        return redirect("user_profile")
+        return redirect("users:user_profile")
     if request.method == 'POST':
         if "save" in request.POST:
             form = SceneForm(instance=scene, data=request.POST)
             if form.is_valid():
                 form.save()
-                return redirect("user_profile")
+                return redirect("users:user_profile")
         elif "delete" in request.POST:
             token = generate_arena_token(
-                user=request.user, username=request.user.username)
+                user=request.user, username=request.user.username, version=request.version)
             # delete account scene data
             scene.delete()
             # delete persist scene data
@@ -177,7 +175,7 @@ def scene_perm_detail(request, pk):
                 messages.error(
                     request, f"Unable to delete {pk} objects from persistance database.")
 
-            return redirect("user_profile")
+            return redirect("users:user_profile")
     else:
         form = SceneForm(instance=scene)
 
@@ -192,30 +190,31 @@ def device_perm_detail(request, pk):
     """
     if not device_permission(user=request.user, device=pk):
         messages.error(request, f"User does not have permission for: {pk}.")
-        return redirect("user_profile")
+        return redirect("users:user_profile")
     # now, make sure device exists before the other commands are tried
     try:
         device = Device.objects.get(name=pk)
     except Device.DoesNotExist:
         messages.error(request, "The device does not exist")
-        return redirect("user_profile")
+        return redirect("users:user_profile")
     token = None
     if request.method == 'POST':
         if "save" in request.POST:
             form = DeviceForm(instance=device, data=request.POST)
             if form.is_valid():
                 form.save()
-                return redirect("user_profile")
+                return redirect("users:user_profile")
         elif "delete" in request.POST:
             # delete account device data
             device.delete()
-            return redirect("user_profile")
+            return redirect("users:user_profile")
         elif "token" in request.POST:
             token = generate_arena_token(
                 user=request.user,
                 username=request.user.username,
-                device=device.name,
-                duration=datetime.timedelta(days=30)
+                ns_device=device.name,
+                duration=datetime.timedelta(days=30),
+                version=request.version
             )
 
     form = DeviceForm(instance=device)
@@ -336,9 +335,9 @@ def profile_update_staff(request):
         if not set_filestore_scope(user):
             messages.error(
                 request, "Unable to update user's filestore status.")
-            return redirect("user_profile")
+            return redirect("users:user_profile")
 
-    return redirect("user_profile")
+    return redirect("users:user_profile")
 
 
 @ api_view(["GET"])
@@ -362,6 +361,9 @@ def my_scenes(request):
     Editable scenes headless endpoint for requesting a list of scenes this user can write to: GET/POST.
     - POST requires id_token for headless clients like Python apps.
     """
+    if request.version not in TOPIC_SUPPORTED_API_VERSIONS:
+        return deprecated_token(request)
+
     user = request.user
     if request.method == "POST":
         gid_token = request.POST.get("id_token", None)
@@ -371,11 +373,12 @@ def my_scenes(request):
             except (ValueError, SocialAccount.DoesNotExist) as err:
                 return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
 
-    serializer = SceneNameSerializer(get_my_scenes(user), many=True)
+    serializer = SceneNameSerializer(
+        get_my_scenes(user, request.version), many=True)
     return JsonResponse(serializer.data, safe=False)
 
 
-def get_my_scenes(user):
+def get_my_scenes(user, version):
     """
     Internal method to update scene permissions table:
     1. Requests list of any scenes with objects saved from /persist/!allscenes to add to scene permissions table.
@@ -383,7 +386,7 @@ def get_my_scenes(user):
     """
     # update scene list from object persistance db
     if user.is_authenticated:
-        token = all_scenes_read_token()
+        token = all_scenes_read_token(version)
         if user.is_staff:  # admin/staff
             p_scenes = get_persist_scenes_all(token)
         else:  # standard user
@@ -470,13 +473,14 @@ def user_profile(request):
     - Shows scenes that the user has permissions to edit and a button to edit them.
     - Handles account deletes.
     """
+    version = TOPIC_SUPPORTED_API_VERSIONS[0]  # TODO (mwfarb): resolve missing request.version
 
     if request.method == 'POST':
         # account delete request
         confirm_text = f'delete {request.user.username} account and scenes'
         if confirm_text in request.POST:
             token = generate_arena_token(
-                user=request.user, username=request.user.username)
+                user=request.user, username=request.user.username, version=version)
             u_scenes = Scene.objects.filter(
                 name__startswith=f'{request.user.username}/')
             for scene in u_scenes:
@@ -486,13 +490,13 @@ def user_profile(request):
                 if not delete_scene_objects(scene.name, token):
                     messages.error(
                         request, f"Unable to delete {scene.name} objects from persistance database.")
-                    return redirect("user_profile")
+                    return redirect("users:user_profile")
 
             # delete filestore files/account
             if not delete_filestore_user(request.user):
                 messages.error(
                     request, "Unable to delete account/files from the filestore.")
-                return redirect("user_profile")
+                return redirect("users:user_profile")
 
             # Be careful of foreign keys, in that case this is suggested:
             # user.is_active = False
@@ -505,7 +509,7 @@ def user_profile(request):
             except User.DoesNotExist:
                 messages.error(request, "Unable to complete account delete.")
 
-    scenes = get_my_scenes(request.user)
+    scenes = get_my_scenes(request.user, version)
     devices = get_my_devices(request.user)
     staff = None
     if request.user.is_staff:  # admin/staff
@@ -620,74 +624,6 @@ def storelogin(request):
     return response
 
 
-class ArenaTokenSchema(AutoSchema):
-    def __init__(self):
-        super(ArenaTokenSchema, self).__init__()
-
-    def get_manual_fields(self, path, method):
-        extra_fields = [
-            coreapi.Field(
-                "username",
-                required=True,
-                location="body",
-                type="string",
-                description="ARENA user database username, or like 'anonymous-[name]'.",
-            ),
-            coreapi.Field(
-                "id_token",
-                required=False,
-                location="body",
-                type="string",
-                description="JWT id_token from social account authentication service, \
-                                    if forwarding from remote client like arena-py.",
-            ),
-            coreapi.Field(
-                "realm",
-                required=False,
-                location="body",
-                type="string",
-                description="Name of the ARENA realm used in the topic string (default: 'realm').",
-            ),
-            coreapi.Field(
-                "scene",
-                required=False,
-                location="body",
-                type="string",
-                description="Name of the ARENA scene: '[namespace]/[scene]'.",
-            ),
-            coreapi.Field(
-                "userid",
-                required=False,
-                location="body",
-                type="string",
-                description="Name of the user's ARENA web client id.",
-            ),
-            coreapi.Field(
-                "camid",
-                required=False,
-                location="body",
-                type="string",
-                description="Name of the user's ARENA camera object id.",
-            ),
-            coreapi.Field(
-                "handleftid",
-                required=False,
-                location="body",
-                type="string",
-                description="Name of the user's ARENA controller object left hand.",
-            ),
-            coreapi.Field(
-                "handrightid",
-                required=False,
-                location="body",
-                type="string",
-                description="Name of the user's ARENA controller object right hand.",
-            ),
-        ]
-        manual_fields = super().get_manual_fields(path, method)
-        return manual_fields + extra_fields
-
-
 def get_user_from_id_token(gid_token):
     """
     Internal method to validate id_tokens from remote authentication.
@@ -722,13 +658,23 @@ def _field_requested(request, field):
 
 
 @ api_view(["POST"])
-# @schema(ArenaTokenSchema())  # TODO: schema not working yet
+def deprecated_token(request):
+    return JsonResponse(
+        {"error": f"ARENA User API {TOPIC_SUPPORTED_API_VERSIONS[0]} token required. You may need to update your client's ARENA library."},
+        status=status.HTTP_426_UPGRADE_REQUIRED
+    )
+
+
+@ api_view(["POST"])
 def arena_token(request):
     """
     Endpoint to request an ARENA token with permissions for an anonymous or authenticated user for
     MQTT and Jitsi resources given incoming parameters.
     - POST requires id_token for headless clients like Python apps.
     """
+    if request.version not in TOPIC_SUPPORTED_API_VERSIONS:
+        return deprecated_token(request)
+
     user = request.user
     gid_token = request.POST.get("id_token", None)
     if gid_token:
@@ -753,15 +699,18 @@ def arena_token(request):
     # produce nonce with 32-bits secure randomness
     nonce = f"{secrets.randbits(32):010d}"
     # define user object_ids server-side to prevent spoofing
-    userid = camid = handleftid = handrightid = None
+    ids = None
     if _field_requested(request, "userid"):
         userid = f"{nonce}_{username}"
-    if _field_requested(request, "camid"):
-        camid = f"camera_{nonce}_{username}"
-    if _field_requested(request, "handleftid"):
-        handleftid = f"handLeft_{nonce}_{username}"
-    if _field_requested(request, "handrightid"):
-        handrightid = f"handRight_{nonce}_{username}"
+        ids = {}
+        ids["userid"] = userid
+        if request.version == API_V2:
+            ids["camid"] = userid  # v2
+        else:
+            ids["camid"] = f"camera_{userid}"  # v1
+        ids["handleftid"] = f"handLeft_{userid}"
+        ids["handrightid"] = f"handRight_{userid}"
+
     if user.is_authenticated:
         duration = datetime.timedelta(days=1)
     else:
@@ -769,13 +718,11 @@ def arena_token(request):
     token = generate_arena_token(
         user=user,
         username=username,
-        realm=request.POST.get("realm", "realm"),
-        scene=request.POST.get("scene", None),
-        camid=camid,
-        userid=userid,
-        handleftid=handleftid,
-        handrightid=handrightid,
-        duration=duration
+        realm=request.POST.get("realm", None),
+        ns_scene=request.POST.get("scene", None),
+        ids=ids,
+        duration=duration,
+        version=request.version
     )
     if not token:
         return JsonResponse(
@@ -784,16 +731,8 @@ def arena_token(request):
     data = {
         "username": username,
         "token": token,
-        "ids": {},
+        "ids": ids,
     }
-    if userid:
-        data["ids"]["userid"] = userid
-    if camid:
-        data["ids"]["camid"] = camid
-    if handleftid:
-        data["ids"]["handleftid"] = handleftid
-    if handrightid:
-        data["ids"]["handrightid"] = handrightid
     response = HttpResponse(json.dumps(data), content_type="application/json")
     response.set_cookie(
         "mqtt_token",

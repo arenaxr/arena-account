@@ -4,6 +4,7 @@ from django.urls import path, re_path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
+
 from . import views
 
 schema_view = get_schema_view(
@@ -11,19 +12,19 @@ schema_view = get_schema_view(
         title="ARENA Users API",
         default_version="v1",
         description="ARENA Users Django site endpoints.",
-        # TODO: terms_of_service=f"/eula",
+        terms_of_service=f"https://{os.environ['HOSTNAME']}/terms.html",
         contact=openapi.Contact(email=os.environ["EMAIL"]),
         license=openapi.License(
             name="BSD 3-Clause License",
             url="https://opensource.org/licenses/BSD-3-Clause",
         ),
     ),
-    # TODO: review permissions
     url=f"https://{os.environ['HOSTNAME']}",
     public=True,
     permission_classes=(permissions.AllowAny,),
 )
 
+app_name = "users"
 urlpatterns = [
     # pages
     path("", views.index, name="index"),
