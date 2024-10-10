@@ -286,6 +286,7 @@ def set_scene_perms_api_v2(
                 pubs.append(f"{realm}/s/+/+/o/+/+")
                 subs.append(f"{realm}/s/+/+/r/+/-/#")
                 pubs.append(f"{realm}/s/+/+/r/-")
+                pubs.append(f"{realm}/s/+/+/r/-/+")
         else:
             # objectid - o
             # scene owners have rights to their scene objects only
@@ -296,6 +297,7 @@ def set_scene_perms_api_v2(
                 pubs.append(f"{realm}/s/{username}/+/o/+/+")
                 subs.append(f"{realm}/s/{username}/+/r/+/-/#")
                 pubs.append(f"{realm}/s/{username}/+/r/-")
+                pubs.append(f"{realm}/s/{username}/+/r/-/+")
             # add scenes that have been granted by other owners
             u_scenes = Scene.objects.filter(editors=user)
             for u_scene in u_scenes:
@@ -307,6 +309,7 @@ def set_scene_perms_api_v2(
                         pubs.append(f"{realm}/s/{u_scene.name}/o/+/+")
                         subs.append(f"{realm}/s/{u_scene.name}/r/+/-/#")
                         pubs.append(f"{realm}/s/{u_scene.name}/r/-")
+                        pubs.append(f"{realm}/s/{u_scene.name}/r/-/+")
     # anon/non-owners have rights to view scene objects only
     if sceneid and not user.is_staff:
         # did the user set specific public read or public write?
@@ -323,6 +326,7 @@ def set_scene_perms_api_v2(
                 pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/+/+")
                 subs.append(f"{realm}/s/{namespace}/{sceneid}/r/+/-/#")
                 pubs.append(f"{realm}/s/{namespace}/{sceneid}/r/-")
+                pubs.append(f"{realm}/s/{namespace}/{sceneid}/r/-/+")
     # (all) everyone should be able to read all public scenes
     if not sceneid:
         subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/+/o/+")
