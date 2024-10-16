@@ -151,10 +151,6 @@ def generate_arena_token(
                 # device owners have rights to their device objects only
                 subs.append(f"{realm}/d/{username}/#")
                 pubs.append(f"{realm}/d/{username}/#")
-    # scene runtime manager
-    if sceneid:
-        subs.append(f"{realm}/proc/#")
-        pubs.append(f"{realm}/proc/#")
     # global network metrics
     # only non-specific scene/device should monitor latency data
     if not sceneid and not deviceid:
@@ -252,6 +248,10 @@ def set_scene_perms_api_v1(
     if sceneid:
         subs.append(f"{realm}/g/a/#")
         pubs.append(f"{realm}/g/a/#")
+    # scene runtime manager
+    if sceneid:
+        subs.append(f"{realm}/proc/#")
+        pubs.append(f"{realm}/proc/#")
 
     return pubs, subs
 
@@ -350,6 +350,10 @@ def set_scene_perms_api_v2(
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/r/{ids['userid']}/-")
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/e/{ids['userid']}/-")
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/d/{ids['userid']}/-")
+    # scene runtime manager
+    if sceneid:
+        subs.append(f"{realm}/g/{namespace}/p/+")
+        pubs.append(f"{realm}/g/{namespace}/p/+")
 
     return pubs, subs
 
