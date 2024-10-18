@@ -21,16 +21,29 @@ from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
 
-from .filestore import (delete_filestore_user, login_filestore_user,
-                        set_filestore_scope)
-from .forms import (DeviceForm, SceneForm, SocialSignupForm, UpdateDeviceForm,
-                    UpdateSceneForm, UpdateStaffForm)
+from .filestore import delete_filestore_user, login_filestore_user, set_filestore_scope
+from .forms import (
+    DeviceForm,
+    SceneForm,
+    SocialSignupForm,
+    UpdateDeviceForm,
+    UpdateSceneForm,
+    UpdateStaffForm,
+)
 from .models import Device, Scene
-from .mqtt import (ANON_REGEX, API_V2, PUBLIC_NAMESPACE,
-                   TOPIC_SUPPORTED_API_VERSIONS, all_scenes_read_token,
-                   generate_arena_token)
-from .persistence import (delete_scene_objects, get_persist_scenes_all,
-                          get_persist_scenes_ns)
+from .mqtt import (
+    ANON_REGEX,
+    API_V2,
+    PUBLIC_NAMESPACE,
+    TOPIC_SUPPORTED_API_VERSIONS,
+    all_scenes_read_token,
+    generate_arena_token,
+)
+from .persistence import (
+    delete_scene_objects,
+    get_persist_scenes_all,
+    get_persist_scenes_ns,
+)
 from .serializers import SceneNameSerializer, SceneSerializer
 
 # namespaced scene regular expression
@@ -362,7 +375,7 @@ def my_scenes(request):
     - POST requires id_token for headless clients like Python apps.
     """
     if request.version not in TOPIC_SUPPORTED_API_VERSIONS:
-        return deprecated_token(request)
+        return deprecated_token()
 
     user = request.user
     if request.method == "POST":
@@ -657,8 +670,7 @@ def _field_requested(request, field):
     return False
 
 
-@ api_view(["POST"])
-def deprecated_token(request):
+def deprecated_token():
     return JsonResponse(
         {"error": f"ARENA User API {TOPIC_SUPPORTED_API_VERSIONS[0]} token required. You may need to update your client's ARENA library."},
         status=status.HTTP_426_UPGRADE_REQUIRED
@@ -673,7 +685,7 @@ def arena_token(request):
     - POST requires id_token for headless clients like Python apps.
     """
     if request.version not in TOPIC_SUPPORTED_API_VERSIONS:
-        return deprecated_token(request)
+        return deprecated_token()
 
     user = request.user
     gid_token = request.POST.get("id_token", None)
