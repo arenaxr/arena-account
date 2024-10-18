@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/arenaxr/arena-account/compare/v1.3.0...v2.0.0) (2024-10-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* Refactored topic structure for more granular flow and access ([#100](https://github.com/arenaxr/arena-account/issues/100))
+
+### Features
+
+* Refactored topic structure for more granular flow and access ([#100](https://github.com/arenaxr/arena-account/issues/100)) ([ac27f8e](https://github.com/arenaxr/arena-account/commit/ac27f8ec11479b1949cd28ee8f5a7f58a3ec331a))
+
 ## [1.3.0](https://github.com/arenaxr/arena-account/compare/v1.2.2...v1.3.0) (2024-09-20)
 
 
