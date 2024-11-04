@@ -99,7 +99,7 @@ def generate_arena_token(
         perm["users"] = p.users
 
     # add jitsi server params if a/v scene
-    if ns_scene and ids and perm["users"] and perm["video"]:
+    if ns_scene and "camid" in ids and perm["users"] and perm["video"]:
         host = os.getenv("HOSTNAME")
         headers = {"kid": host}
         payload["aud"] = "arena"
@@ -228,13 +228,16 @@ def set_scene_perms_api_v1(
         if perm["public_write"]:
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/#")
         # user presence objects
-        if ids and perm["users"]:  # probable web browser write
-            pubs.append(f"{realm}/s/{namespace}/{sceneid}/{ids['camid']}")
-            pubs.append(f"{realm}/s/{namespace}/{sceneid}/{ids['camid']}/#")
-            pubs.append(f"{realm}/s/{namespace}/{sceneid}/{ids['handleftid']}")
-            pubs.append(f"{realm}/s/{namespace}/{sceneid}/{ids['handrightid']}")
+        if perm["users"]:
+            if "camid" in ids:  # probable web browser write
+                pubs.append(f"{realm}/s/{namespace}/{sceneid}/{ids['camid']}")
+                pubs.append(f"{realm}/s/{namespace}/{sceneid}/{ids['camid']}/#")
+            if "handleftid" in ids:
+                pubs.append(f"{realm}/s/{namespace}/{sceneid}/{ids['handleftid']}")
+            if "handrightid" in ids:
+                pubs.append(f"{realm}/s/{namespace}/{sceneid}/{ids['handrightid']}")
     # chat messages
-    if sceneid and ids and perm["users"]:
+    if sceneid and "userid" in ids and perm["users"]:
         userhandle = ids["userid"] + base64.b64encode(ids["userid"].encode()).decode()
         # receive private messages: Read
         subs.append(f"{realm}/c/{namespace}/p/{ids['userid']}/#")
@@ -281,7 +284,7 @@ def set_scene_perms_api_v2(
             # staff/admin have rights to all scene data
             subs.append(f"{realm}/s/+/+/+/+")
             pubs.append(f"{realm}/s/+/+/o/+")
-            if ids:
+            if "userid" in ids:
                 subs.append(f"{realm}/s/+/+/+/+/{ids['userid']}/#")
                 pubs.append(f"{realm}/s/+/+/o/+/+")
                 subs.append(f"{realm}/s/+/+/r/+/-/#")
@@ -292,7 +295,7 @@ def set_scene_perms_api_v2(
             # scene owners have rights to their scene objects only
             subs.append(f"{realm}/s/{username}/+/+/+")
             pubs.append(f"{realm}/s/{username}/+/o/+")
-            if ids:
+            if "userid" in ids:
                 subs.append(f"{realm}/s/{username}/+/+/+/{ids['userid']}/#")
                 pubs.append(f"{realm}/s/{username}/+/o/+/+")
                 subs.append(f"{realm}/s/{username}/+/r/+/-/#")
@@ -304,7 +307,7 @@ def set_scene_perms_api_v2(
                 if not sceneid or (sceneid and u_scene.name == f"{namespace}/{sceneid}"):
                     subs.append(f"{realm}/s/{u_scene.name}/+/+")
                     pubs.append(f"{realm}/s/{u_scene.name}/o/+")
-                    if ids:
+                    if "userid" in ids:
                         subs.append(f"{realm}/s/{u_scene.name}/+/+/{ids['userid']}/#")
                         pubs.append(f"{realm}/s/{u_scene.name}/o/+/+")
                         subs.append(f"{realm}/s/{u_scene.name}/r/+/-/#")
@@ -318,7 +321,7 @@ def set_scene_perms_api_v2(
         # objectid - o
         if perm["public_read"]:
             subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+")
-            if ids:
+            if "userid" in ids:
                 subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+/{ids['userid']}/#")
         if perm["public_write"]:
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/+")
@@ -331,7 +334,7 @@ def set_scene_perms_api_v2(
     if not sceneid:
         subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/+/o/+")
     # (all) user presence/chat
-    if sceneid and ids and perm["users"]:
+    if sceneid and "userid" in ids and perm["users"]:
         # idtag - x/c/p
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/{ids['userid']}")
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/{ids['userid']}/+")
@@ -344,12 +347,13 @@ def set_scene_perms_api_v2(
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids[userobj]}")
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids[userobj]}/+")
     # (all) render-fusion/env/debug
-    if sceneid and ids:
+    if sceneid and "userid" in ids:
         # to-many/pseudo-group sub and pub special permission
         # idtag - r/e/d
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/r/{ids['userid']}/-")
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/e/{ids['userid']}/-")
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/d/{ids['userid']}/-")
+
     # scene runtime manager
     if sceneid:
         subs.append(f"{realm}/g/{namespace}/p/+")
