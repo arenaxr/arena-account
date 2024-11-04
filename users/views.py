@@ -34,6 +34,7 @@ from .models import Device, Scene
 from .mqtt import (
     ANON_REGEX,
     API_V2,
+    CLIENT_REGEX,
     PUBLIC_NAMESPACE,
     TOPIC_SUPPORTED_API_VERSIONS,
     all_scenes_read_token,
@@ -683,6 +684,17 @@ def arena_token(request):
     Endpoint to request an ARENA token with permissions for an anonymous or authenticated user for
     MQTT and Jitsi resources given incoming parameters.
     - POST requires id_token for headless clients like Python apps.
+
+    Payload form data:
+        username(string): ARENA account username, only used for anonymous.
+        id_auth(string): Authentication type: "google" or "anonymous".
+        realm(string): ARENA realm.
+        scene(string): ARENA namespaced scene.
+        client(string): Client type for reference, e.g. "webScene", "py1.2.3", "unity".
+        userid(boolean): true to request user context. (deprecated: always true in v2)
+        camid(boolean): true to request permission for camera.
+        handleftid(boolean): true to request permission for left controller.
+        handrightid(boolean): true to request permission for right controller.
     """
     if request.version not in TOPIC_SUPPORTED_API_VERSIONS:
         return deprecated_token()
@@ -699,14 +711,20 @@ def arena_token(request):
         username = user.username
         if not username:
             return JsonResponse(
-                {"error": "Invalid parameters"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": "Invalid parameters"}, status=status.HTTP_401_UNAUTHORIZED
             )
     else:  # AnonymousUser
         username = request.POST.get("username", None)
         if not username or not re.match(ANON_REGEX, username):
             return JsonResponse(
-                {"error": "Invalid parameters"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": "Invalid form parameter: 'username'"}, status=status.HTTP_400_BAD_REQUEST
             )
+
+    client = request.POST.get("client", None)
+    if not client or not re.match(CLIENT_REGEX, client):
+        return JsonResponse(
+            {"error": "Invalid form parameter: 'client'"}, status=status.HTTP_400_BAD_REQUEST
+        )
 
     # produce nonce with 32-bits secure randomness
     nonce = f"{secrets.randbits(32):010d}"
@@ -716,6 +734,7 @@ def arena_token(request):
     userid = f"{username}_{nonce}"
     ids = {}
     ids["userid"] = userid
+    ids["clientid"] = f"{userid}_{client}"
     # add avatar object if requested
     if _field_requested(request, "camid"):
         if request.version == API_V2:
