@@ -712,15 +712,19 @@ def arena_token(request):
     nonce = f"{secrets.randbits(32):010d}"
     # define user object_ids server-side to prevent spoofing
     ids = None
-    if _field_requested(request, "userid"):
-        userid = f"{nonce}_{username}"
-        ids = {}
-        ids["userid"] = userid
+    # always include userid in responses for user_client origin checking
+    userid = f"{username}_{nonce}"
+    ids = {}
+    ids["userid"] = userid
+    # add avatar object if requested
+    if _field_requested(request, "camid"):
         if request.version == API_V2:
             ids["camid"] = userid  # v2
         else:
             ids["camid"] = f"camera_{userid}"  # v1
+    if _field_requested(request, "handleftid"):
         ids["handleftid"] = f"handLeft_{userid}"
+    if _field_requested(request, "handrightid"):
         ids["handrightid"] = f"handRight_{userid}"
 
     if user.is_authenticated:
