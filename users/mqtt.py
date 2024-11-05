@@ -284,36 +284,36 @@ def set_scene_perms_api_v2(
             # objectid - o
             # staff/admin have rights to all scene data
             subs.append(f"{realm}/s/+/+/+/+/+")
-            pubs.append(f"{realm}/s/+/+/o/{ids['clientid']}/+")
+            pubs.append(f"{realm}/s/+/+/o/{ids['userclient']}/+")
             if "userid" in ids:
                 subs.append(f"{realm}/s/+/+/+/+/+/{ids['userid']}/#")
-                pubs.append(f"{realm}/s/+/+/o/{ids['clientid']}/+/+")
+                pubs.append(f"{realm}/s/+/+/o/{ids['userclient']}/+/+")
                 subs.append(f"{realm}/s/+/+/r/+/+/-/#")
-                pubs.append(f"{realm}/s/+/+/r/{ids['clientid']}/-")
-                pubs.append(f"{realm}/s/+/+/r/{ids['clientid']}/-/+")
+                pubs.append(f"{realm}/s/+/+/r/{ids['userclient']}/-")
+                pubs.append(f"{realm}/s/+/+/r/{ids['userclient']}/-/+")
         else:
             # objectid - o
             # scene owners have rights to their scene objects only
             subs.append(f"{realm}/s/{username}/+/+/+/+")
-            pubs.append(f"{realm}/s/{username}/+/o/{ids['clientid']}/+")
+            pubs.append(f"{realm}/s/{username}/+/o/{ids['userclient']}/+")
             if "userid" in ids:
                 subs.append(f"{realm}/s/{username}/+/+/+/+/{ids['userid']}/#")
-                pubs.append(f"{realm}/s/{username}/+/o/{ids['clientid']}/+/+")
+                pubs.append(f"{realm}/s/{username}/+/o/{ids['userclient']}/+/+")
                 subs.append(f"{realm}/s/{username}/+/r/+/+/-/#")
-                pubs.append(f"{realm}/s/{username}/+/r/{ids['clientid']}/-")
-                pubs.append(f"{realm}/s/{username}/+/r/{ids['clientid']}/-/+")
+                pubs.append(f"{realm}/s/{username}/+/r/{ids['userclient']}/-")
+                pubs.append(f"{realm}/s/{username}/+/r/{ids['userclient']}/-/+")
             # add scenes that have been granted by other owners
             u_scenes = Scene.objects.filter(editors=user)
             for u_scene in u_scenes:
                 if not sceneid or (sceneid and u_scene.name == f"{namespace}/{sceneid}"):
                     subs.append(f"{realm}/s/{u_scene.name}/+/+/+")
-                    pubs.append(f"{realm}/s/{u_scene.name}/o/{ids['clientid']}/+")
+                    pubs.append(f"{realm}/s/{u_scene.name}/o/{ids['userclient']}/+")
                     if "userid" in ids:
                         subs.append(f"{realm}/s/{u_scene.name}/+/+/+/{ids['userid']}/#")
-                        pubs.append(f"{realm}/s/{u_scene.name}/o/{ids['clientid']}/+/+")
+                        pubs.append(f"{realm}/s/{u_scene.name}/o/{ids['userclient']}/+/+")
                         subs.append(f"{realm}/s/{u_scene.name}/r/+/+/-/#")
-                        pubs.append(f"{realm}/s/{u_scene.name}/r/{ids['clientid']}/-")
-                        pubs.append(f"{realm}/s/{u_scene.name}/r/{ids['clientid']}/-/+")
+                        pubs.append(f"{realm}/s/{u_scene.name}/r/{ids['userclient']}/-")
+                        pubs.append(f"{realm}/s/{u_scene.name}/r/{ids['userclient']}/-/+")
     # anon/non-owners have rights to view scene objects only
     if sceneid and not user.is_staff:
         # did the user set specific public read or public write?
@@ -325,42 +325,42 @@ def set_scene_perms_api_v2(
             if "userid" in ids:
                 subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+/+/{ids['userid']}/#")
         if perm["public_write"]:
-            pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/{ids['clientid']}/+")
+            pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/{ids['userclient']}/+")
             if ids:
-                pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/{ids['clientid']}/+/+")
+                pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/{ids['userclient']}/+/+")
                 subs.append(f"{realm}/s/{namespace}/{sceneid}/r/+/+/-/#")
-                pubs.append(f"{realm}/s/{namespace}/{sceneid}/r/{ids['clientid']}/-")
-                pubs.append(f"{realm}/s/{namespace}/{sceneid}/r/{ids['clientid']}/-/+")
+                pubs.append(f"{realm}/s/{namespace}/{sceneid}/r/{ids['userclient']}/-")
+                pubs.append(f"{realm}/s/{namespace}/{sceneid}/r/{ids['userclient']}/-/+")
     # (all) everyone should be able to read all public scenes
     if not sceneid:
         subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/+/o/+/+")
     # (all) user presence/chat
     if sceneid and "userid" in ids and perm["users"]:
         # idtag - x/c/p
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/{ids['clientid']}/{ids['userid']}")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/{ids['clientid']}/{ids['userid']}/+")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/c/{ids['clientid']}/{ids['userid']}")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/c/{ids['clientid']}/{ids['userid']}/+")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/p/{ids['clientid']}/{ids['userid']}")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/p/{ids['clientid']}/{ids['userid']}/+")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/{ids['userclient']}/{ids['userid']}")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/{ids['userclient']}/{ids['userid']}/+")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/c/{ids['userclient']}/{ids['userid']}")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/c/{ids['userclient']}/{ids['userid']}/+")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/p/{ids['userclient']}/{ids['userid']}")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/p/{ids['userclient']}/{ids['userid']}/+")
         # userobjectid - u
         if perm["users"]:
             if "camid" in ids:
-                pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids['clientid']}/{ids['camid']}")
-                pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids['clientid']}/{ids['camid']}/+")
+                pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids['userclient']}/{ids['camid']}")
+                pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids['userclient']}/{ids['camid']}/+")
             if "handleftid" in ids:
-                pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids['clientid']}/{ids['handleftid']}")
-                pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids['clientid']}/{ids['handleftid']}/+")
+                pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids['userclient']}/{ids['handleftid']}")
+                pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids['userclient']}/{ids['handleftid']}/+")
             if "handrightid" in ids:
-                pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids['clientid']}/{ids['handrightid']}")
-                pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids['clientid']}/{ids['handrightid']}/+")
+                pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids['userclient']}/{ids['handrightid']}")
+                pubs.append(f"{realm}/s/{namespace}/{sceneid}/u/{ids['userclient']}/{ids['handrightid']}/+")
     # (all) render-fusion/env/debug
     if sceneid and "userid" in ids:
         # to-many/pseudo-group sub and pub special permission
         # idtag - r/e/d
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/r/{ids['clientid']}/{ids['userid']}/-")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/e/{ids['clientid']}/{ids['userid']}/-")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/d/{ids['clientid']}/{ids['userid']}/-")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/r/{ids['userclient']}/{ids['userid']}/-")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/e/{ids['userclient']}/{ids['userid']}/-")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/d/{ids['userclient']}/{ids['userid']}/-")
 
     # scene runtime manager
     if sceneid:

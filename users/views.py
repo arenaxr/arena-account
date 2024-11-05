@@ -734,7 +734,7 @@ def arena_token(request):
     userid = f"{username}_{nonce}"
     ids = {}
     ids["userid"] = userid
-    ids["clientid"] = f"{userid}_{client}"
+    ids["userclient"] = f"{userid}_{client}"
     # add avatar object if requested
     if _field_requested(request, "camid"):
         if request.version == API_V2:
