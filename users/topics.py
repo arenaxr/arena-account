@@ -53,21 +53,21 @@ PUBLISH_TOPICS = SimpleNamespace(**{
     'PROC_REG':               Template('${realm}/proc/reg'),
     'PROC_CTL':               Template('${realm}/proc/control'),
     'PROC_DBG':               Template('${realm}/proc/debug/${uuid}'),
-    'SCENE_PRESENCE':         Template('${realm}/s/${nameSpace}/${sceneName}/x/${clientId}/${idTag}'),
-    'SCENE_PRESENCE_PRIVATE': Template('${realm}/s/${nameSpace}/${sceneName}/x/${clientId}/${idTag}/${toUid}'),
-    'SCENE_CHAT':             Template('${realm}/s/${nameSpace}/${sceneName}/c/${clientId}/${idTag}'),
-    'SCENE_CHAT_PRIVATE':     Template('${realm}/s/${nameSpace}/${sceneName}/c/${clientId}/${idTag}/${toUid}'),
-    'SCENE_USER':             Template('${realm}/s/${nameSpace}/${sceneName}/u/${clientId}/${userObj}'),
-    'SCENE_USER_PRIVATE':     Template('${realm}/s/${nameSpace}/${sceneName}/u/${clientId}/${userObj}/${toUid}'),  # Need to add face_ privs
-    'SCENE_OBJECTS':          Template('${realm}/s/${nameSpace}/${sceneName}/o/${clientId}/${objectId}'),  # All client placeholder
-    'SCENE_OBJECTS_PRIVATE':  Template('${realm}/s/${nameSpace}/${sceneName}/o/${clientId}/${objectId}/${toUid}'),
-    'SCENE_RENDER':           Template('${realm}/s/${nameSpace}/${sceneName}/r/${clientId}/${idTag}'),
-    'SCENE_RENDER_PRIVATE':   Template('${realm}/s/${nameSpace}/${sceneName}/r/${clientId}/${idTag}/-'),  # To avoid unpriv sub
-    'SCENE_ENV':              Template('${realm}/s/${nameSpace}/${sceneName}/e/${clientId}/${idTag}'),
-    'SCENE_ENV_PRIVATE':      Template('${realm}/s/${nameSpace}/${sceneName}/e/${clientId}/${idTag}/-'),  # To avoid unpriv sub
-    'SCENE_PROGRAM':          Template('${realm}/s/${nameSpace}/${sceneName}/p/${clientId}/${idTag}'),
-    'SCENE_PROGRAM_PRIVATE':  Template('${realm}/s/${nameSpace}/${sceneName}/p/${clientId}/${idTag}/${toUid}'),
-    'SCENE_DEBUG':            Template('${realm}/s/${nameSpace}/${sceneName}/d/${clientId}/${idTag}/-'),  # To avoid unpriv sub
+    'SCENE_PRESENCE':         Template('${realm}/s/${nameSpace}/${sceneName}/x/${userClient}/${idTag}'),
+    'SCENE_PRESENCE_PRIVATE': Template('${realm}/s/${nameSpace}/${sceneName}/x/${userClient}/${idTag}/${toUid}'),
+    'SCENE_CHAT':             Template('${realm}/s/${nameSpace}/${sceneName}/c/${userClient}/${idTag}'),
+    'SCENE_CHAT_PRIVATE':     Template('${realm}/s/${nameSpace}/${sceneName}/c/${userClient}/${idTag}/${toUid}'),
+    'SCENE_USER':             Template('${realm}/s/${nameSpace}/${sceneName}/u/${userClient}/${userObj}'),
+    'SCENE_USER_PRIVATE':     Template('${realm}/s/${nameSpace}/${sceneName}/u/${userClient}/${userObj}/${toUid}'),  # Need to add face_ privs
+    'SCENE_OBJECTS':          Template('${realm}/s/${nameSpace}/${sceneName}/o/${userClient}/${objectId}'),  # All client placeholder
+    'SCENE_OBJECTS_PRIVATE':  Template('${realm}/s/${nameSpace}/${sceneName}/o/${userClient}/${objectId}/${toUid}'),
+    'SCENE_RENDER':           Template('${realm}/s/${nameSpace}/${sceneName}/r/${userClient}/${idTag}'),
+    'SCENE_RENDER_PRIVATE':   Template('${realm}/s/${nameSpace}/${sceneName}/r/${userClient}/${idTag}/-'),  # To avoid unpriv sub
+    'SCENE_ENV':              Template('${realm}/s/${nameSpace}/${sceneName}/e/${userClient}/${idTag}'),
+    'SCENE_ENV_PRIVATE':      Template('${realm}/s/${nameSpace}/${sceneName}/e/${userClient}/${idTag}/-'),  # To avoid unpriv sub
+    'SCENE_PROGRAM':          Template('${realm}/s/${nameSpace}/${sceneName}/p/${userClient}/${idTag}'),
+    'SCENE_PROGRAM_PRIVATE':  Template('${realm}/s/${nameSpace}/${sceneName}/p/${userClient}/${idTag}/${toUid}'),
+    'SCENE_DEBUG':            Template('${realm}/s/${nameSpace}/${sceneName}/d/${userClient}/${idTag}/-'),  # To avoid unpriv sub
 })
 
 ADMIN_TOPICS = SimpleNamespace(**{
