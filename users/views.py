@@ -673,7 +673,7 @@ def _field_requested(request, field):
 
 def deprecated_token():
     return JsonResponse(
-        {"error": f"ARENA User API {TOPIC_SUPPORTED_API_VERSIONS[0]} token required. You may need to update your client's ARENA library."},
+        {"error": f"ARENA User API {TOPIC_SUPPORTED_API_VERSIONS[0]} token required. You may need to update your client's ARENA library, see https://docs.arenaxr.org/content/migration."},
         status=status.HTTP_426_UPGRADE_REQUIRED
     )
 
