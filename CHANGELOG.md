@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/arenaxr/arena-account/compare/v1.3.0...v2.0.0) (2024-11-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* Refactored topic structure for more granular flow and access ([#100](https://github.com/arenaxr/arena-account/issues/100))
+
+### Features
+
+* Refactored topic structure for more granular flow and access ([#100](https://github.com/arenaxr/arena-account/issues/100)) ([ac27f8e](https://github.com/arenaxr/arena-account/commit/ac27f8ec11479b1949cd28ee8f5a7f58a3ec331a))
+
+
+### Bug Fixes
+
+* **mqtt:** require userClient in topic for all scene messages ([#107](https://github.com/arenaxr/arena-account/issues/107)) ([07a98a2](https://github.com/arenaxr/arena-account/commit/07a98a2b42b05ab430bcf4158e0c37795b966dce))
+
 ## [1.3.0](https://github.com/arenaxr/arena-account/compare/v1.2.2...v1.3.0) (2024-09-20)
 
 
