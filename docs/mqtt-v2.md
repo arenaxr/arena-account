@@ -10,21 +10,12 @@ User: anonymous-mike
 MQTT Publish topics:
 - $NETWORK/latency
 - realm/g/mwfarbnook/p/+
-- realm/s/mwfarbnook/test/c/anonymous-mike_0799265009_web/anonymous-mike_0799265009
-- realm/s/mwfarbnook/test/c/anonymous-mike_0799265009_web/anonymous-mike_0799265009/+
-- realm/s/mwfarbnook/test/d/anonymous-mike_0799265009_web/anonymous-mike_0799265009/-
-- realm/s/mwfarbnook/test/e/anonymous-mike_0799265009_web/anonymous-mike_0799265009/-
-- realm/s/mwfarbnook/test/p/anonymous-mike_0799265009_web/anonymous-mike_0799265009
-- realm/s/mwfarbnook/test/p/anonymous-mike_0799265009_web/anonymous-mike_0799265009/+
-- realm/s/mwfarbnook/test/r/anonymous-mike_0799265009_web/anonymous-mike_0799265009/-
-- realm/s/mwfarbnook/test/u/anonymous-mike_0799265009_web/anonymous-mike_0799265009
-- realm/s/mwfarbnook/test/u/anonymous-mike_0799265009_web/anonymous-mike_0799265009/+
+- realm/s/mwfarbnook/test/+/anonymous-mike_0799265009_web/anonymous-mike_0799265009
+- realm/s/mwfarbnook/test/+/anonymous-mike_0799265009_web/anonymous-mike_0799265009/+
 - realm/s/mwfarbnook/test/u/anonymous-mike_0799265009_web/handLeft_anonymous-mike_0799265009
 - realm/s/mwfarbnook/test/u/anonymous-mike_0799265009_web/handLeft_anonymous-mike_0799265009/+
 - realm/s/mwfarbnook/test/u/anonymous-mike_0799265009_web/handRight_anonymous-mike_0799265009
 - realm/s/mwfarbnook/test/u/anonymous-mike_0799265009_web/handRight_anonymous-mike_0799265009/+
-- realm/s/mwfarbnook/test/x/anonymous-mike_0799265009_web/anonymous-mike_0799265009
-- realm/s/mwfarbnook/test/x/anonymous-mike_0799265009_web/anonymous-mike_0799265009/+
 
 MQTT Subscribe topics:
 - realm/g/mwfarbnook/p/+
@@ -43,21 +34,12 @@ MQTT Publish topics:
 - realm/s/mwfarbnook/+/o/mwfarbnook_0799265009_web/+/+
 - realm/s/mwfarbnook/+/r/mwfarbnook_0799265009_web/-
 - realm/s/mwfarbnook/+/r/mwfarbnook_0799265009_web/-/+
-- realm/s/mwfarbnook/test/c/mwfarbnook_0799265009_web/mwfarbnook_0799265009
-- realm/s/mwfarbnook/test/c/mwfarbnook_0799265009_web/mwfarbnook_0799265009/+
-- realm/s/mwfarbnook/test/d/mwfarbnook_0799265009_web/mwfarbnook_0799265009/-
-- realm/s/mwfarbnook/test/e/mwfarbnook_0799265009_web/mwfarbnook_0799265009/-
-- realm/s/mwfarbnook/test/p/mwfarbnook_0799265009_web/mwfarbnook_0799265009
-- realm/s/mwfarbnook/test/p/mwfarbnook_0799265009_web/mwfarbnook_0799265009/+
-- realm/s/mwfarbnook/test/r/mwfarbnook_0799265009_web/mwfarbnook_0799265009/-
-- realm/s/mwfarbnook/test/u/mwfarbnook_0799265009_web/mwfarbnook_0799265009
-- realm/s/mwfarbnook/test/u/mwfarbnook_0799265009_web/mwfarbnook_0799265009/+
+- realm/s/mwfarbnook/test/+/mwfarbnook_0799265009_web/mwfarbnook_0799265009
+- realm/s/mwfarbnook/test/+/mwfarbnook_0799265009_web/mwfarbnook_0799265009/+
 - realm/s/mwfarbnook/test/u/mwfarbnook_0799265009_web/handLeft_mwfarbnook_0799265009
 - realm/s/mwfarbnook/test/u/mwfarbnook_0799265009_web/handLeft_mwfarbnook_0799265009/+
 - realm/s/mwfarbnook/test/u/mwfarbnook_0799265009_web/handRight_mwfarbnook_0799265009
 - realm/s/mwfarbnook/test/u/mwfarbnook_0799265009_web/handRight_mwfarbnook_0799265009/+
-- realm/s/mwfarbnook/test/x/mwfarbnook_0799265009_web/mwfarbnook_0799265009
-- realm/s/mwfarbnook/test/x/mwfarbnook_0799265009_web/mwfarbnook_0799265009/+
 
 MQTT Subscribe topics:
 - realm/d/mwfarbnook/#
