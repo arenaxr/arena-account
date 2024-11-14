@@ -336,6 +336,9 @@ def set_scene_perms_api_v2(
         subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/+/o/+/+")
     # (all) user presence/chat
     if sceneid and "userid" in ids and perm["users"]:
+        # users enabled, so all message types for uuid = userid/idtag are enabled
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/+/{ids['userclient']}/{ids['userid']}")
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/+/{ids['userclient']}/{ids['userid']}/+")
         # idtag - x/c/p
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/{ids['userclient']}/{ids['userid']}")
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/{ids['userclient']}/{ids['userid']}/+")
