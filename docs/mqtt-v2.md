@@ -30,8 +30,7 @@ MQTT Publish topics:
 - $NETWORK/latency
 - realm/d/mwfarbnook/#
 - realm/g/mwfarbnook/p/+
-- realm/s/mwfarbnook/+/o/mwfarbnook_0799265009_web/+
-- realm/s/mwfarbnook/+/o/mwfarbnook_0799265009_web/+/+
+- realm/s/mwfarbnook/+/o/mwfarbnook_0799265009_web/#
 - realm/s/mwfarbnook/+/r/mwfarbnook_0799265009_web/-
 - realm/s/mwfarbnook/+/r/mwfarbnook_0799265009_web/-/+
 - realm/s/mwfarbnook/test/+/mwfarbnook_0799265009_web/mwfarbnook_0799265009
@@ -68,13 +67,16 @@ User: mwfarbnook
 
 MQTT Publish topics:
 - $NETWORK/latency
-- realm/s/mwfarb/allow-editors/o/mwfarbnook_0799265009_web/+
-- realm/s/mwfarb/json8/o/mwfarbnook_0799265009_web/+
-- realm/s/mwfarbnook/+/o/mwfarbnook_0799265009_web/+
+- realm/s/mwfarb/allow-editors/o/mwfarbnook_0799265009_web/#
+- realm/s/mwfarb/json8/o/mwfarbnook_0799265009_web/#
+- realm/s/mwfarbnook/+/o/mwfarbnook_0799265009_web/#
 
 MQTT Subscribe topics:
 - $NETWORK
 - realm/s/mwfarb/allow-editors/+/+/+
+- realm/s/mwfarb/allow-editors/+/+/+/mwfarbnook_0799265009/#
 - realm/s/mwfarb/json8/+/+/+
+- realm/s/mwfarb/json8/+/+/+/mwfarbnook_0799265009/#
 - realm/s/mwfarbnook/+/+/+/+
+- realm/s/mwfarbnook/+/+/+/+/mwfarbnook_0799265009/#
 - realm/s/public/+/o/+/+
