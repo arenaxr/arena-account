@@ -745,6 +745,8 @@ def arena_token(request):
         ids["handleftid"] = f"handLeft_{userid}"
     if _field_requested(request, "handrightid"):
         ids["handrightid"] = f"handRight_{userid}"
+    if _field_requested(request, "renderfusionid"):
+        ids["renderfusionid"] = "-"
 
     if user.is_authenticated:
         duration = datetime.timedelta(days=1)

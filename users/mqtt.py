@@ -288,7 +288,7 @@ def set_scene_perms_api_v2(
             if "userid" in ids:
                 subs.append(f"{realm}/s/+/+/+/+/+/{ids['userid']}/#")
                 pubs.append(f"{realm}/s/+/+/o/{ids['userclient']}/+/+")
-                if sceneid:  # render fusion requires a scene
+                if sceneid and "renderfusionid" in ids:
                     subs.append(f"{realm}/s/+/+/r/+/+/-/#")
                     pubs.append(f"{realm}/s/+/+/r/{ids['userclient']}/-")
                     pubs.append(f"{realm}/s/+/+/r/{ids['userclient']}/-/+")
@@ -300,7 +300,7 @@ def set_scene_perms_api_v2(
             if "userid" in ids:
                 subs.append(f"{realm}/s/{username}/+/+/+/+/{ids['userid']}/#")
                 pubs.append(f"{realm}/s/{username}/+/o/{ids['userclient']}/+/+")
-                if sceneid:  # render fusion requires a scene
+                if sceneid and "renderfusionid" in ids:
                     subs.append(f"{realm}/s/{username}/+/r/+/+/-/#")
                     pubs.append(f"{realm}/s/{username}/+/r/{ids['userclient']}/-")
                     pubs.append(f"{realm}/s/{username}/+/r/{ids['userclient']}/-/+")
@@ -313,7 +313,7 @@ def set_scene_perms_api_v2(
                     if "userid" in ids:
                         subs.append(f"{realm}/s/{u_scene.name}/+/+/+/{ids['userid']}/#")
                         pubs.append(f"{realm}/s/{u_scene.name}/o/{ids['userclient']}/+/+")
-                        if sceneid:  # render fusion requires a scene
+                        if sceneid and "renderfusionid" in ids:
                             subs.append(f"{realm}/s/{u_scene.name}/r/+/+/-/#")
                             pubs.append(f"{realm}/s/{u_scene.name}/r/{ids['userclient']}/-")
                             pubs.append(f"{realm}/s/{u_scene.name}/r/{ids['userclient']}/-/+")
@@ -331,7 +331,7 @@ def set_scene_perms_api_v2(
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/{ids['userclient']}/#")
             if ids:
                 pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/{ids['userclient']}/+/+")
-                if sceneid:  # render fusion requires a scene
+                if sceneid and "renderfusionid" in ids:
                     subs.append(f"{realm}/s/{namespace}/{sceneid}/r/+/+/-/#")
                     pubs.append(f"{realm}/s/{namespace}/{sceneid}/r/{ids['userclient']}/-")
                     pubs.append(f"{realm}/s/{namespace}/{sceneid}/r/{ids['userclient']}/-/+")
