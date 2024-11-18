@@ -31,8 +31,6 @@ MQTT Publish topics:
 - realm/d/mwfarbnook/#
 - realm/g/mwfarbnook/p/+
 - realm/s/mwfarbnook/+/o/mwfarbnook_0799265009_web/#
-- realm/s/mwfarbnook/+/r/mwfarbnook_0799265009_web/-
-- realm/s/mwfarbnook/+/r/mwfarbnook_0799265009_web/-/+
 - realm/s/mwfarbnook/test/+/mwfarbnook_0799265009_web/mwfarbnook_0799265009
 - realm/s/mwfarbnook/test/+/mwfarbnook_0799265009_web/mwfarbnook_0799265009/+
 - realm/s/mwfarbnook/test/u/mwfarbnook_0799265009_web/handLeft_mwfarbnook_0799265009
@@ -45,7 +43,6 @@ MQTT Subscribe topics:
 - realm/g/mwfarbnook/p/+
 - realm/s/mwfarbnook/+/+/+/+
 - realm/s/mwfarbnook/+/+/+/+/mwfarbnook_0799265009/#
-- realm/s/mwfarbnook/+/r/+/+/-/#
 
 ## General Context
 Page (scenes, build, network)

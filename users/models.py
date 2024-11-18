@@ -50,6 +50,10 @@ class Scene(models.Model):
     def namespace(self):
         return self.name.split("/")[0]
 
+    @property
+    def sceneid(self):
+        return self.name.split("/")[1]
+
 
 class Device(models.Model):
     """Model representing a device's permissions."""
