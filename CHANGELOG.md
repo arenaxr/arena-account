@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.0.1](https://github.com/arenaxr/arena-account/compare/v2.0.0...v2.0.1) (2024-11-19)
+
+
+### Bug Fixes
+
+* **mqtt:** add environmentid request for 'e' host permissions ([73ed411](https://github.com/arenaxr/arena-account/commit/73ed41136841eed337f861f2e5ca82c57d1f1436))
+* **mqtt:** add requirement renderfusion perms with context request ([6264c11](https://github.com/arenaxr/arena-account/commit/6264c11528001cc36ada7c87ac2c82bda9b29155))
+* **mqtt:** allow scene editors write access to public programtopics ([78b3d89](https://github.com/arenaxr/arena-account/commit/78b3d8964172ae6b9355296c343d48ceb257903a))
+* **mqtt:** consolidate token perms by message type and scene write ([#108](https://github.com/arenaxr/arena-account/issues/108)) ([6ba6cad](https://github.com/arenaxr/arena-account/commit/6ba6cad0514504b6fc17c04d03c02a4a1c50a1ea))
+
 ## [2.0.0](https://github.com/arenaxr/arena-account/compare/v1.3.0...v2.0.0) (2024-11-07)
 
 
