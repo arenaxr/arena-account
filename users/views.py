@@ -747,6 +747,8 @@ def arena_token(request):
         ids["handrightid"] = f"handRight_{userid}"
     if _field_requested(request, "renderfusionid"):
         ids["renderfusionid"] = "-"
+    if _field_requested(request, "environmentid"):
+        ids["environmentid"] = "-"
 
     if user.is_authenticated:
         duration = datetime.timedelta(days=1)
