@@ -285,6 +285,7 @@ def set_scene_perms_api_v2(
             # staff/admin have rights to all scene data
             subs.append(f"{realm}/s/+/+/+/+/+")
             pubs.append(f"{realm}/s/+/+/o/{ids['userclient']}/#")
+            pubs.append(f"{realm}/s/+/+/p/{ids['userclient']}/+")
             if "userid" in ids:
                 subs.append(f"{realm}/s/+/+/+/+/+/{ids['userid']}/#")
                 pubs.append(f"{realm}/s/+/+/o/{ids['userclient']}/+/+")
@@ -297,6 +298,7 @@ def set_scene_perms_api_v2(
             # scene owners have rights to their scene objects only
             subs.append(f"{realm}/s/{username}/+/+/+/+")
             pubs.append(f"{realm}/s/{username}/+/o/{ids['userclient']}/#")
+            pubs.append(f"{realm}/s/{username}/+/p/{ids['userclient']}/+")
             if "userid" in ids:
                 subs.append(f"{realm}/s/{username}/+/+/+/+/{ids['userid']}/#")
                 pubs.append(f"{realm}/s/{username}/+/o/{ids['userclient']}/+/+")
@@ -310,6 +312,7 @@ def set_scene_perms_api_v2(
                 if not sceneid or (sceneid and u_scene.name == f"{namespace}/{sceneid}"):
                     subs.append(f"{realm}/s/{u_scene.name}/+/+/+")
                     pubs.append(f"{realm}/s/{u_scene.name}/o/{ids['userclient']}/#")
+                    pubs.append(f"{realm}/s/{u_scene.name}/p/{ids['userclient']}/+")
                     if "userid" in ids:
                         subs.append(f"{realm}/s/{u_scene.name}/+/+/+/{ids['userid']}/#")
                         pubs.append(f"{realm}/s/{u_scene.name}/o/{ids['userclient']}/+/+")
@@ -329,6 +332,7 @@ def set_scene_perms_api_v2(
                 subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+/+/{ids['userid']}/#")
         if perm["public_write"]:
             pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/{ids['userclient']}/#")
+            pubs.append(f"{realm}/s/{namespace}/{sceneid}/p/{ids['userclient']}/+")
             if ids:
                 pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/{ids['userclient']}/+/+")
                 if sceneid and "renderfusionid" in ids:
