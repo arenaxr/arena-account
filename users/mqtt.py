@@ -283,15 +283,18 @@ def set_scene_perms_api_v2(
         if user.is_staff:
             # objectid - o
             # staff/admin have rights to all scene data
+            topicv2_add_scene_reader(pubs, subs, realm, "+", "+", ids)
             topicv2_add_scene_writer(pubs, subs, realm, "+", "+", ids)
         else:
             # objectid - o
             # scene owners have rights to their scene objects only
+            topicv2_add_scene_reader(pubs, subs, realm, username, "+", ids)
             topicv2_add_scene_writer(pubs, subs, realm, username, "+", ids)
             # add scenes that have been granted by other owners
             u_scenes = Scene.objects.filter(editors=user)
             for u_scene in u_scenes:
                 if not sceneid or (sceneid and u_scene.name == f"{namespace}/{sceneid}"):
+                    topicv2_add_scene_reader(pubs, subs, realm, u_scene.namespace, u_scene.sceneid, ids)
                     topicv2_add_scene_writer(pubs, subs, realm, u_scene.namespace, u_scene.sceneid, ids)
     # anon/non-owners have rights to view scene objects only
     if sceneid:
