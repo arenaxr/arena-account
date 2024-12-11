@@ -50,7 +50,8 @@ MQTT Subscribe topics:
 - realm/g/mwfarb/p/+
 - realm/s/mwfarb/test/+/+/+
 - realm/s/mwfarb/test/+/+/+/mwfarbnook_0799265009/#
-- realm/s/mwfarbnook/+/p/+/#
+- realm/s/mwfarbnook/+/+/+/+
+- realm/s/mwfarbnook/+/+/+/+/mwfarbnook_0799265009/#
 
 ## General Context
 Pages (scenes, build, network, programs/dashboard)
@@ -86,7 +87,9 @@ MQTT Publish topics:
 
 MQTT Subscribe topics:
 - $NETWORK
-- realm/s/mwfarb/allow-editors/p/+/#
-- realm/s/mwfarbnook/+/p/+/#
+- realm/s/mwfarb/allow-editors/+/+/+
+- realm/s/mwfarb/allow-editors/+/+/+/mwfarbnook_0799265009/#
+- realm/s/mwfarbnook/+/+/+/+
+- realm/s/mwfarbnook/+/+/+/+/mwfarbnook_0799265009/#
 - realm/s/public/+/+/+/+
 - realm/s/public/+/+/+/+/mwfarbnook_0799265009/#
