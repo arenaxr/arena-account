@@ -1,10 +1,12 @@
 # Sample MQTT JWT Topic Permissions v2
 
 ## Specific Scene Context
-- Page (3d scene), Python, Unity
-- Scene = mwfarb/test
+Pages: (3d scene, build3d), Python, Unity
 
 ### Scene Unprivileged
+Scene: mwfarb/test
+
+Editor: None
 
 User: anonymous-mike
 
@@ -24,6 +26,9 @@ MQTT Subscribe topics:
 - realm/s/mwfarb/test/+/+/+/anonymous-mike_0799265009/#
 
 ### Scene Privileged
+Scene: mwfarb/test
+
+Editor: mwfarbnook/+, mwfarb/allow-editors
 
 User: mwfarbnook
 
@@ -48,10 +53,12 @@ MQTT Subscribe topics:
 - realm/s/mwfarbnook/+/p/+/#
 
 ## General Context
-- Page (scenes, build, network)
-- Scene = None
+Pages: (scenes, build, network, programs/dashboard)
 
 ### General Unprivileged
+Scene: None
+
+Editor: None
 
 User: anonymous-mike
 
@@ -64,6 +71,9 @@ MQTT Subscribe topics:
 - realm/s/public/+/+/+/+/anonymous-mike_0799265009/#
 
 ### General Privileged
+Scene: None
+
+Editor: mwfarbnook/+, mwfarb/allow-editors
 
 User: mwfarbnook
 
@@ -71,15 +81,12 @@ MQTT Publish topics:
 - $NETWORK/latency
 - realm/s/mwfarb/allow-editors/o/mwfarbnook_0799265009_web/#
 - realm/s/mwfarb/allow-editors/p/+/#
-- realm/s/mwfarb/json8/o/mwfarbnook_0799265009_web/#
-- realm/s/mwfarb/json8/p/+/#
 - realm/s/mwfarbnook/+/o/mwfarbnook_0799265009_web/#
 - realm/s/mwfarbnook/+/p/+/#
 
 MQTT Subscribe topics:
 - $NETWORK
 - realm/s/mwfarb/allow-editors/p/+/#
-- realm/s/mwfarb/json8/p/+/#
 - realm/s/mwfarbnook/+/p/+/#
 - realm/s/public/+/+/+/+
 - realm/s/public/+/+/+/+/mwfarbnook_0799265009/#
