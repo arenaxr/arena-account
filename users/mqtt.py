@@ -283,43 +283,16 @@ def set_scene_perms_api_v2(
         if user.is_staff:
             # objectid - o
             # staff/admin have rights to all scene data
-            subs.append(f"{realm}/s/+/+/+/+/+")
-            pubs.append(f"{realm}/s/+/+/o/{ids['userclient']}/#")
-            pubs.append(f"{realm}/s/+/+/p/{ids['userclient']}/+")
-            if "userid" in ids:
-                subs.append(f"{realm}/s/+/+/+/+/+/{ids['userid']}/#")
-                pubs.append(f"{realm}/s/+/+/o/{ids['userclient']}/+/+")
-                if sceneid and "renderfusionid" in ids:
-                    topicv2_add_rrhost(pubs, subs, realm, "+", "+", ids["userclient"])
-                if sceneid and "environmentid" in ids:
-                    topicv2_add_evhost(pubs, subs, realm, "+", "+", ids["userclient"])
+            topicv2_add_scene_writer(pubs, subs, realm, "+", "+", ids)
         else:
             # objectid - o
             # scene owners have rights to their scene objects only
-            subs.append(f"{realm}/s/{username}/+/+/+/+")
-            pubs.append(f"{realm}/s/{username}/+/o/{ids['userclient']}/#")
-            pubs.append(f"{realm}/s/{username}/+/p/{ids['userclient']}/+")
-            if "userid" in ids:
-                subs.append(f"{realm}/s/{username}/+/+/+/+/{ids['userid']}/#")
-                pubs.append(f"{realm}/s/{username}/+/o/{ids['userclient']}/+/+")
-                if sceneid and "renderfusionid" in ids:
-                    topicv2_add_rrhost(pubs, subs, realm, username, "+", ids["userclient"])
-                if sceneid and "environmentid" in ids:
-                    topicv2_add_evhost(pubs, subs, realm, username, "+", ids["userclient"])
+            topicv2_add_scene_writer(pubs, subs, realm, username, "+", ids)
             # add scenes that have been granted by other owners
             u_scenes = Scene.objects.filter(editors=user)
             for u_scene in u_scenes:
                 if not sceneid or (sceneid and u_scene.name == f"{namespace}/{sceneid}"):
-                    subs.append(f"{realm}/s/{u_scene.name}/+/+/+")
-                    pubs.append(f"{realm}/s/{u_scene.name}/o/{ids['userclient']}/#")
-                    pubs.append(f"{realm}/s/{u_scene.name}/p/{ids['userclient']}/+")
-                    if "userid" in ids:
-                        subs.append(f"{realm}/s/{u_scene.name}/+/+/+/{ids['userid']}/#")
-                        pubs.append(f"{realm}/s/{u_scene.name}/o/{ids['userclient']}/+/+")
-                        if sceneid and "renderfusionid" in ids:
-                            topicv2_add_rrhost(pubs, subs, realm, u_scene.namespace, u_scene.sceneid, ids["userclient"])
-                        if sceneid and "environmentid" in ids:
-                            topicv2_add_evhost(pubs, subs, realm, u_scene.namespace, u_scene.sceneid, ids["userclient"])
+                    topicv2_add_scene_writer(pubs, subs, realm, u_scene.namespace, u_scene.sceneid, ids)
     # anon/non-owners have rights to view scene objects only
     if sceneid and not user.is_staff:
         # did the user set specific public read or public write?
@@ -327,33 +300,17 @@ def set_scene_perms_api_v2(
             return pubs, subs  # anonymous not permitted
         # objectid - o
         if perm["public_read"]:
-            subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+/+")
-            if "userid" in ids:
-                subs.append(f"{realm}/s/{namespace}/{sceneid}/+/+/+/{ids['userid']}/#")
+            topicv2_add_scene_reader(pubs, subs, realm, namespace, sceneid, ids)
         if perm["public_write"]:
-            pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/{ids['userclient']}/#")
-            pubs.append(f"{realm}/s/{namespace}/{sceneid}/p/{ids['userclient']}/+")
-            if ids:
-                pubs.append(f"{realm}/s/{namespace}/{sceneid}/o/{ids['userclient']}/+/+")
-                if sceneid and "renderfusionid" in ids:
-                    topicv2_add_rrhost(pubs, subs, realm, namespace, sceneid, ids["userclient"])
-                if sceneid and "environmentid" in ids:
-                    topicv2_add_evhost(pubs, subs, realm, namespace, sceneid, ids["userclient"])
+            topicv2_add_scene_writer(pubs, subs, realm, namespace, sceneid, ids)
     # (all) everyone should be able to read all public scenes
     if not sceneid:
-        subs.append(f"{realm}/s/{PUBLIC_NAMESPACE}/+/o/+/+")
+        topicv2_add_scene_reader(pubs, subs, realm, PUBLIC_NAMESPACE, "+", ids)
     # (all) user presence/chat
     if sceneid and "userid" in ids and perm["users"]:
         # users enabled, so all message types for uuid = userid/idtag are enabled
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/+/{ids['userclient']}/{ids['userid']}")
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/+/{ids['userclient']}/{ids['userid']}/+")
-        # idtag - x/c/p
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/{ids['userclient']}/{ids['userid']}")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/x/{ids['userclient']}/{ids['userid']}/+")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/c/{ids['userclient']}/{ids['userid']}")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/c/{ids['userclient']}/{ids['userid']}/+")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/p/{ids['userclient']}/{ids['userid']}")
-        pubs.append(f"{realm}/s/{namespace}/{sceneid}/p/{ids['userclient']}/{ids['userid']}/+")
         # userobjectid - u
         if perm["users"]:
             if "camid" in ids:
@@ -372,13 +329,38 @@ def set_scene_perms_api_v2(
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/r/{ids['userclient']}/{ids['userid']}/-")
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/e/{ids['userclient']}/{ids['userid']}/-")
         pubs.append(f"{realm}/s/{namespace}/{sceneid}/d/{ids['userclient']}/{ids['userid']}/-")
-
     # scene runtime manager
-    if sceneid:
+    # sub (client): {runtime_realm}/g/<ns>/p/{runtime_uuid}
+    if namespace:
         subs.append(f"{realm}/g/{namespace}/p/+")
         pubs.append(f"{realm}/g/{namespace}/p/+")
+    # pub (client): {runtime_realm}/s/<ns>/<scene>/p/{idTag}
+    if sceneid and "userid" in ids:
+        pubs.append(f"{realm}/s/{namespace}/{sceneid}/p/{ids['userclient']}/{ids['userid']}")
 
     return pubs, subs
+
+
+def topicv2_add_scene_reader(pubs, subs, realm, namespaceid, sceneid, ids):
+    subs.append(f"{realm}/s/{namespaceid}/{sceneid}/+/+/+")
+    if "userid" in ids:
+        subs.append(f"{realm}/s/{namespaceid}/{sceneid}/+/+/+/{ids['userid']}/#")
+
+
+def topicv2_add_scene_writer(pubs, subs, realm, namespaceid, sceneid, ids):
+    pubs.append(f"{realm}/s/{namespaceid}/{sceneid}/o/{ids['userclient']}/#")
+    pubs.append(f"{realm}/s/{namespaceid}/{sceneid}/p/{ids['userclient']}/+")
+    if "userid" in ids:
+        pubs.append(f"{realm}/s/{namespaceid}/{sceneid}/o/{ids['userclient']}/+/+")
+        if sceneid and "renderfusionid" in ids:
+            topicv2_add_rrhost(pubs, subs, realm, namespaceid, sceneid, ids["userclient"])
+        if sceneid and "environmentid" in ids:
+            topicv2_add_evhost(pubs, subs, realm, namespaceid, sceneid, ids["userclient"])
+    # scene runtime manager
+    # pub (editor): {runtime_realm}/s/<ns>/<scene>/p/{runtime_uuid}/{module_uuid}/-/stdin
+    # sub (editor): {runtime_realm}/s/<ns>/<scene>/p/{runtime_uuid}/{module_uuid}/-/out|err
+    pubs.append(f"{realm}/s/{namespaceid}/{sceneid}/p/+/#")
+    subs.append(f"{realm}/s/{namespaceid}/{sceneid}/p/+/#")
 
 
 def topicv2_add_rrhost(pubs, subs, realm, namespaceid, sceneid, userclient):
