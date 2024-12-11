@@ -294,7 +294,7 @@ def set_scene_perms_api_v2(
                 if not sceneid or (sceneid and u_scene.name == f"{namespace}/{sceneid}"):
                     topicv2_add_scene_writer(pubs, subs, realm, u_scene.namespace, u_scene.sceneid, ids)
     # anon/non-owners have rights to view scene objects only
-    if sceneid and not user.is_staff:
+    if sceneid:
         # did the user set specific public read or public write?
         if not user.is_authenticated and not perm["anonymous_users"]:
             return pubs, subs  # anonymous not permitted

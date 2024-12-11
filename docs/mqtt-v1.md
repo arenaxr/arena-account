@@ -1,35 +1,41 @@
 # Sample MQTT JWT Topic Permissions v1 (deprecated)
 
 ## Specific Scene Context
-Page (3d scene), Python, Unity
+Pages (3d scene, build3d), Python, Unity
 
 ### Scene Unprivileged
+Scene: mwfarb/test
+
+Editor: None
 
 User: anonymous-mike
 
 MQTT Publish topics:
 - $NETWORK/latency
-- realm/c/mwfarbnook/o/2559945886_anonymous-mikeMjU1OTk0NTg4Nl9hbm9ueW1vdXMtbWlrZQ==
-- realm/c/mwfarbnook/p/+/2559945886_anonymous-mikeMjU1OTk0NTg4Nl9hbm9ueW1vdXMtbWlrZQ==
-- realm/env/mwfarbnook/test/#
+- realm/c/mwfarb/o/2559945886_anonymous-mikeMjU1OTk0NTg4Nl9hbm9ueW1vdXMtbWlrZQ==
+- realm/c/mwfarb/p/+/2559945886_anonymous-mikeMjU1OTk0NTg4Nl9hbm9ueW1vdXMtbWlrZQ==
+- realm/env/mwfarb/test/#
 - realm/env/public/#
 - realm/g/a/#
 - realm/proc/#
-- realm/s/mwfarbnook/test/camera_2559945886_anonymous-mike
-- realm/s/mwfarbnook/test/camera_2559945886_anonymous-mike/#
-- realm/s/mwfarbnook/test/handLeft_2559945886_anonymous-mike
-- realm/s/mwfarbnook/test/handRight_2559945886_anonymous-mike
+- realm/s/mwfarb/test/camera_2559945886_anonymous-mike
+- realm/s/mwfarb/test/camera_2559945886_anonymous-mike/#
+- realm/s/mwfarb/test/handLeft_2559945886_anonymous-mike
+- realm/s/mwfarb/test/handRight_2559945886_anonymous-mike
 
 MQTT Subscribe topics:
 - $NETWORK
-- realm/c/mwfarbnook/o/#
-- realm/c/mwfarbnook/p/2559945886_anonymous-mike/#
+- realm/c/mwfarb/o/#
+- realm/c/mwfarb/p/2559945886_anonymous-mike/#
 - realm/g/a/#
 - realm/proc/#
-- realm/s/mwfarbnook/test/#
+- realm/s/mwfarb/test/#
 - realm/s/public/#
 
 ### Scene Privileged
+Scene: mwfarb/test
+
+Editor: mwfarbnook/+, mwfarb/allow-editors
 
 User: mwfarbnook
 
@@ -56,9 +62,12 @@ MQTT Subscribe topics:
 - realm/s/public/#
 
 ## General Context
-Page (scenes, build, network)
+Pages (scenes, build, network)
 
 ### General Unprivileged
+Scene: None
+
+Editor: None
 
 User: anonymous-mike
 
@@ -73,6 +82,9 @@ MQTT Subscribe topics:
 - realm/s/public/#
 
 ### General Privileged
+Scene: None
+
+Editor: mwfarbnook/+, mwfarb/allow-editors
 
 User: mwfarbnook
 
@@ -80,22 +92,18 @@ MQTT Publish topics:
 - $NETWORK/latency
 - realm/d/mwfarbnook/#
 - realm/env/mwfarb/allow-editors/#
-- realm/env/mwfarb/json8/#
 - realm/env/mwfarbnook/#
 - realm/env/public/#
 - realm/proc/#
 - realm/s/mwfarb/allow-editors/#
-- realm/s/mwfarb/json8/#
 - realm/s/mwfarbnook/#
 
 MQTT Subscribe topics:
 - $NETWORK
 - realm/d/mwfarbnook/#
 - realm/env/mwfarb/allow-editors/#
-- realm/env/mwfarb/json8/#
 - realm/env/mwfarbnook/#
 - realm/proc/#
 - realm/s/mwfarb/allow-editors/#
-- realm/s/mwfarb/json8/#
 - realm/s/mwfarbnook/#
 - realm/s/public/#

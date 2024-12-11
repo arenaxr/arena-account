@@ -1,7 +1,7 @@
 # Sample MQTT JWT Topic Permissions v2
 
 ## Specific Scene Context
-Pages: (3d scene, build3d), Python, Unity
+Pages (3d scene, build3d), Python, Unity
 
 ### Scene Unprivileged
 Scene: mwfarb/test
@@ -53,7 +53,7 @@ MQTT Subscribe topics:
 - realm/s/mwfarbnook/+/p/+/#
 
 ## General Context
-Pages: (scenes, build, network, programs/dashboard)
+Pages (scenes, build, network, programs/dashboard)
 
 ### General Unprivileged
 Scene: None
