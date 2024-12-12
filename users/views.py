@@ -731,7 +731,10 @@ def arena_token(request):
     # define user object_ids server-side to prevent spoofing
     ids = None
     # always include userid in responses for user_client origin checking
-    userid = f"{username}_{nonce}"
+    if request.version == API_V2:
+        userid = f"{username}_{nonce}"  # v2
+    else:
+        userid = f"{nonce}_{username}"  # v1
     ids = {}
     ids["userid"] = userid
     ids["userclient"] = f"{userid}_{client}"
