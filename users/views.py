@@ -30,7 +30,7 @@ from .forms import (
     UpdateSceneForm,
     UpdateStaffForm,
 )
-from .models import Device, Scene
+from .models import RE_NS_SLASH_ID, Device, Scene
 from .mqtt import (
     ANON_REGEX,
     API_V2,
@@ -48,7 +48,7 @@ from .persistence import (
 from .serializers import SceneNameSerializer, SceneSerializer
 
 # namespaced scene regular expression
-NS_REGEX = re.compile(r'^[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+$')
+RE_PATTERN_NS_SLASH_ID = re.compile(RE_NS_SLASH_ID)
 
 
 def index(request):
@@ -408,7 +408,7 @@ def get_my_scenes(user, version):
         a_scenes = Scene.objects.values_list("name", flat=True)
 
         for p_scene in p_scenes:
-            if NS_REGEX.match(p_scene) and p_scene not in a_scenes:
+            if RE_PATTERN_NS_SLASH_ID.match(p_scene) and p_scene not in a_scenes:
                 s = Scene(
                     name=p_scene,
                     summary="Existing scene name migrated from persistence database.",

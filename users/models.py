@@ -4,8 +4,6 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.urls import reverse
 
-# TODO: move this from users.views import NS_REGEX
-
 # Scene permissions defaults
 SCENE_PUBLIC_READ_DEF = True
 SCENE_PUBLIC_WRITE_DEF = False
@@ -13,15 +11,19 @@ SCENE_ANON_USERS_DEF = True
 SCENE_VIDEO_CONF_DEF = True
 SCENE_USERS_DEF = True
 
+RE_NS = r"^[a-zA-Z0-9_-]*$"
+RE_NS_SLASH_ID = r"^[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+$"
 
-# alphanum_regex = RegexValidator(r"^[0-9a-zA-Z]*$", "Only alphanumeric allowed.")
-# namescene_regex = RegexValidator(NS_REGEX, "Only alphanumeric, underscore, hyphen, and one forward-slash allowed.")
+ns_regex = RegexValidator(RE_NS, "Only alphanumeric, underscore, hyphen allowed.")
+ns_slash_id_regex = RegexValidator(
+    RE_NS_SLASH_ID, "Only alphanumeric, underscore, hyphen, in namespace/idname format allowed."
+)
 
 
 class Namespace(models.Model):
     """Model representing a namespace's permissions."""
 
-    name = models.CharField(max_length=100, blank=False, unique=True)
+    name = models.CharField(max_length=100, blank=False, unique=True, validators=[ns_regex])
     owners = models.ManyToManyField(User, blank=True, related_name="namespace_owners")
     editors = models.ManyToManyField(User, blank=True, related_name="namespace_editors")
     viewers = models.ManyToManyField(User, blank=True, related_name="namespace_viewers")
@@ -43,8 +45,7 @@ class Namespace(models.Model):
 class Scene(models.Model):
     """Model representing a namespace/scene's permissions."""
 
-    name = models.CharField(max_length=200, blank=False, unique=True)
-    # name = models.CharField(max_length=200, blank=False, unique=True, validators=[namescene_regex])
+    name = models.CharField(max_length=200, blank=False, unique=True, validators=[ns_slash_id_regex])
     summary = models.TextField(max_length=1000, blank=True)
     owners = models.ManyToManyField(User, blank=True, related_name="scene_owners")
     editors = models.ManyToManyField(User, blank=True, related_name="scene_editors")
@@ -85,8 +86,7 @@ class Scene(models.Model):
 class Device(models.Model):
     """Model representing a namespace/device's permissions."""
 
-    name = models.CharField(max_length=200, blank=False, unique=True)
-    # name = models.CharField(max_length=200, blank=False, unique=True, validators=[namescene_regex])
+    name = models.CharField(max_length=200, blank=False, unique=True, validators=[ns_slash_id_regex])
     summary = models.TextField(max_length=1000, blank=True)
     creation_date = models.DateTimeField(auto_now_add=True)
 
