@@ -1,7 +1,10 @@
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.db import models
 from django.urls import reverse
+
+# TODO: move this from users.views import NS_REGEX
 
 # Scene permissions defaults
 SCENE_PUBLIC_READ_DEF = True
@@ -11,23 +14,47 @@ SCENE_VIDEO_CONF_DEF = True
 SCENE_USERS_DEF = True
 
 
+# alphanum_regex = RegexValidator(r"^[0-9a-zA-Z]*$", "Only alphanumeric allowed.")
+# namescene_regex = RegexValidator(NS_REGEX, "Only alphanumeric, underscore, hyphen, and one forward-slash allowed.")
+
+
+class Namespace(models.Model):
+    """Model representing a namespace's permissions."""
+
+    name = models.CharField(max_length=100, blank=False, unique=True)
+    owners = models.ManyToManyField(User, blank=True, related_name="namespace_owners")
+    editors = models.ManyToManyField(User, blank=True, related_name="namespace_editors")
+    viewers = models.ManyToManyField(User, blank=True, related_name="namespace_viewers")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # performs regular validation then clean()
+        super(Namespace, self).save(*args, **kwargs)
+
+    def clean(self):
+        if self.name == "":
+            raise ValidationError("Empty namespace name!")
+        self.name = self.name.strip()
+
+    def __str__(self):
+        """String for representing the namespace object by name."""
+        return self.name
+
+
 class Scene(models.Model):
-    """Model representing a scene's permissions."""
+    """Model representing a namespace/scene's permissions."""
 
     name = models.CharField(max_length=200, blank=False, unique=True)
+    # name = models.CharField(max_length=200, blank=False, unique=True, validators=[namescene_regex])
     summary = models.TextField(max_length=1000, blank=True)
-    editors = models.ManyToManyField(User, blank=True)
+    owners = models.ManyToManyField(User, blank=True, related_name="scene_owners")
+    editors = models.ManyToManyField(User, blank=True, related_name="scene_editors")
+    viewers = models.ManyToManyField(User, blank=True, related_name="scene_viewers")
     creation_date = models.DateTimeField(auto_now_add=True)
-    public_read = models.BooleanField(
-        default=SCENE_PUBLIC_READ_DEF, blank=True)
-    public_write = models.BooleanField(
-        default=SCENE_PUBLIC_WRITE_DEF, blank=True)
-    anonymous_users = models.BooleanField(
-        default=SCENE_ANON_USERS_DEF, blank=True)
-    video_conference = models.BooleanField(
-        default=SCENE_VIDEO_CONF_DEF, blank=True)
-    users = models.BooleanField(
-        default=SCENE_USERS_DEF, blank=True)
+    public_read = models.BooleanField(default=SCENE_PUBLIC_READ_DEF, blank=True)
+    public_write = models.BooleanField(default=SCENE_PUBLIC_WRITE_DEF, blank=True)
+    anonymous_users = models.BooleanField(default=SCENE_ANON_USERS_DEF, blank=True)
+    video_conference = models.BooleanField(default=SCENE_VIDEO_CONF_DEF, blank=True)
+    users = models.BooleanField(default=SCENE_USERS_DEF, blank=True)
 
     def save(self, *args, **kwargs):
         self.full_clean()  # performs regular validation then clean()
@@ -35,7 +62,7 @@ class Scene(models.Model):
 
     def clean(self):
         if self.name == "":
-            raise ValidationError("Empty scene name!")
+            raise ValidationError("Empty namespace/scene name!")
         self.name = self.name.strip()
 
     def __str__(self):
@@ -56,9 +83,10 @@ class Scene(models.Model):
 
 
 class Device(models.Model):
-    """Model representing a device's permissions."""
+    """Model representing a namespace/device's permissions."""
 
     name = models.CharField(max_length=200, blank=False, unique=True)
+    # name = models.CharField(max_length=200, blank=False, unique=True, validators=[namescene_regex])
     summary = models.TextField(max_length=1000, blank=True)
     creation_date = models.DateTimeField(auto_now_add=True)
 
@@ -68,7 +96,7 @@ class Device(models.Model):
 
     def clean(self):
         if self.name == "":
-            raise ValidationError("Empty device name!")
+            raise ValidationError("Empty namespace/device name!")
         self.name = self.name.strip()
 
     def __str__(self):
@@ -78,3 +106,7 @@ class Device(models.Model):
     @property
     def namespace(self):
         return self.name.split("/")[0]
+
+    @property
+    def deviceid(self):
+        return self.name.split("/")[1]
