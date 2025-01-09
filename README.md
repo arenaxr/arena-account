@@ -38,6 +38,7 @@ GAUTH_INSTALLED_CLIENTSECRET=Google_OAuth_Desktop_Client_Secret
 GAUTH_DEVICE_CLIENTID=Google_OAuth_TV_and_Limited_Input_Client_ID
 GAUTH_DEVICE_CLIENTSECRET=Google_OAuth_TV_and_Limited_Input_Client_Secret
 MQTT_TOKEN_PRIVKEY=/path/to/your/test/key/file.pem
+DJANGO_LOG_LEVEL=DEBUG
 ```
 4. Create db: ```make migrate```
 5. Create admin user: ```python3 manage.py createsuperuser --email admin@example.com --username admin```
