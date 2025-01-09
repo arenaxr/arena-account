@@ -41,13 +41,6 @@ class UpdateDeviceForm(forms.Form):
 
 
 class SceneForm(forms.ModelForm):
-    editors = forms.ModelMultipleChoiceField(
-        queryset=User.objects.all().order_by('username'),
-        widget=autocomplete.ModelSelect2Multiple(
-            url='users:user-autocomplete',
-            forward=(forward.Self(), ),
-            attrs={'data-minimum-input-length': 2},
-        ), required=False)
     public_read = forms.BooleanField(
         widget=forms.CheckboxInput(attrs={"class": "form-check-input"}), required=False)
     public_write = forms.BooleanField(
@@ -58,11 +51,32 @@ class SceneForm(forms.ModelForm):
         widget=forms.CheckboxInput(attrs={"class": "form-check-input"}), required=False)
     users = forms.BooleanField(
         widget=forms.CheckboxInput(attrs={"class": "form-check-input"}), required=False)
+    owners = forms.ModelMultipleChoiceField(
+        queryset=User.objects.all().order_by('username'),
+        widget=autocomplete.ModelSelect2Multiple(
+            url='users:user-autocomplete',
+            forward=(forward.Self(), ),
+            attrs={'data-minimum-input-length': 2},
+        ), required=False)
+    editors = forms.ModelMultipleChoiceField(
+        queryset=User.objects.all().order_by('username'),
+        widget=autocomplete.ModelSelect2Multiple(
+            url='users:user-autocomplete',
+            forward=(forward.Self(), ),
+            attrs={'data-minimum-input-length': 2},
+        ), required=False)
+    viewers = forms.ModelMultipleChoiceField(
+        queryset=User.objects.all().order_by('username'),
+        widget=autocomplete.ModelSelect2Multiple(
+            url='users:user-autocomplete',
+            forward=(forward.Self(), ),
+            attrs={'data-minimum-input-length': 2},
+        ), required=False)
 
     class Meta:
         model = Scene
         fields = ("public_read", "public_write",
-                  "anonymous_users", "video_conference", "users", "editors")
+                  "anonymous_users", "video_conference", "users", "owners", "editors", "viewers")
 
 
 class DeviceForm(forms.ModelForm):
