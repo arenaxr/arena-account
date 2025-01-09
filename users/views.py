@@ -24,13 +24,14 @@ from rest_framework.parsers import JSONParser
 from .filestore import delete_filestore_user, login_filestore_user, set_filestore_scope
 from .forms import (
     DeviceForm,
+    NamespaceForm,
     SceneForm,
     SocialSignupForm,
     UpdateDeviceForm,
     UpdateSceneForm,
     UpdateStaffForm,
 )
-from .models import RE_NS_SLASH_ID, Device, Scene
+from .models import RE_NS_SLASH_ID, Device, Namespace, Scene
 from .mqtt import (
     ANON_REGEX,
     API_V2,
@@ -157,6 +158,35 @@ def profile_update_device(request):
         return redirect(f"profile/devices/{name}")
 
     return redirect("users:user_profile")
+
+
+def namespace_perm_detail(request, pk):
+    """
+    Handle Namespace Permissions Edit page, get page load and post submit requests.
+    - Handles namespace permissions changes and deletes.
+    """
+    if not namespace_permission(user=request.user, namespace=pk):
+        messages.error(request, f"User does not have permission for: {pk}.")
+        return redirect("users:user_profile")
+    # now, make sure namespace exists before the other commands are tried
+    try:
+        namespace = Namespace.objects.get(name=pk)
+    except Namespace.DoesNotExist:
+        messages.error(request, "The namespace does not exist")
+        return redirect("users:user_profile")
+    if request.method == 'POST':
+        if "save" in request.POST:
+            form = NamespaceForm(instance=namespace, data=request.POST)
+            if form.is_valid():
+                form.save()
+                return redirect("users:user_profile")
+
+            return redirect("users:user_profile")
+    else:
+        form = NamespaceForm(instance=namespace)
+
+    return render(request=request, template_name="users/namespace_perm_detail.html",
+                  context={"namespace": namespace, "form": form})
 
 
 def scene_perm_detail(request, pk):
@@ -448,6 +478,24 @@ def get_my_devices(user):
     merged_devices = (devices | public_devices).distinct().order_by("name")
     return merged_devices
 
+
+def namespace_permission(user, namespace):
+    """
+    Internal method to check if 'user' can edit 'namespace'.
+    """
+    if not user.is_authenticated:  # anon
+        return False
+    elif user.is_staff:  # admin/staff
+        return True
+    elif namespace == user.username:  # owner
+        return True
+    else:
+        try:
+            editor_namespace = Namespace.objects.get(
+                name=namespace, editors=user)  # editor
+        except Namespace.ObjectDoesNotExist:
+            return False
+        return True
 
 def scene_permission(user, scene):
     """

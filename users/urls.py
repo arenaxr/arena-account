@@ -39,6 +39,8 @@ urlpatterns = [
     path("profile", views.user_profile, name="user_profile"),
     path("login_callback", views.login_callback, name="login_callback"),
     re_path(
+        r'^profile/namespaces/(?P<pk>[^\/]+)$', views.namespace_perm_detail),
+    re_path(
         r'^profile/scenes/(?P<pk>[^\/]+\/[^\/]+)$', views.scene_perm_detail),
     re_path(
         r'^profile/devices/(?P<pk>[^\/]+\/[^\/]+)$', views.device_perm_detail),

@@ -4,7 +4,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth.models import User
 
-from .models import Device, Scene
+from .models import Device, Namespace, Scene
 
 
 class SocialSignupForm(_SocialSignupForm):
@@ -38,6 +38,35 @@ class UpdateSceneForm(forms.Form):
 class UpdateDeviceForm(forms.Form):
     add = forms.CharField(label="add", required=False)
     edit = forms.CharField(label="edit", required=False)
+
+
+
+class NamespaceForm(forms.ModelForm):
+    owners = forms.ModelMultipleChoiceField(
+        queryset=User.objects.all().order_by('username'),
+        widget=autocomplete.ModelSelect2Multiple(
+            url='users:user-autocomplete',
+            forward=(forward.Self(), ),
+            attrs={'data-minimum-input-length': 2},
+        ), required=False)
+    editors = forms.ModelMultipleChoiceField(
+        queryset=User.objects.all().order_by('username'),
+        widget=autocomplete.ModelSelect2Multiple(
+            url='users:user-autocomplete',
+            forward=(forward.Self(), ),
+            attrs={'data-minimum-input-length': 2},
+        ), required=False)
+    viewers = forms.ModelMultipleChoiceField(
+        queryset=User.objects.all().order_by('username'),
+        widget=autocomplete.ModelSelect2Multiple(
+            url='users:user-autocomplete',
+            forward=(forward.Self(), ),
+            attrs={'data-minimum-input-length': 2},
+        ), required=False)
+
+    class Meta:
+        model = Namespace
+        fields = ("owners", "editors", "viewers")
 
 
 class SceneForm(forms.ModelForm):
