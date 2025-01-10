@@ -168,13 +168,14 @@ def namespace_perm_detail(request, pk):
     if not namespace_permission(user=request.user, namespace=pk):
         messages.error(request, f"User does not have permission for: {pk}.")
         return redirect("users:user_profile")
+    owners = None  # TODO: define owners
     # now, make sure namespace exists before the other commands are tried
     try:
         namespace = Namespace.objects.get(name=pk)
     except Namespace.DoesNotExist:
         messages.error(request, "The namespace does not exist")
         return redirect("users:user_profile")
-    if request.method == 'POST':
+    if request.method == "POST":
         if "save" in request.POST:
             form = NamespaceForm(instance=namespace, data=request.POST)
             if form.is_valid():
@@ -185,8 +186,11 @@ def namespace_perm_detail(request, pk):
     else:
         form = NamespaceForm(instance=namespace)
 
-    return render(request=request, template_name="users/namespace_perm_detail.html",
-                  context={"namespace": namespace, "form": form})
+    return render(
+        request=request,
+        template_name="users/namespace_perm_detail.html",
+        context={"namespace": namespace, "owners": owners, "form": form},
+    )
 
 
 def scene_perm_detail(request, pk):
@@ -197,34 +201,44 @@ def scene_perm_detail(request, pk):
     if not scene_permission(user=request.user, scene=pk):
         messages.error(request, f"User does not have permission for: {pk}.")
         return redirect("users:user_profile")
+    owners = None  # TODO: define owners
+    namespaced_editors = None  # TODO: define namespaced_editors
+    namespaced_viewers = None  # TODO: define namespaced_viewers
     # now, make sure scene exists before the other commands are tried
     try:
         scene = Scene.objects.get(name=pk)
     except Scene.DoesNotExist:
         messages.error(request, "The scene does not exist")
         return redirect("users:user_profile")
-    if request.method == 'POST':
+    if request.method == "POST":
         if "save" in request.POST:
             form = SceneForm(instance=scene, data=request.POST)
             if form.is_valid():
                 form.save()
                 return redirect("users:user_profile")
         elif "delete" in request.POST:
-            token = generate_arena_token(
-                user=request.user, username=request.user.username, version=request.version)
+            token = generate_arena_token(user=request.user, username=request.user.username, version=request.version)
             # delete account scene data
             scene.delete()
             # delete persist scene data
             if not delete_scene_objects(pk, token):
-                messages.error(
-                    request, f"Unable to delete {pk} objects from persistance database.")
+                messages.error(request, f"Unable to delete {pk} objects from persistence database.")
 
             return redirect("users:user_profile")
     else:
         form = SceneForm(instance=scene)
 
-    return render(request=request, template_name="users/scene_perm_detail.html",
-                  context={"scene": scene, "form": form})
+    return render(
+        request=request,
+        template_name="users/scene_perm_detail.html",
+        context={
+            "scene": scene,
+            "owners": owners,
+            "namespaced_editors": namespaced_editors,
+            "namespaced_viewers": namespaced_viewers,
+            "form": form,
+        },
+    )
 
 
 def device_perm_detail(request, pk):
@@ -242,7 +256,7 @@ def device_perm_detail(request, pk):
         messages.error(request, "The device does not exist")
         return redirect("users:user_profile")
     token = None
-    if request.method == 'POST':
+    if request.method == "POST":
         if "save" in request.POST:
             form = DeviceForm(instance=device, data=request.POST)
             if form.is_valid():
@@ -258,12 +272,15 @@ def device_perm_detail(request, pk):
                 username=request.user.username,
                 ns_device=device.name,
                 duration=datetime.timedelta(days=30),
-                version=request.version
+                version=request.version,
             )
 
     form = DeviceForm(instance=device)
-    return render(request=request, template_name="users/device_perm_detail.html",
-                  context={"device": device, "token": token, "form": form})
+    return render(
+        request=request,
+        template_name="users/device_perm_detail.html",
+        context={"device": device, "token": token, "form": form},
+    )
 
 
 class UserAutocomplete(autocomplete.Select2QuerySetView):
@@ -428,7 +445,7 @@ def get_my_scenes(user, version):
     1. Requests list of any scenes with objects saved from /persist/!allscenes to add to scene permissions table.
     2. Requests and returns list of user's editable scenes from scene permissions table.
     """
-    # update scene list from object persistance db
+    # update scene list from object persistence db
     if user.is_authenticated:
         token = all_scenes_read_token(version)
         if user.is_staff:  # admin/staff
@@ -551,7 +568,7 @@ def user_profile(request):
                 # delete persist scene data
                 if not delete_scene_objects(scene.name, token):
                     messages.error(
-                        request, f"Unable to delete {scene.name} objects from persistance database.")
+                        request, f"Unable to delete {scene.name} objects from persistence database.")
                     return redirect("users:user_profile")
 
             # delete filestore files/account
