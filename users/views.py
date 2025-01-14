@@ -158,7 +158,7 @@ def profile_update_scene(request):
     return redirect("users:user_profile")
 
 
-@ permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated])
 def profile_update_device(request):
     """
     Handle User Profile page, device post submit requests.
@@ -333,8 +333,8 @@ class UserAutocomplete(autocomplete.Select2QuerySetView):
         return qs
 
 
-@ api_view(["POST", "GET", "PUT", "DELETE"])
-@ permission_classes([permissions.IsAuthenticated])
+@api_view(["POST", "GET", "PUT", "DELETE"])
+@permission_classes([permissions.IsAuthenticated])
 def scene_detail(request, pk):
     """
     Scene Permissions headless endpoint for editing permission: POST, GET, PUT, DELETE.
@@ -437,7 +437,7 @@ def profile_update_staff(request):
     return redirect("users:user_profile")
 
 
-@ api_view(["GET"])
+@api_view(["GET"])
 def my_namespaces(request):
     """
     Editable entire namespaces headless endpoint for requesting a list of namespaces this user can write to: GET.
@@ -452,7 +452,7 @@ def my_namespaces(request):
     return JsonResponse({"namespaces": namespaces})
 
 
-@ api_view(["GET", "POST"])
+@api_view(["GET", "POST"])
 def my_scenes(request):
     """
     Editable scenes headless endpoint for requesting a list of scenes this user can write to: GET/POST.
@@ -695,7 +695,7 @@ class SocialSignupView(SocialSignupViewDefault):
             {"form": social_form, "account": self.sociallogin.account},
         )
 
-    @ transaction.atomic
+    @transaction.atomic
     def form_valid(self, social_form):
         self.request.session.pop("socialaccount_sociallogin", None)
         user = social_form.save(self.request)
@@ -703,7 +703,7 @@ class SocialSignupView(SocialSignupViewDefault):
         return helpers.complete_social_signup(self.request, self.sociallogin)
 
 
-@ api_view(["GET", "POST"])
+@api_view(["GET", "POST"])
 def user_state(request):
     """
     Endpoint request for the user's authenticated status, username, name, email: GET/POST.
@@ -741,7 +741,7 @@ def user_state(request):
         )
 
 
-@ api_view(["GET", "POST"])
+@api_view(["GET", "POST"])
 def storelogin(request):
     """
     Endpoint request for the user's file store token: GET/POST.
@@ -806,7 +806,7 @@ def deprecated_token():
     )
 
 
-@ api_view(["POST"])
+@api_view(["POST"])
 def arena_token(request):
     """
     Endpoint to request an ARENA token with permissions for an anonymous or authenticated user for
@@ -914,7 +914,7 @@ def arena_token(request):
     return response
 
 
-@ api_view(["GET"])
+@api_view(["GET"])
 def health_state(request):
     """
     Endpoint request for the arena-account system health: GET.
