@@ -30,6 +30,11 @@ class UpdateStaffForm(forms.Form):
         label="is_staff", required=False, initial=False)
 
 
+class UpdateNamespaceForm(forms.Form):
+    add = forms.CharField(label="add", required=False)
+    edit = forms.CharField(label="edit", required=False)
+
+
 class UpdateSceneForm(forms.Form):
     add = forms.CharField(label="add", required=False)
     edit = forms.CharField(label="edit", required=False)

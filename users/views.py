@@ -28,6 +28,7 @@ from .forms import (
     SceneForm,
     SocialSignupForm,
     UpdateDeviceForm,
+    UpdateNamespaceForm,
     UpdateSceneForm,
     UpdateStaffForm,
 )
@@ -97,7 +98,35 @@ def logout_request(request):
     return response
 
 
-@ permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated])
+def profile_update_namespace(request):
+    """
+    Handle User Profile page, namespace post submit requests.
+    """
+    if request.method != "POST":
+        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Not authenticated."}, status=status.HTTP_403_FORBIDDEN)
+    form = UpdateNamespaceForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, "Invalid parameters")
+        return redirect("users:user_profile")
+    if "add" in request.POST:
+        namespacename = request.POST.get("namespacename", None)
+        s = Namespace(
+            name=f"{namespacename}",
+        )
+        s.save()
+        messages.success(request, f"Created namespace {namespacename}")
+        return redirect("users:user_profile")
+    elif "edit" in request.POST:
+        name = form.cleaned_data["edit"]
+        return redirect(f"profile/namespaces/{name}")
+
+    return redirect("users:user_profile")
+
+
+@permission_classes([permissions.IsAuthenticated])
 def profile_update_scene(request):
     """
     Handle User Profile page, scene post submit requests.
@@ -181,6 +210,13 @@ def namespace_perm_detail(request, pk):
             if form.is_valid():
                 form.save()
                 return redirect("users:user_profile")
+        elif "delete" in request.POST:
+            token = generate_arena_token(user=request.user, username=request.user.username, version=request.version)
+            # delete account scene data
+            namespace.delete()
+            # delete persist scene data
+            if not delete_scene_objects(pk, token):
+                messages.error(request, f"Unable to delete {pk} objects from persistence database.")
 
             return redirect("users:user_profile")
     else:
@@ -439,6 +475,32 @@ def my_scenes(request):
     return JsonResponse(serializer.data, safe=False)
 
 
+def get_my_namespaces(user):
+    """
+    Internal method to update namespace permissions table:
+    Requests and returns list of user's editable namespaces from namespace permissions table.
+    """
+    # load list of namespaces this user can edit
+    namespaces = Namespace.objects.none()
+    editor_namespaces = Namespace.objects.none()
+    if user.is_authenticated:
+        if user.is_staff:  # admin/staff
+            namespaces = Namespace.objects.all()
+        else:  # standard user
+            namespaces = Namespace.objects.filter(name=f"{user.username}")
+            editor_namespaces = Namespace.objects.filter(editors=user)
+        if len(namespaces) == 0:
+            #  add default namespace for user
+            namespaces.add(
+                Namespace(
+                    name=f"{user.username}",
+                )
+            )
+    # merge 'my' namespaced namespaces and extras namespaces granted
+    merged_namespaces = (namespaces | editor_namespaces).distinct().order_by("name")
+    return merged_namespaces
+
+
 def get_my_scenes(user, version):
     """
     Internal method to update scene permissions table:
@@ -588,6 +650,7 @@ def user_profile(request):
             except User.DoesNotExist:
                 messages.error(request, "Unable to complete account delete.")
 
+    namespaces = get_my_namespaces(request.user)
     scenes = get_my_scenes(request.user, version)
     devices = get_my_devices(request.user)
     staff = None
@@ -596,7 +659,7 @@ def user_profile(request):
     return render(
         request=request,
         template_name="users/user_profile.html",
-        context={"user": request.user, "scenes": scenes,
+        context={"user": request.user, "namespaces": namespaces, "scenes": scenes,
                  "devices": devices, "staff": staff},
     )
 

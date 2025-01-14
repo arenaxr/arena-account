@@ -63,12 +63,12 @@
                         Staff</button>
                     <button type="submit" class="btn btn-secondary btn-sm" name="is_staff" value="false">Remove
                         Staff</button><br>
-                    <ul>
-                        <li><small><cite>Add Staff/Remove Staff</cite> will allow/disallow write access to public Scenes
-                                and public File Store.</small></li>
-                        <li><small>Using Admin Page to set <cite>Staff status</cite> may not allow write access to
-                                public File Store correctly.</small></li>
-                    </ul>
+                <ul>
+                    <li><small><cite>Add Staff/Remove Staff</cite> will allow/disallow write access to public Scenes
+                            and public File Store.</small></li>
+                    <li><small>Using Admin Page to set <cite>Staff status</cite> may not allow write access to
+                            public File Store correctly.</small></li>
+                </ul>
                 </p>
             </form>
             <script type="text/javascript">
@@ -100,6 +100,62 @@
             </table>
             <br>
             {% endif %}
+            <!-- List namespaces user can edit, and links -->
+            <h5>Namespace Permissions
+                <button id="button_expand_add_namespace" type="button" title="Open: Add Namespace"
+                    class="btn btn-sm btn-primary" data-bs-toggle="button" aria-pressed="false" autocomplete="off"
+                    {% if not user.is_staff %} disabled {% endif %}>
+                    +
+                </button>
+            </h5>
+            <form action="profile_update_namespace" method="POST">
+                {% csrf_token %}
+                <div id="div_add_namespace" style="display: none;" class="input-group mb-3">
+                    <input type="text" class="form-control" name="namespacename" placeholder="namespacename"
+                        pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){1,38}$" aria-label="namespacename"
+                        aria-describedby="basic-addon2">
+                    <div class="input-group-append">
+                        <button type="submit" class="btn btn-outline-secondary" name="add">Add Namespace</button>
+                    </div>
+                </div>
+            </form>
+            {% if namespaces %}
+            <table class="table table-sm table-hover">
+                <thead class="thead-light">
+                    <th>Namespace Name</th>
+                    <th>Editors</th>
+                    <th>Viewers</th>
+                    <th></th>
+                </thead>
+                <tbody>
+                    {% for namespace in namespaces %}
+                    <form action="profile_update_namespace" method="POST">
+                        {% csrf_token %}
+                        <tr>
+                            <td><b>{{ namespace.name }}</b></td>
+                            <!--editors-->
+                            <td>
+                                {{ namespace.editors.all|join:", " }}
+                            </td>
+                            <td>
+                                {{ namespace.viewers.all|join:", " }}
+                            </td>
+                            <td><button type="submit" class="btn btn-secondary btn-sm" name="edit"
+                                    value="{{ namespace.name }}">Edit</button></td>
+                            </td>
+                        </tr>
+                    </form>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <table class="table table-sm table-hover">
+                <tr>
+                    <td>No namespaces</td>
+                </tr>
+            </table>
+            {% endif %}
+            <br>
             <!-- List scenes user can edit, and links -->
             <h5>Scene Permissions <button id="button_expand_add_scene" type="button" title="Open: Add Scene"
                     class="btn btn-sm btn-primary" data-bs-toggle="button" aria-pressed="false" autocomplete="off">
@@ -129,7 +185,8 @@
                     <th>User Interaction</th>
                     <th>Anonymous Users</th>
                     <th>Video Conference</th>
-                    <th>Other Editors</th>
+                    <th>Editors</th>
+                    <th>Viewers</th>
                     <th></th>
                 </thead>
                 <tbody>
@@ -137,7 +194,9 @@
                     <form action="profile_update_scene" method="POST">
                         {% csrf_token %}
                         <tr>
-                            <td><a href="{{ request.scheme }}://{{ request.META.HTTP_HOST }}/{{ scene.name }}"><b>{{ scene.name }}</b></a></td>
+                            <td><a
+                                    href="{{ request.scheme }}://{{ request.META.HTTP_HOST }}/{{ scene.name }}"><b>{{ scene.name }}</b></a>
+                            </td>
                             <!--public subscribe ok-->
                             <td>
                                 {% if scene.public_read %}
@@ -178,13 +237,17 @@
                                 <i class="fas fa-times"></i>
                                 {% endif %}
                             </td>
-                            <!--number of editors-->
+                            <!--editors-->
                             <td>
                                 {% if scene.public_write %}
                                 <span style="color:darkorange;font-weight:bolder;font-style:italic;">ALL USERS</span>
                                 {% else %}
                                 {{ scene.editors.all|join:", " }}
                                 {% endif %}
+                            </td>
+                            <!--viewers-->
+                            <td>
+                                {{ scene.viewers.all|join:", " }}
                             </td>
                             <td><button type="submit" class="btn btn-secondary btn-sm" name="edit"
                                     value="{{ scene.name }}">Edit</button></td>
@@ -267,6 +330,7 @@
         window.onload = onPageLoad();
 
         function onPageLoad() {
+            createExpandHandler("button_expand_add_namespace", "div_add_namespace")
             createExpandHandler("button_expand_add_scene", "div_add_scene")
             createExpandHandler("button_expand_add_device", "div_add_device")
         }
