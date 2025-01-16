@@ -1,11 +1,15 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-
 from users.models import Scene
 
 
 class SceneSerializer(serializers.ModelSerializer):
     editors = serializers.SlugRelatedField(
+        queryset=User.objects.all(),
+        many=True,
+        slug_field='username'
+    )
+    viewers = serializers.SlugRelatedField(
         queryset=User.objects.all(),
         many=True,
         slug_field='username'
@@ -17,13 +21,14 @@ class SceneSerializer(serializers.ModelSerializer):
             "name",
             "summary",
             "editors",
+            "viewers",
             "creation_date",
             "public_read",
             "public_write",
             "anonymous_users",
             "video_conference",
             "users",
-            "namespace",
+            "is_default",
         ]
 
 

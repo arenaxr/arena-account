@@ -132,7 +132,12 @@
                     <form action="profile_update_namespace" method="POST">
                         {% csrf_token %}
                         <tr>
-                            <td><b>{{ namespace.name }}</b></td>
+                            <!--name-->
+                            <td><b>{{ namespace.name }}</b>
+                                {% if namespace.is_default %}
+                                <b> (default)</b>
+                                {% endif %}
+                            </td>
                             <!--editors-->
                             <td>
                                 {{ namespace.editors.all|join:", " }}
@@ -195,8 +200,12 @@
                     <form action="profile_update_scene" method="POST">
                         {% csrf_token %}
                         <tr>
+                            <!--name-->
                             <td><a
                                     href="{{ request.scheme }}://{{ request.META.HTTP_HOST }}/{{ scene.name }}"><b>{{ scene.name }}</b></a>
+                                {% if scene.is_default %}
+                                <b> (default)</b>
+                                {% endif %}
                             </td>
                             <!--public subscribe ok-->
                             <td>
@@ -298,7 +307,9 @@
                     <form action="profile_update_device" method="POST">
                         {% csrf_token %}
                         <tr>
+                            <!--name-->
                             <td><b>{{ device.name }}</b></td>
+                            <!--summary-->
                             <td><b>{{ device.summary }}</b></td>
                             <td><button type="submit" class="btn btn-secondary btn-sm" name="edit"
                                     value="{{ device.name }}">Edit</button></td>

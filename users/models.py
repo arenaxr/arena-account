@@ -41,6 +41,10 @@ class Namespace(models.Model):
         """String for representing the namespace object by name."""
         return self.name
 
+    @property
+    def is_default(self):
+        return self.editors.count() == 0 and self.viewers.count() == 0
+
 
 class Scene(models.Model):
     """Model representing a namespace/scene's permissions."""
@@ -81,6 +85,18 @@ class Scene(models.Model):
     @property
     def sceneid(self):
         return self.name.split("/")[1]
+
+    @property
+    def is_default(self):
+        return (
+            self.public_read is SCENE_PUBLIC_READ_DEF
+            and self.public_write is SCENE_PUBLIC_WRITE_DEF
+            and self.anonymous_users is SCENE_ANON_USERS_DEF
+            and self.video_conference is SCENE_VIDEO_CONF_DEF
+            and self.users is SCENE_USERS_DEF
+            and self.editors.count() == 0
+            and self.viewers.count() == 0
+        )
 
 
 class Device(models.Model):

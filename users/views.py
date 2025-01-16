@@ -440,14 +440,17 @@ def profile_update_staff(request):
 @api_view(["GET"])
 def my_namespaces(request):
     """
-    Editable entire namespaces headless endpoint for requesting a list of namespaces this user can write to: GET.
+    Editable entire namespaces headless endpoint for requesting a list of namespaces this user can edit and/or view: GET.
     """
     namespaces = []
     if request.user.is_authenticated:
         namespaces.append(request.user.username)
+        editor_namespaces = Namespace.objects.filter(editors=request.user)
     if request.user.is_staff:  # admin/staff
         namespaces.append(PUBLIC_NAMESPACE)
-    # TODO: when entire namespaces are shared, they should be added here
+
+    # also show namespaces listed as "viewer"
+
     namespaces.sort()
     return JsonResponse({"namespaces": namespaces})
 
@@ -455,7 +458,7 @@ def my_namespaces(request):
 @api_view(["GET", "POST"])
 def my_scenes(request):
     """
-    Editable scenes headless endpoint for requesting a list of scenes this user can write to: GET/POST.
+    Editable scenes headless endpoint for requesting a list of scenes this user can edit and/or view: GET/POST.
     - POST requires id_token for headless clients like Python apps.
     """
     if request.version not in TOPIC_SUPPORTED_API_VERSIONS:
@@ -470,12 +473,16 @@ def my_scenes(request):
             except (ValueError, SocialAccount.DoesNotExist) as err:
                 return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
 
-    serializer = SceneNameSerializer(
-        get_my_scenes(user, request.version), many=True)
+    edit_scenes = get_my_edit_scenes(user, request.version)
+    # also show scenes listed as "viewer"
+    view_scenes = get_my_view_scenes(user, request.version)
+    merged_scenes = (edit_scenes | view_scenes).distinct().order_by("name")
+
+    serializer = SceneSerializer(merged_scenes, many=True)
     return JsonResponse(serializer.data, safe=False)
 
 
-def get_my_namespaces(user):
+def get_my_edit_namespaces(user):
     """
     Internal method to update namespace permissions table:
     Requests and returns list of user's editable namespaces from namespace permissions table.
@@ -491,20 +498,16 @@ def get_my_namespaces(user):
             editor_namespaces = Namespace.objects.filter(editors=user)
         if len(namespaces) == 0:
             #  add default namespace for user
-            namespaces.add(
-                Namespace(
-                    name=f"{user.username}",
-                )
-            )
+            namespaces.add(Namespace(name=f"{user.username}"))
     # merge 'my' namespaced namespaces and extras namespaces granted
     merged_namespaces = (namespaces | editor_namespaces).distinct().order_by("name")
     return merged_namespaces
 
 
-def get_my_scenes(user, version):
+def get_my_edit_scenes(user, version):
     """
-    Internal method to update scene permissions table:
-    1. Requests list of any scenes with objects saved from /persist/!allscenes to add to scene permissions table.
+    Internal method to request edit scenes from persist and permissions:
+    1. Requests list of any scenes with objects saved from /persist/!allscenes.
     2. Requests and returns list of user's editable scenes from scene permissions table.
     """
     # update scene list from object persistence db
@@ -515,7 +518,6 @@ def get_my_scenes(user, version):
         else:  # standard user
             p_scenes = get_persist_scenes_ns(token, user.username)
         a_scenes = Scene.objects.values_list("name", flat=True)
-
         for p_scene in p_scenes:
             if RE_PATTERN_NS_SLASH_ID.match(p_scene) and p_scene not in a_scenes:
                 s = Scene(
@@ -538,6 +540,41 @@ def get_my_scenes(user, version):
     return merged_scenes
 
 
+def get_my_view_scenes(user, version):
+    """
+    Internal method to request view scenes from persist and permissions:
+    1. Requests and returns list of user's viewable scenes from scene permissions table.
+    """
+    # update scene list from object persistence db
+    if user.is_authenticated:
+        token = all_scenes_read_token(version)
+        if user.is_staff:  # admin/staff
+            p_scenes = get_persist_scenes_all(token)
+        else:  # standard user
+            p_scenes = get_persist_scenes_ns(token, user.username)
+        a_scenes = Scene.objects.values_list("name", flat=True)
+        for p_scene in p_scenes:
+            if RE_PATTERN_NS_SLASH_ID.match(p_scene) and p_scene not in a_scenes:
+                s = Scene(
+                    name=p_scene,
+                    summary="Existing scene name migrated from persistence database.",
+                )
+                s.save()
+
+    # load list of scenes this user can edit
+    scenes = Scene.objects.none()
+    editor_scenes = Scene.objects.none()
+    if user.is_authenticated:
+        if user.is_staff:  # admin/staff
+            scenes = Scene.objects.all()
+        else:  # standard user
+            scenes = Scene.objects.filter(name__startswith=f"{user.username}/")
+            editor_scenes = Scene.objects.filter(editors=user)
+    # merge 'my' namespaced scenes and extras scenes granted
+    merged_scenes = (scenes | editor_scenes | persist_scenes).distinct().order_by("name")
+    return merged_scenes
+
+
 def get_my_devices(user):
     """
     Internal method to update device permissions table:
@@ -549,10 +586,8 @@ def get_my_devices(user):
         if user.is_staff:  # admin/staff
             devices = Device.objects.all()
         else:  # standard user
-            devices = Device.objects.filter(
-                name__startswith=f"{user.username}/")
-    public_devices = Device.objects.filter(
-        name__startswith=f"{PUBLIC_NAMESPACE}/")
+            devices = Device.objects.filter(name__startswith=f"{user.username}/")
+    public_devices = Device.objects.filter(name__startswith=f"{PUBLIC_NAMESPACE}/")
     # merge 'my' namespaced devices and extras devices granted
     merged_devices = (devices | public_devices).distinct().order_by("name")
     return merged_devices
@@ -650,8 +685,8 @@ def user_profile(request):
             except User.DoesNotExist:
                 messages.error(request, "Unable to complete account delete.")
 
-    namespaces = get_my_namespaces(request.user)
-    scenes = get_my_scenes(request.user, version)
+    namespaces = get_my_edit_namespaces(request.user)
+    scenes = get_my_edit_scenes(request.user, version)
     devices = get_my_devices(request.user)
     staff = None
     if request.user.is_staff:  # admin/staff
