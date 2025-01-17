@@ -47,7 +47,12 @@ from .persistence import (
     get_persist_scenes_all,
     get_persist_scenes_ns,
 )
-from .serializers import SceneNameSerializer, SceneSerializer
+from .serializers import (
+    NamespaceNameSerializer,
+    NamespaceSerializer,
+    SceneNameSerializer,
+    SceneSerializer,
+)
 
 # namespaced scene regular expression
 RE_PATTERN_NS_SLASH_ID = re.compile(RE_NS_SLASH_ID)
@@ -437,11 +442,24 @@ def profile_update_staff(request):
     return redirect("users:user_profile")
 
 
-@api_view(["GET"])
+@api_view(["GET", "POST"])
 def my_namespaces(request):
     """
-    Editable entire namespaces headless endpoint for requesting a list of namespaces this user can edit and/or view: GET.
+    Editable/viewable namespace headless endpoint for requesting a list of namespaces this user can edit and/or view: GET/POST.
+    - POST requires id_token for headless clients like Python apps.
     """
+    if request.version not in TOPIC_SUPPORTED_API_VERSIONS:
+        return deprecated_token()
+
+    user = request.user
+    if request.method == "POST":
+        gid_token = request.POST.get("id_token", None)
+        if gid_token:
+            try:
+                user = get_user_from_id_token(gid_token)
+            except (ValueError, SocialAccount.DoesNotExist) as err:
+                return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
+
     namespaces = []
     if request.user.is_authenticated:
         namespaces.append(request.user.username)
@@ -449,16 +467,19 @@ def my_namespaces(request):
     if request.user.is_staff:  # admin/staff
         namespaces.append(PUBLIC_NAMESPACE)
 
+    edit_namespaces = get_my_edit_namespaces(user)
     # also show namespaces listed as "viewer"
+    view_namespaces = get_my_view_namespaces(user)
+    merged_namespaces = (edit_namespaces | view_namespaces).distinct().order_by("name")
 
-    namespaces.sort()
-    return JsonResponse({"namespaces": namespaces})
+    serializer = NamespaceNameSerializer(merged_namespaces, many=True)
+    return JsonResponse(serializer.data, safe=False)
 
 
 @api_view(["GET", "POST"])
 def my_scenes(request):
     """
-    Editable scenes headless endpoint for requesting a list of scenes this user can edit and/or view: GET/POST.
+    Editable/viewable scenes headless endpoint for requesting a list of scenes this user can edit and/or view: GET/POST.
     - POST requires id_token for headless clients like Python apps.
     """
     if request.version not in TOPIC_SUPPORTED_API_VERSIONS:
@@ -478,7 +499,7 @@ def my_scenes(request):
     view_scenes = get_my_view_scenes(user, request.version)
     merged_scenes = (edit_scenes | view_scenes).distinct().order_by("name")
 
-    serializer = SceneSerializer(merged_scenes, many=True)
+    serializer = SceneNameSerializer(merged_scenes, many=True)
     return JsonResponse(serializer.data, safe=False)
 
 
@@ -501,6 +522,28 @@ def get_my_edit_namespaces(user):
             namespaces.add(Namespace(name=f"{user.username}"))
     # merge 'my' namespaced namespaces and extras namespaces granted
     merged_namespaces = (namespaces | editor_namespaces).distinct().order_by("name")
+    return merged_namespaces
+
+
+def get_my_view_namespaces(user):
+    """
+    Internal method to update namespace permissions table:
+    Requests and returns list of user's viewable namespaces from namespace permissions table.
+    """
+    # load list of namespaces this user can view
+    namespaces = Namespace.objects.none()
+    viewer_namespaces = Namespace.objects.none()
+    if user.is_authenticated:
+        if user.is_staff:  # admin/staff
+            namespaces = Namespace.objects.all()
+        else:  # standard user
+            namespaces = Namespace.objects.filter(name=f"{user.username}")
+            viewer_namespaces = Namespace.objects.filter(viewers=user)
+        if len(namespaces) == 0:
+            #  add default namespace for user
+            namespaces.add(Namespace(name=f"{user.username}"))
+    # merge 'my' namespaced namespaces and extras namespaces granted
+    merged_namespaces = (namespaces | viewer_namespaces).distinct().order_by("name")
     return merged_namespaces
 
 
