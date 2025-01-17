@@ -938,7 +938,7 @@ def arena_token(request):
         "token": token,
         "ids": ids,
     }
-    response = HttpResponse(json.dumps(data), content_type="application/json")
+    response = JsonResponse(data)
     response.set_cookie(
         "mqtt_token",
         token,
