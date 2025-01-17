@@ -20,6 +20,17 @@ ns_slash_id_regex = RegexValidator(
 )
 
 
+class NamespaceDefault:
+    def __init__(self, name=""):
+        self.name = name
+        self.owners = []
+        self.editors = []
+        self.viewers = []
+
+    def __getitem__(self, item):
+        return getattr(self, item)
+
+
 class Namespace(models.Model):
     """Model representing a namespace's permissions."""
 

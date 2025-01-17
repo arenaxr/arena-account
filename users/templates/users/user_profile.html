@@ -140,11 +140,15 @@
                             </td>
                             <!--editors-->
                             <td>
-                                {{ namespace.editors.all|join:", " }}
+                                {{ namespace.persist_scenes }}
+                            </td>
+                            <!--editors-->
+                            <td>
+                                {{ namespace.editors|join:", " }}
                             </td>
                             <!--viewers-->
                             <td>
-                                {{ namespace.viewers.all|join:", " }}
+                                {{ namespace.viewers|join:", " }}
                             </td>
                             <td><button type="submit" class="btn btn-secondary btn-sm" name="edit"
                                     value="{{ namespace.name }}">Edit</button></td>

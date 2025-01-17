@@ -3,6 +3,7 @@ import json
 import os
 import re
 import secrets
+from operator import itemgetter
 
 from allauth.socialaccount import helpers
 from allauth.socialaccount.models import SocialAccount
@@ -32,7 +33,7 @@ from .forms import (
     UpdateSceneForm,
     UpdateStaffForm,
 )
-from .models import RE_NS_SLASH_ID, Device, Namespace, Scene
+from .models import RE_NS_SLASH_ID, Device, Namespace, NamespaceDefault, Scene
 from .mqtt import (
     ANON_REGEX,
     API_V2,
@@ -460,20 +461,16 @@ def my_namespaces(request):
             except (ValueError, SocialAccount.DoesNotExist) as err:
                 return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
 
-    namespaces = []
-    if request.user.is_authenticated:
-        namespaces.append(request.user.username)
-        editor_namespaces = Namespace.objects.filter(editors=request.user)
-    if request.user.is_staff:  # admin/staff
-        namespaces.append(PUBLIC_NAMESPACE)
-
     edit_namespaces = get_my_edit_namespaces(user)
     # also show namespaces listed as "viewer"
     view_namespaces = get_my_view_namespaces(user)
-    merged_namespaces = (edit_namespaces | view_namespaces).distinct().order_by("name")
+    merged_list = edit_namespaces + view_namespaces
+    merged_dict = {}
+    for entry in merged_list:
+        merged_dict[entry["name"]] = {"name": entry["name"]}
 
-    serializer = NamespaceNameSerializer(merged_namespaces, many=True)
-    return JsonResponse(serializer.data, safe=False)
+    output_list = sorted(list(merged_dict.values()), key=lambda d: d["name"])
+    return JsonResponse(output_list, safe=False)
 
 
 @api_view(["GET", "POST"])
@@ -517,12 +514,18 @@ def get_my_edit_namespaces(user):
         else:  # standard user
             namespaces = Namespace.objects.filter(name=f"{user.username}")
             editor_namespaces = Namespace.objects.filter(editors=user)
-        if len(namespaces) == 0:
-            #  add default namespace for user
-            namespaces.add(Namespace(name=f"{user.username}"))
     # merge 'my' namespaced namespaces and extras namespaces granted
     merged_namespaces = (namespaces | editor_namespaces).distinct().order_by("name")
-    return merged_namespaces
+    serializer = NamespaceSerializer(merged_namespaces, many=True)
+    ns_out = serializer.data
+    if user.is_authenticated:
+        # always add current user's namespace
+        if not any(dictionary.get("name") == user.username for dictionary in ns_out):
+            ns_out.append(NamespaceDefault(name=user.username))
+        # also add persisted
+
+    # return sorted(ns_out, key=lambda d: d['name'])
+    return sorted(ns_out, key=itemgetter('name'))
 
 
 def get_my_view_namespaces(user):
@@ -544,7 +547,8 @@ def get_my_view_namespaces(user):
             namespaces.add(Namespace(name=f"{user.username}"))
     # merge 'my' namespaced namespaces and extras namespaces granted
     merged_namespaces = (namespaces | viewer_namespaces).distinct().order_by("name")
-    return merged_namespaces
+    serializer = NamespaceSerializer(merged_namespaces, many=True)
+    return serializer.data
 
 
 def get_my_edit_scenes(user, version):
