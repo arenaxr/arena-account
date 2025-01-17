@@ -571,7 +571,7 @@ def get_my_view_scenes(user, version):
             scenes = Scene.objects.filter(name__startswith=f"{user.username}/")
             editor_scenes = Scene.objects.filter(editors=user)
     # merge 'my' namespaced scenes and extras scenes granted
-    merged_scenes = (scenes | editor_scenes | persist_scenes).distinct().order_by("name")
+    merged_scenes = (scenes | editor_scenes).distinct().order_by("name")
     return merged_scenes
 
 
