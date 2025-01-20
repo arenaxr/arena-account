@@ -30,6 +30,10 @@ class NamespaceDefault:
     def __getitem__(self, item):
         return getattr(self, item)
 
+    @property
+    def is_default(self):
+        return len(self.editors) == 0 and len(self.viewers) == 0
+
 
 class Namespace(models.Model):
     """Model representing a namespace's permissions."""

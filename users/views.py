@@ -522,9 +522,7 @@ def get_my_edit_namespaces(user):
         # always add current user's namespace
         if not any(dictionary.get("name") == user.username for dictionary in ns_out):
             ns_out.append(NamespaceDefault(name=user.username))
-        # also add persisted
 
-    # return sorted(ns_out, key=lambda d: d['name'])
     return sorted(ns_out, key=itemgetter('name'))
 
 
@@ -534,21 +532,18 @@ def get_my_view_namespaces(user):
     Requests and returns list of user's viewable namespaces from namespace permissions table.
     """
     # load list of namespaces this user can view
-    namespaces = Namespace.objects.none()
     viewer_namespaces = Namespace.objects.none()
     if user.is_authenticated:
-        if user.is_staff:  # admin/staff
-            namespaces = Namespace.objects.all()
-        else:  # standard user
-            namespaces = Namespace.objects.filter(name=f"{user.username}")
+        if not user.is_staff:  # admin/staff
             viewer_namespaces = Namespace.objects.filter(viewers=user)
-        if len(namespaces) == 0:
-            #  add default namespace for user
-            namespaces.add(Namespace(name=f"{user.username}"))
-    # merge 'my' namespaced namespaces and extras namespaces granted
-    merged_namespaces = (namespaces | viewer_namespaces).distinct().order_by("name")
-    serializer = NamespaceSerializer(merged_namespaces, many=True)
-    return serializer.data
+    serializer = NamespaceSerializer(viewer_namespaces, many=True)
+    ns_out = serializer.data
+    if user.is_authenticated:
+        # always add public namespace
+        if not any(dictionary.get("name") == PUBLIC_NAMESPACE for dictionary in ns_out):
+            ns_out.append(NamespaceDefault(name=PUBLIC_NAMESPACE))
+
+    return sorted(ns_out, key=itemgetter('name'))
 
 
 def get_my_edit_scenes(user, version):
