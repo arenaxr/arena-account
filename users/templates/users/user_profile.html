@@ -252,12 +252,12 @@
                                 {% if scene.public_write %}
                                 <span style="color:darkorange;font-weight:bolder;font-style:italic;">ALL USERS</span>
                                 {% else %}
-                                {{ scene.editors.all|join:", " }}
+                                {{ scene.editors|join:", " }}
                                 {% endif %}
                             </td>
                             <!--viewers-->
                             <td>
-                                {{ scene.viewers.all|join:", " }}
+                                {{ scene.viewers|join:", " }}
                             </td>
                             <td><button type="submit" class="btn btn-secondary btn-sm" name="edit"
                                     value="{{ scene.name }}">Edit</button></td>

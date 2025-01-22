@@ -26,13 +26,7 @@ class NamespaceDefault:
         self.owners = []
         self.editors = []
         self.viewers = []
-
-    def __getitem__(self, item):
-        return getattr(self, item)
-
-    @property
-    def is_default(self):
-        return len(self.editors) == 0 and len(self.viewers) == 0
+        self.is_default = True
 
 
 class Namespace(models.Model):
@@ -59,6 +53,20 @@ class Namespace(models.Model):
     @property
     def is_default(self):
         return self.editors.count() == 0 and self.viewers.count() == 0
+
+
+class SceneDefault:
+    def __init__(self, name=""):
+        self.name = name
+        self.owners = []
+        self.editors = []
+        self.viewers = []
+        self.public_read = SCENE_PUBLIC_READ_DEF
+        self.public_write = SCENE_PUBLIC_WRITE_DEF
+        self.anonymous_users = SCENE_ANON_USERS_DEF
+        self.video_conference = SCENE_VIDEO_CONF_DEF
+        self.users = SCENE_USERS_DEF
+        self.is_default = True
 
 
 class Scene(models.Model):

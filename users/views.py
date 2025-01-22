@@ -1,5 +1,4 @@
 import datetime
-import json
 import os
 import re
 import secrets
@@ -33,7 +32,14 @@ from .forms import (
     UpdateSceneForm,
     UpdateStaffForm,
 )
-from .models import RE_NS_SLASH_ID, Device, Namespace, NamespaceDefault, Scene
+from .models import (
+    RE_NS_SLASH_ID,
+    Device,
+    Namespace,
+    NamespaceDefault,
+    Scene,
+    SceneDefault,
+)
 from .mqtt import (
     ANON_REGEX,
     API_V2,
@@ -444,7 +450,7 @@ def profile_update_staff(request):
 
 
 @api_view(["GET", "POST"])
-def my_namespaces(request):
+def list_my_namespaces(request):
     """
     Editable/viewable namespace headless endpoint for requesting a list of namespaces this user can edit and/or view: GET/POST.
     - POST requires id_token for headless clients like Python apps.
@@ -474,7 +480,7 @@ def my_namespaces(request):
 
 
 @api_view(["GET", "POST"])
-def my_scenes(request):
+def list_my_scenes(request):
     """
     Editable/viewable scenes headless endpoint for requesting a list of scenes this user can edit and/or view: GET/POST.
     - POST requires id_token for headless clients like Python apps.
@@ -494,10 +500,13 @@ def my_scenes(request):
     edit_scenes = get_my_edit_scenes(user, request.version)
     # also show scenes listed as "viewer"
     view_scenes = get_my_view_scenes(user, request.version)
-    merged_scenes = (edit_scenes | view_scenes).distinct().order_by("name")
+    merged_list = edit_scenes + view_scenes
+    merged_dict = {}
+    for entry in merged_list:
+        merged_dict[entry["name"]] = {"name": entry["name"]}
 
-    serializer = SceneNameSerializer(merged_scenes, many=True)
-    return JsonResponse(serializer.data, safe=False)
+    output_list = sorted(list(merged_dict.values()), key=lambda d: d["name"])
+    return JsonResponse(output_list, safe=False)
 
 
 def get_my_edit_namespaces(user):
@@ -506,22 +515,22 @@ def get_my_edit_namespaces(user):
     Requests and returns list of user's editable namespaces from namespace permissions table.
     """
     # load list of namespaces this user can edit
-    namespaces = Namespace.objects.none()
+    my_namespaces = Namespace.objects.none()
     editor_namespaces = Namespace.objects.none()
     if user.is_authenticated:
         if user.is_staff:  # admin/staff
-            namespaces = Namespace.objects.all()
+            my_namespaces = Namespace.objects.all()
         else:  # standard user
-            namespaces = Namespace.objects.filter(name=f"{user.username}")
+            my_namespaces = Namespace.objects.filter(name=user.username)
             editor_namespaces = Namespace.objects.filter(editors=user)
     # merge 'my' namespaced namespaces and extras namespaces granted
-    merged_namespaces = (namespaces | editor_namespaces).distinct().order_by("name")
+    merged_namespaces = (my_namespaces | editor_namespaces).distinct().order_by("name")
     serializer = NamespaceSerializer(merged_namespaces, many=True)
     ns_out = serializer.data
     if user.is_authenticated:
         # always add current user's namespace
         if not any(dictionary.get("name") == user.username for dictionary in ns_out):
-            ns_out.append(NamespaceDefault(name=user.username))
+            ns_out.append(vars(NamespaceDefault(name=user.username)))
 
     return sorted(ns_out, key=itemgetter('name'))
 
@@ -538,10 +547,6 @@ def get_my_view_namespaces(user):
             viewer_namespaces = Namespace.objects.filter(viewers=user)
     serializer = NamespaceSerializer(viewer_namespaces, many=True)
     ns_out = serializer.data
-    if user.is_authenticated:
-        # always add public namespace
-        if not any(dictionary.get("name") == PUBLIC_NAMESPACE for dictionary in ns_out):
-            ns_out.append(NamespaceDefault(name=PUBLIC_NAMESPACE))
 
     return sorted(ns_out, key=itemgetter('name'))
 
@@ -552,34 +557,40 @@ def get_my_edit_scenes(user, version):
     1. Requests list of any scenes with objects saved from /persist/!allscenes.
     2. Requests and returns list of user's editable scenes from scene permissions table.
     """
-    # update scene list from object persistence db
+    # load list of scenes this user can edit
+    my_scenes = Scene.objects.none()
+    editor_scenes = Scene.objects.none()
+    editor_namespaces = Namespace.objects.none()
     if user.is_authenticated:
+        if user.is_staff:  # admin/staff
+            my_scenes = Scene.objects.all()
+        else:  # standard user
+            my_scenes = Scene.objects.filter(name__startswith=f"{user.username}/")
+            editor_scenes = Scene.objects.filter(editors=user)
+            editor_namespaces = Namespace.objects.filter(editors=user)
+            for editor_namespace in editor_namespaces:
+                editor_ns_scenes = Scene.objects.filter(name__startswith=f"{editor_namespace}/")
+                editor_scenes = (editor_scenes | editor_ns_scenes).distinct()
+    # merge 'my' scenes and extras scenes granted
+    merged_scenes = (my_scenes | editor_scenes).distinct().order_by("name")
+    serializer = SceneSerializer(merged_scenes, many=True)
+    sc_out = serializer.data
+    if user.is_authenticated:
+        # update scene list from object persistence db
         token = all_scenes_read_token(version)
         if user.is_staff:  # admin/staff
             p_scenes = get_persist_scenes_all(token)
         else:  # standard user
             p_scenes = get_persist_scenes_ns(token, user.username)
-        a_scenes = Scene.objects.values_list("name", flat=True)
+            for editor_namespace in editor_namespaces:
+                p_scenes = p_scenes + get_persist_scenes_ns(token, editor_namespace)
+        # a_scenes = Scene.objects.values_list("name", flat=True)
         for p_scene in p_scenes:
-            if RE_PATTERN_NS_SLASH_ID.match(p_scene) and p_scene not in a_scenes:
-                s = Scene(
-                    name=p_scene,
-                    summary="Existing scene name migrated from persistence database.",
-                )
-                s.save()
+            # always add queried persisted scenes
+            if not any(dictionary.get("name") == p_scene for dictionary in sc_out):
+                sc_out.append(vars(SceneDefault(name=p_scene)))
 
-    # load list of scenes this user can edit
-    scenes = Scene.objects.none()
-    editor_scenes = Scene.objects.none()
-    if user.is_authenticated:
-        if user.is_staff:  # admin/staff
-            scenes = Scene.objects.all()
-        else:  # standard user
-            scenes = Scene.objects.filter(name__startswith=f"{user.username}/")
-            editor_scenes = Scene.objects.filter(editors=user)
-    # merge 'my' namespaced scenes and extras scenes granted
-    merged_scenes = (scenes | editor_scenes).distinct().order_by("name")
-    return merged_scenes
+    return sorted(sc_out, key=itemgetter('name'))
 
 
 def get_my_view_scenes(user, version):
@@ -587,34 +598,34 @@ def get_my_view_scenes(user, version):
     Internal method to request view scenes from persist and permissions:
     1. Requests and returns list of user's viewable scenes from scene permissions table.
     """
-    # update scene list from object persistence db
+    # load list of scenes this user can view
+    viewer_scenes = Scene.objects.none()
+    viewer_namespaces = Namespace.objects.none()
     if user.is_authenticated:
+        if not user.is_staff:  # admin/staff
+            viewer_scenes = Scene.objects.filter(viewers=user)
+            viewer_namespaces = Namespace.objects.filter(viewers=user)
+            for viewer_namespace in viewer_namespaces:
+                viewer_ns_scenes = Scene.objects.filter(name__startswith=f"{viewer_namespace}/")
+                viewer_scenes = (viewer_scenes | viewer_ns_scenes).distinct()
+    # merge 'my' scenes and extras scenes granted
+    merged_scenes = (viewer_scenes).distinct().order_by("name")
+    serializer = SceneSerializer(merged_scenes, many=True)
+    sc_out = serializer.data
+    if user.is_authenticated:
+        # update scene list from object persistence db
         token = all_scenes_read_token(version)
-        if user.is_staff:  # admin/staff
-            p_scenes = get_persist_scenes_all(token)
-        else:  # standard user
-            p_scenes = get_persist_scenes_ns(token, user.username)
-        a_scenes = Scene.objects.values_list("name", flat=True)
+        p_scenes = []
+        if not user.is_staff:  # admin/staff
+            for viewer_namespace in viewer_namespaces:
+                p_scenes = p_scenes + get_persist_scenes_ns(token, viewer_namespace)
+        # a_scenes = Scene.objects.values_list("name", flat=True)
         for p_scene in p_scenes:
-            if RE_PATTERN_NS_SLASH_ID.match(p_scene) and p_scene not in a_scenes:
-                s = Scene(
-                    name=p_scene,
-                    summary="Existing scene name migrated from persistence database.",
-                )
-                s.save()
+            # always add queried persisted scenes
+            if not any(dictionary.get("name") == p_scene for dictionary in sc_out):
+                sc_out.append(SceneDefault(name=p_scene))
 
-    # load list of scenes this user can edit
-    scenes = Scene.objects.none()
-    editor_scenes = Scene.objects.none()
-    if user.is_authenticated:
-        if user.is_staff:  # admin/staff
-            scenes = Scene.objects.all()
-        else:  # standard user
-            scenes = Scene.objects.filter(name__startswith=f"{user.username}/")
-            editor_scenes = Scene.objects.filter(editors=user)
-    # merge 'my' namespaced scenes and extras scenes granted
-    merged_scenes = (scenes | editor_scenes).distinct().order_by("name")
-    return merged_scenes
+    return sorted(sc_out, key=itemgetter('name'))
 
 
 def get_my_devices(user):
