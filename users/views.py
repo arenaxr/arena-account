@@ -210,12 +210,11 @@ def namespace_perm_detail(request, pk):
         messages.error(request, f"User does not have permission for: {pk}.")
         return redirect("users:user_profile")
     owners = []
-    # now, make sure namespace exists before the other commands are tried
+    # check if namespace exists before the other commands are tried
     try:
         namespace = Namespace.objects.get(name=pk)
     except Namespace.DoesNotExist:
-        messages.error(request, "The namespace does not exist")
-        return redirect("users:user_profile")
+        namespace = Namespace(name=pk)
     if request.method == "POST":
         if "save" in request.POST:
             form = NamespaceForm(instance=namespace, data=request.POST)
@@ -252,12 +251,11 @@ def scene_perm_detail(request, pk):
     owners = [pk.split("/")[0]]
     namespace_editors = []  # TODO: define namespaced_editors
     namespace_viewers = []  # TODO: define namespaced_viewers
-    # now, make sure scene exists before the other commands are tried
+    # check if scene exists before the other commands are tried
     try:
         scene = Scene.objects.get(name=pk)
     except Scene.DoesNotExist:
-        messages.error(request, "The scene does not exist")
-        return redirect("users:user_profile")
+        scene = Scene(name=pk)
     if request.method == "POST":
         if "save" in request.POST:
             form = SceneForm(instance=scene, data=request.POST)
@@ -524,7 +522,7 @@ def get_my_edit_namespaces(user):
             my_namespaces = Namespace.objects.filter(name=user.username)
             editor_namespaces = Namespace.objects.filter(editors=user)
     # merge 'my' namespaced namespaces and extras namespaces granted
-    merged_namespaces = (my_namespaces | editor_namespaces).distinct().order_by("name")
+    merged_namespaces = (my_namespaces | editor_namespaces).distinct()
     serializer = NamespaceSerializer(merged_namespaces, many=True)
     ns_out = serializer.data
     if user.is_authenticated:
@@ -570,9 +568,9 @@ def get_my_edit_scenes(user, version):
             editor_namespaces = Namespace.objects.filter(editors=user)
             for editor_namespace in editor_namespaces:
                 editor_ns_scenes = Scene.objects.filter(name__startswith=f"{editor_namespace}/")
-                editor_scenes = (editor_scenes | editor_ns_scenes).distinct()
+                editor_scenes = (editor_scenes | editor_ns_scenes)
     # merge 'my' scenes and extras scenes granted
-    merged_scenes = (my_scenes | editor_scenes).distinct().order_by("name")
+    merged_scenes = (my_scenes | editor_scenes).distinct()
     serializer = SceneSerializer(merged_scenes, many=True)
     sc_out = serializer.data
     if user.is_authenticated:
@@ -607,9 +605,9 @@ def get_my_view_scenes(user, version):
             viewer_namespaces = Namespace.objects.filter(viewers=user)
             for viewer_namespace in viewer_namespaces:
                 viewer_ns_scenes = Scene.objects.filter(name__startswith=f"{viewer_namespace}/")
-                viewer_scenes = (viewer_scenes | viewer_ns_scenes).distinct()
+                viewer_scenes = (viewer_scenes | viewer_ns_scenes)
     # merge 'my' scenes and extras scenes granted
-    merged_scenes = (viewer_scenes).distinct().order_by("name")
+    merged_scenes = (viewer_scenes).distinct()
     serializer = SceneSerializer(merged_scenes, many=True)
     sc_out = serializer.data
     if user.is_authenticated:
