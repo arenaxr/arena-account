@@ -206,10 +206,10 @@ def namespace_perm_detail(request, pk):
     Handle Namespace Permissions Edit page, get page load and post submit requests.
     - Handles namespace permissions changes and deletes.
     """
-    if not namespace_permission(user=request.user, namespace=pk):
+    if not namespace_edit_permission(user=request.user, namespace=pk):
         messages.error(request, f"User does not have permission for: {pk}.")
         return redirect("users:user_profile")
-    owners = None  # TODO: define owners
+    owners = []
     # now, make sure namespace exists before the other commands are tried
     try:
         namespace = Namespace.objects.get(name=pk)
@@ -246,12 +246,12 @@ def scene_perm_detail(request, pk):
     Handle Scene Permissions Edit page, get page load and post submit requests.
     - Handles scene permissions changes and deletes.
     """
-    if not scene_permission(user=request.user, scene=pk):
+    if not scene_edit_permission(user=request.user, scene=pk):
         messages.error(request, f"User does not have permission for: {pk}.")
         return redirect("users:user_profile")
-    owners = None  # TODO: define owners
-    namespaced_editors = None  # TODO: define namespaced_editors
-    namespaced_viewers = None  # TODO: define namespaced_viewers
+    owners = [pk.split("/")[0]]
+    namespace_editors = []  # TODO: define namespaced_editors
+    namespace_viewers = []  # TODO: define namespaced_viewers
     # now, make sure scene exists before the other commands are tried
     try:
         scene = Scene.objects.get(name=pk)
@@ -282,8 +282,8 @@ def scene_perm_detail(request, pk):
         context={
             "scene": scene,
             "owners": owners,
-            "namespaced_editors": namespaced_editors,
-            "namespaced_viewers": namespaced_viewers,
+            "namespace_editors": namespace_editors,
+            "namespace_viewers": namespace_viewers,
             "form": form,
         },
     )
@@ -294,7 +294,7 @@ def device_perm_detail(request, pk):
     Handle Device Permissions Edit page, get page load and post submit requests.
     - Handles device permissions changes and deletes.
     """
-    if not device_permission(user=request.user, device=pk):
+    if not device_edit_permission(user=request.user, device=pk):
         messages.error(request, f"User does not have permission for: {pk}.")
         return redirect("users:user_profile")
     # now, make sure device exists before the other commands are tried
@@ -352,7 +352,7 @@ def scene_detail(request, pk):
     Scene Permissions headless endpoint for editing permission: POST, GET, PUT, DELETE.
     """
     # check permissions model for namespace
-    if not scene_permission(user=request.user, scene=pk):
+    if not scene_edit_permission(user=request.user, scene=pk):
         return JsonResponse(
             {"error": f"User does not have permission for: {pk}."},
             status=status.HTTP_400_BAD_REQUEST,
@@ -646,7 +646,7 @@ def get_my_devices(user):
     return merged_devices
 
 
-def namespace_permission(user, namespace):
+def namespace_edit_permission(user, namespace):
     """
     Internal method to check if 'user' can edit 'namespace'.
     """
@@ -654,17 +654,19 @@ def namespace_permission(user, namespace):
         return False
     elif user.is_staff:  # admin/staff
         return True
-    elif namespace == user.username:  # owner
+    elif namespace == user.username:  # ns owner
         return True
     else:
+        editor_namespace = None
         try:
-            editor_namespace = Namespace.objects.get(
-                name=namespace, editors=user)  # editor
+            editor_namespace = Namespace.objects.get(name=namespace, editors=user)  # ns editor
         except Namespace.ObjectDoesNotExist:
-            return False
-        return True
+            pass
+        finally:
+            return bool(editor_namespace)
 
-def scene_permission(user, scene):
+
+def scene_edit_permission(user, scene):
     """
     Internal method to check if 'user' can edit 'scene'.
     """
@@ -672,18 +674,21 @@ def scene_permission(user, scene):
         return False
     elif user.is_staff:  # admin/staff
         return True
-    elif scene.startswith(f"{user.username}/"):  # owner
+    elif scene.startswith(f"{user.username}/"):  # s owner
         return True
     else:
+        editor_scene = None
+        editor_namespace = None
         try:
-            editor_scene = Scene.objects.get(
-                name=scene, editors=user)  # editor
-        except Scene.ObjectDoesNotExist:
-            return False
-        return True
+            editor_scene = Scene.objects.get(name=scene, editors=user)  # s editor
+            editor_namespace = Namespace.objects.get(name=scene.split("/")[0], editors=user)  # ns editor
+        except (Scene.ObjectDoesNotExist, Namespace.ObjectDoesNotExist):
+            pass
+        finally:
+            return bool(editor_scene or editor_namespace)
 
 
-def device_permission(user, device):
+def device_edit_permission(user, device):
     """
     Internal method to check if 'user' can edit 'device'.
     """
@@ -691,7 +696,7 @@ def device_permission(user, device):
         return False
     elif user.is_staff:  # admin/staff
         return True
-    elif device.startswith(f"{user.username}/"):  # owner
+    elif device.startswith(f"{user.username}/"):  # d owner
         return True
 
 

@@ -21,13 +21,13 @@
                     </tr>
                     <tr>
                         <td><b>Owners:</b></td>
-                        <td>{{ owners }}</td>
+                        <td>{{ owners|join:", " }}</td>
                         <td>Owners cannot be removed (default: namespace). Includes Editor permissions.</td>
                     </tr>
                     <tr>
                         <td><b>Editors:</b></td>
                         {% if namespace_editors %}
-                        <td>{{ form.editors }}<small style="color: grey">Includes namespace Editors: {{ namespace_editors }}</small></td>
+                        <td>{{ form.editors }}<br><small style="color: grey">Includes namespace Editors: {{ namespace_editors|join:", " }}</small></td>
                         {% else %}
                         <td>{{ form.editors }}</td>
                         {% endif %}
@@ -36,7 +36,7 @@
                     <tr>
                         <td><b>Viewers:</b></td>
                         {% if namespace_viewers %}
-                        <td>{{ form.viewers }}<small style="color: grey">Includes namespace Viewers: {{ namespace_viewers }}</small></td>
+                        <td>{{ form.viewers }}<br><small style="color: grey">Includes namespace Viewers: {{ namespace_viewers|join:", " }}</small></td>
                         {% else %}
                         <td>{{ form.viewers }}</td>
                         {% endif %}
