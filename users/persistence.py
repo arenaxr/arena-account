@@ -8,7 +8,17 @@ from .utils import get_rest_host
 PERSIST_TIMEOUT = 30  # 30 seconds
 
 
-def delete_scene_objects(scene, token):
+def get_scene_objects(token, scene):
+    # get scene from persist
+    verify, host = get_rest_host()
+    url = f"https://{host}/persist/{scene}"
+    result = _urlopen(url, token, "GET", verify)
+    if result:
+        return json.loads(result)
+    return []
+
+
+def delete_scene_objects(token, scene):
     # delete scene from persist
     verify, host = get_rest_host()
     url = f"https://{host}/persist/{scene}"
@@ -44,13 +54,9 @@ def _urlopen(url, token, method, verify):
     cookies = {"mqtt_token": token}
     try:
         if method == "GET":
-            response = requests.get(
-                url, headers=headers, cookies=cookies, verify=verify, timeout=PERSIST_TIMEOUT
-            )
+            response = requests.get(url, headers=headers, cookies=cookies, verify=verify, timeout=PERSIST_TIMEOUT)
         elif method == "DELETE":
-            response = requests.delete(
-                url, headers=headers, cookies=cookies, verify=verify, timeout=PERSIST_TIMEOUT
-            )
+            response = requests.delete(url, headers=headers, cookies=cookies, verify=verify, timeout=PERSIST_TIMEOUT)
         return response.text
     except (requests.exceptions.ConnectionError, HTTPError) as err:
         print(f"{err}: {url}")

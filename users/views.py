@@ -263,12 +263,17 @@ def scene_perm_detail(request, pk):
                 messages.success(request, f"Updated scene permissions: {pk}")
                 return redirect("users:user_profile")
         elif "delete" in request.POST:
-            token = generate_arena_token(user=request.user, username=request.user.username, version=request.version)
+            token = generate_arena_token(
+                user=request.user,
+                username=request.user.username,
+                ids={"userclient": f"{request.user.username}-objects-delete"},
+                version=request.version,
+            )
             # delete account scene data
             scene.delete()
             messages.success(request, f"Removed scene permissions: {pk}")
             # delete persist scene data
-            if delete_scene_objects(pk, token):
+            if delete_scene_objects(token, pk):
                 messages.success(request, f"Removed scene persisted objects: {pk}")
             else:
                 messages.error(request, f"Unable to delete {pk} objects from persistence database.")
@@ -728,14 +733,18 @@ def user_profile(request):
         confirm_text = f'delete {request.user.username} account and scenes'
         if confirm_text in request.POST:
             token = generate_arena_token(
-                user=request.user, username=request.user.username, version=version)
+                user=request.user,
+                username=request.user.username,
+                ids={"userclient": f"{request.user.username}-objects-delete"},
+                version=version,
+            )
             u_scenes = Scene.objects.filter(
                 name__startswith=f'{request.user.username}/')
             for scene in u_scenes:
                 # delete account scene data
                 scene.delete()
                 # delete persist scene data
-                if not delete_scene_objects(scene.name, token):
+                if not delete_scene_objects(token, scene.name):
                     messages.error(
                         request, f"Unable to delete {scene.name} objects from persistence database.")
                     return redirect("users:user_profile")
