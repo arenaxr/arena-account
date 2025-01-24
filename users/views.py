@@ -53,6 +53,7 @@ from .persistence import (
     delete_scene_objects,
     get_persist_scenes_all,
     get_persist_scenes_ns,
+    get_scene_objects,
 )
 from .serializers import (
     NamespaceNameSerializer,
@@ -206,6 +207,8 @@ def namespace_perm_detail(request, pk):
     Handle Namespace Permissions Edit page, get page load and post submit requests.
     - Handles namespace permissions changes and deletes.
     """
+    version = TOPIC_SUPPORTED_API_VERSIONS[0]  # TODO (mwfarb): resolve missing request.version
+
     if not namespace_edit_permission(user=request.user, namespace=pk):
         messages.error(request, f"User does not have permission for: {pk}.")
         return redirect("users:user_profile")
@@ -244,6 +247,8 @@ def scene_perm_detail(request, pk):
     Handle Scene Permissions Edit page, get page load and post submit requests.
     - Handles scene permissions changes and deletes.
     """
+    version = TOPIC_SUPPORTED_API_VERSIONS[0]  # TODO (mwfarb): resolve missing request.version
+
     if not scene_edit_permission(user=request.user, scene=pk):
         messages.error(request, f"User does not have permission for: {pk}.")
         return redirect("users:user_profile")
@@ -267,7 +272,7 @@ def scene_perm_detail(request, pk):
                 user=request.user,
                 username=request.user.username,
                 ids={"userclient": f"{request.user.username}-objects-delete"},
-                version=request.version,
+                version=version,
             )
             # delete account scene data
             scene.delete()
@@ -282,6 +287,14 @@ def scene_perm_detail(request, pk):
     else:
         form = SceneForm(instance=scene)
 
+    token = all_scenes_read_token(version)
+    objects = get_scene_objects(token, pk)
+    objects_updated = None
+    if len(objects) > 0:
+        updated_ts = sorted(objects, reverse=True, key=itemgetter("updatedAt"))[0]["updatedAt"]
+        updated_dt = datetime.datetime.fromisoformat(updated_ts.replace("Z", "+00:00"))
+        objects_updated = f"{updated_dt.strftime('%B %d, %Y, %H:%M:%S')} UTC"
+
     return render(
         request=request,
         template_name="users/scene_perm_detail.html",
@@ -290,6 +303,8 @@ def scene_perm_detail(request, pk):
             "owners": owners,
             "namespace_editors": namespace_editors,
             "namespace_viewers": namespace_viewers,
+            "objects_length": len(objects),
+            "objects_updated": objects_updated,
             "form": form,
         },
     )
@@ -300,6 +315,8 @@ def device_perm_detail(request, pk):
     Handle Device Permissions Edit page, get page load and post submit requests.
     - Handles device permissions changes and deletes.
     """
+    version = TOPIC_SUPPORTED_API_VERSIONS[0]  # TODO (mwfarb): resolve missing request.version
+
     if not device_edit_permission(user=request.user, device=pk):
         messages.error(request, f"User does not have permission for: {pk}.")
         return redirect("users:user_profile")
@@ -327,7 +344,7 @@ def device_perm_detail(request, pk):
                 username=request.user.username,
                 ns_device=device.name,
                 duration=datetime.timedelta(days=30),
-                version=request.version,
+                version=version,
             )
 
     form = DeviceForm(instance=device)
