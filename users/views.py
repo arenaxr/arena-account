@@ -300,8 +300,7 @@ def device_perm_detail(request, pk):
     try:
         device = Device.objects.get(name=pk)
     except Device.DoesNotExist:
-        messages.error(request, "The device does not exist")
-        return redirect("users:user_profile")
+        device = Device(name=pk)
     token = None
     if request.method == "POST":
         if "save" in request.POST:
@@ -532,6 +531,9 @@ def get_my_edit_namespaces(user):
         # always add current user's namespace
         if not any(dictionary.get("name") == user.username for dictionary in ns_out):
             ns_out.append(vars(NamespaceDefault(name=user.username)))
+    # count persisted
+    for ns in ns_out:
+        ns["account"] = User.objects.filter(username=ns["name"]).exists()
 
     return sorted(ns_out, key=itemgetter('name'))
 
@@ -585,11 +587,13 @@ def get_my_edit_scenes(user, version):
             p_scenes = get_persist_scenes_ns(token, user.username)
             for editor_namespace in editor_namespaces:
                 p_scenes = p_scenes + get_persist_scenes_ns(token, editor_namespace)
-        # a_scenes = Scene.objects.values_list("name", flat=True)
         for p_scene in p_scenes:
             # always add queried persisted scenes
             if not any(dictionary.get("name") == p_scene for dictionary in sc_out):
                 sc_out.append(vars(SceneDefault(name=p_scene)))
+        # count persisted
+        for sc in sc_out:
+            sc["persisted"] = sc in p_scenes
 
     return sorted(sc_out, key=itemgetter('name'))
 
@@ -620,7 +624,6 @@ def get_my_view_scenes(user, version):
         if not user.is_staff:  # admin/staff
             for viewer_namespace in viewer_namespaces:
                 p_scenes = p_scenes + get_persist_scenes_ns(token, viewer_namespace)
-        # a_scenes = Scene.objects.values_list("name", flat=True)
         for p_scene in p_scenes:
             # always add queried persisted scenes
             if not any(dictionary.get("name") == p_scene for dictionary in sc_out):

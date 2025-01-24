@@ -123,6 +123,7 @@
             <table class="table table-sm table-hover">
                 <thead class="thead-light">
                     <th>Namespace Name</th>
+                    <th>User Account</th>
                     <th>Editors</th>
                     <th>Viewers</th>
                     <th></th>
@@ -136,6 +137,14 @@
                             <td><b>{{ namespace.name }}</b>
                                 {% if namespace.is_default %}
                                 <b> (default)</b>
+                                {% endif %}
+                            </td>
+                            <!--user account-->
+                            <td>
+                                {% if namespace.account %}
+                                <i class="fas fa-check"></i>
+                                {% else %}
+                                <i class="fas fa-times"></i>
                                 {% endif %}
                             </td>
                             <!--editors-->
@@ -186,6 +195,7 @@
             <table class="table table-sm table-hover">
                 <thead class="thead-light">
                     <th>Scene Name (view)</th>
+                    <th>Persisted Objects</th>
                     <th>Public Read</th>
                     <th>Public Write</th>
                     <th>User Interaction</th>
@@ -205,6 +215,14 @@
                                     href="{{ request.scheme }}://{{ request.META.HTTP_HOST }}/{{ scene.name }}"><b>{{ scene.name }}</b></a>
                                 {% if scene.is_default %}
                                 <b> (default)</b>
+                                {% endif %}
+                            </td>
+                            <!--persisted in db-->
+                            <td>
+                                {% if scene.persisted %}
+                                <i class="fas fa-check"></i>
+                                {% else %}
+                                <i class="fas fa-times"></i>
                                 {% endif %}
                             </td>
                             <!--public subscribe ok-->
