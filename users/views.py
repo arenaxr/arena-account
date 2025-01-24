@@ -210,6 +210,8 @@ def namespace_perm_detail(request, pk):
         messages.error(request, f"User does not have permission for: {pk}.")
         return redirect("users:user_profile")
     owners = []
+    if User.objects.filter(username=pk).exists():
+        owners.append(pk)
     # check if namespace exists before the other commands are tried
     try:
         namespace = Namespace.objects.get(name=pk)
@@ -425,16 +427,14 @@ def profile_update_staff(request):
         return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
     form = UpdateStaffForm(request.POST)
     if not request.user.is_authenticated:
-        return JsonResponse(
-            {"error": "Not authenticated."}, status=status.HTTP_403_FORBIDDEN
-        )
+        return JsonResponse({"error": "Not authenticated."}, status=status.HTTP_403_FORBIDDEN)
     if not form.is_valid():
         return JsonResponse(
             {"error": "Invalid parameters"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
     staff_username = form.cleaned_data["staff_username"]
-    if (request.user.is_superuser and User.objects.filter(username=staff_username).exists()):
+    if request.user.is_superuser and User.objects.filter(username=staff_username).exists():
         is_staff = bool(form.cleaned_data["is_staff"])
         print(f"Setting Django user {staff_username}, staff={is_staff}")
         user = User.objects.get(username=staff_username)
@@ -442,8 +442,7 @@ def profile_update_staff(request):
         user.save()
         print(f"Setting Filebrowser user {staff_username}, staff={is_staff}")
         if not set_filestore_scope(user):
-            messages.error(
-                request, "Unable to update user's filestore status.")
+            messages.error(request, "Unable to update user's filestore status.")
             return redirect("users:user_profile")
 
     return redirect("users:user_profile")
@@ -467,7 +466,7 @@ def list_my_namespaces(request):
             except (ValueError, SocialAccount.DoesNotExist) as err:
                 return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
 
-    edit_namespaces = get_my_edit_namespaces(user)
+    edit_namespaces = get_my_edit_namespaces(user, request.version)
     # also show namespaces listed as "viewer"
     view_namespaces = get_my_view_namespaces(user)
     merged_list = edit_namespaces + view_namespaces
@@ -509,7 +508,7 @@ def list_my_scenes(request):
     return JsonResponse(output_list, safe=False)
 
 
-def get_my_edit_namespaces(user):
+def get_my_edit_namespaces(user, version):
     """
     Internal method to update namespace permissions table:
     Requests and returns list of user's editable namespaces from namespace permissions table.
@@ -531,11 +530,21 @@ def get_my_edit_namespaces(user):
         # always add current user's namespace
         if not any(dictionary.get("name") == user.username for dictionary in ns_out):
             ns_out.append(vars(NamespaceDefault(name=user.username)))
+        # for staff, add any non-user namespaces in persist db
+        if user.is_staff:  # admin/staff
+            token = all_scenes_read_token(version)
+            p_scenes = get_persist_scenes_all(token)
+            for p_scene in p_scenes:
+                p_ns = p_scene.split("/")[0]  # TODO: replace with distinct call persist/!allnamespaces
+                if not any(dictionary.get("name") == p_ns for dictionary in ns_out):
+                    if not User.objects.filter(username=p_ns).exists():
+                        ns_out.append(vars(NamespaceDefault(name=p_ns)))
+
     # count persisted
     for ns in ns_out:
         ns["account"] = User.objects.filter(username=ns["name"]).exists()
 
-    return sorted(ns_out, key=itemgetter('name'))
+    return sorted(ns_out, key=itemgetter("name"))
 
 
 def get_my_view_namespaces(user):
@@ -551,7 +560,7 @@ def get_my_view_namespaces(user):
     serializer = NamespaceSerializer(viewer_namespaces, many=True)
     ns_out = serializer.data
 
-    return sorted(ns_out, key=itemgetter('name'))
+    return sorted(ns_out, key=itemgetter("name"))
 
 
 def get_my_edit_scenes(user, version):
@@ -573,7 +582,7 @@ def get_my_edit_scenes(user, version):
             editor_namespaces = Namespace.objects.filter(editors=user)
             for editor_namespace in editor_namespaces:
                 editor_ns_scenes = Scene.objects.filter(name__startswith=f"{editor_namespace}/")
-                editor_scenes = (editor_scenes | editor_ns_scenes)
+                editor_scenes = editor_scenes | editor_ns_scenes
     # merge 'my' scenes and extras scenes granted
     merged_scenes = (my_scenes | editor_scenes).distinct()
     serializer = SceneSerializer(merged_scenes, many=True)
@@ -591,11 +600,12 @@ def get_my_edit_scenes(user, version):
             # always add queried persisted scenes
             if not any(dictionary.get("name") == p_scene for dictionary in sc_out):
                 sc_out.append(vars(SceneDefault(name=p_scene)))
-        # count persisted
-        for sc in sc_out:
-            sc["persisted"] = sc in p_scenes
+        if user.is_staff:  # admin/staff
+            # count persisted
+            for sc in sc_out:
+                sc["persisted"] = sc["name"] in p_scenes
 
-    return sorted(sc_out, key=itemgetter('name'))
+    return sorted(sc_out, key=itemgetter("name"))
 
 
 def get_my_view_scenes(user, version):
@@ -612,7 +622,7 @@ def get_my_view_scenes(user, version):
             viewer_namespaces = Namespace.objects.filter(viewers=user)
             for viewer_namespace in viewer_namespaces:
                 viewer_ns_scenes = Scene.objects.filter(name__startswith=f"{viewer_namespace}/")
-                viewer_scenes = (viewer_scenes | viewer_ns_scenes)
+                viewer_scenes = viewer_scenes | viewer_ns_scenes
     # merge 'my' scenes and extras scenes granted
     merged_scenes = (viewer_scenes).distinct()
     serializer = SceneSerializer(merged_scenes, many=True)
@@ -627,9 +637,9 @@ def get_my_view_scenes(user, version):
         for p_scene in p_scenes:
             # always add queried persisted scenes
             if not any(dictionary.get("name") == p_scene for dictionary in sc_out):
-                sc_out.append(SceneDefault(name=p_scene))
+                sc_out.append(vars(SceneDefault(name=p_scene)))
 
-    return sorted(sc_out, key=itemgetter('name'))
+    return sorted(sc_out, key=itemgetter("name"))
 
 
 def get_my_devices(user):
@@ -747,7 +757,7 @@ def user_profile(request):
             except User.DoesNotExist:
                 messages.error(request, "Unable to complete account delete.")
 
-    namespaces = get_my_edit_namespaces(request.user)
+    namespaces = get_my_edit_namespaces(request.user, version)
     scenes = get_my_edit_scenes(request.user, version)
     devices = get_my_devices(request.user)
     staff = None
