@@ -12,6 +12,7 @@ from .models import (
     SCENE_PUBLIC_WRITE_DEF,
     SCENE_USERS_DEF,
     SCENE_VIDEO_CONF_DEF,
+    Namespace,
     Scene,
 )
 from .mqtt_match import topic_matches_sub
@@ -290,6 +291,12 @@ def set_scene_perms_api_v2(
             # scene owners have rights to their scene objects only
             topicv2_add_scene_reader(pubs, subs, realm, username, "+", ids)
             topicv2_add_scene_writer(pubs, subs, realm, username, "+", ids)
+            # add namespaces that have been granted by other owners
+            u_namespaces = Namespace.objects.filter(editors=user)
+            for u_namespace in u_namespaces:
+                if not sceneid or u_namespace.name == f"{namespace}":
+                    topicv2_add_scene_reader(pubs, subs, realm, u_namespace.name, "+", ids)
+                    topicv2_add_scene_writer(pubs, subs, realm, u_namespace.name, "+", ids)
             # add scenes that have been granted by other owners
             u_scenes = Scene.objects.filter(editors=user)
             for u_scene in u_scenes:

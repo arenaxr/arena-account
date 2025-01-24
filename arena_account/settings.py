@@ -44,13 +44,13 @@ USERNAME_RESERVED = [
     "aframe",
     "apriltag",
     "ar",
-    "orchestrator",  # proxy
     "arts",
     "audio",
     "auth",  # proxy
     "build",
     "chat",
     "conf",
+    "dashboard",  # proxy
     "dist",
     "face-tracking",
     "files",
@@ -65,7 +65,9 @@ USERNAME_RESERVED = [
     "mqtt2",  # proxy
     "network",
     "node_modules",
+    "orchestrator",  # proxy
     "persist",  # proxy
+    "programs",  # proxy
     "public",  # public namespace (tentative)
     "pythonrt",  # proxy
     "runtime-mngr",
