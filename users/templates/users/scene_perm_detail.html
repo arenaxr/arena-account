@@ -73,7 +73,7 @@
                 <a href="{{request.scheme}}://{{request.get_host}}/build/?scene={{ scene.name }}"
                     class="btn btn-secondary btn-sm">Edit Scene Objects</a>
                 <hr />
-                <input type="button" class="btn btn-danger btn-sm" onclick="clickDelete(this);" value="Delete Scene" />
+                <input type="button" class="btn btn-danger btn-sm" onclick="clickDelete(this);" value="Delete Objects and Permissions" />
             </form>
 
         </div>
@@ -101,7 +101,7 @@
 
         async function clickDelete() {
             Swal.fire({
-                title: 'Are you sure you want to delete scene {{ scene.name }}?',
+                title: 'Are you sure you want to delete scene objects and permissions: {{ scene.name }}?',
                 showCancelButton: true,
                 confirmButtonText: `Yes`,
                 customClass: {

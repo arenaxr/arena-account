@@ -33,6 +33,8 @@
                     <td>Add/remove additional Viewers. Viewers can see namespace names in lists.</td>
                 </tr>                </table>
                 <button type="submit" class="btn btn-secondary btn-sm" name="save">Save</button>
+                <hr />
+                <input type="button" class="btn btn-danger btn-sm" onclick="clickDelete(this);" value="Delete Permissions" />
             </form>
 
         </div>
@@ -43,7 +45,26 @@
         function onPageLoad() {
         }
 
-
+        async function clickDelete() {
+            Swal.fire({
+                title: 'Are you sure you want to delete namespace permissions: {{ namespace.name }}?',
+                showCancelButton: true,
+                confirmButtonText: `Yes`,
+                customClass: {
+                    cancelButton: 'order-1 right-gap',
+                    confirmButton: 'order-2',
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // submit delete in form manually
+                    const form = document.getElementById('namespace_perms_form');
+                    const input = document.createElement('input');
+                    input.setAttribute('name', 'delete');
+                    form.appendChild(input);
+                    form.submit();
+                }
+            })
+        }
     </script>
 </div>
 

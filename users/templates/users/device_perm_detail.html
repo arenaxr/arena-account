@@ -60,7 +60,7 @@
                 <button type="submit" class="btn btn-secondary btn-sm" name="save">Save</button>
                 <button type="submit" class="btn btn-secondary btn-sm" name="token">Generate MQTT Token</button>
                 <hr />
-                <input type="button" class="btn btn-danger btn-sm" onclick="clickDelete(this);" value="Delete Device" />
+                <input type="button" class="btn btn-danger btn-sm" onclick="clickDelete(this);" value="Delete Permissions" />
             </form>
 
         </div>
@@ -80,7 +80,7 @@
 
         async function clickDelete() {
             Swal.fire({
-                title: 'Are you sure you want to delete device {{ device.name }}?',
+                title: 'Are you sure you want to delete device permissions: {{ device.name }}?',
                 showCancelButton: true,
                 confirmButtonText: `Yes`,
                 customClass: {
