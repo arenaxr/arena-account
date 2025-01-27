@@ -26,6 +26,16 @@ def delete_scene_objects(token, scene):
     return result
 
 
+def get_persist_ns_all(token):
+    # request all scenes from persist
+    verify, host = get_rest_host()
+    url = f"https://{host}/persist/!allnamespaces"
+    result = _urlopen(url, token, "GET", verify)
+    if result:
+        return json.loads(result)
+    return []
+
+
 def get_persist_scenes_all(token):
     # request all scenes from persist
     verify, host = get_rest_host()

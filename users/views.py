@@ -51,6 +51,7 @@ from .mqtt import (
 )
 from .persistence import (
     delete_scene_objects,
+    get_persist_ns_all,
     get_persist_scenes_all,
     get_persist_scenes_ns,
     get_scene_objects,
@@ -210,7 +211,7 @@ def namespace_perm_detail(request, pk):
     version = TOPIC_SUPPORTED_API_VERSIONS[0]  # TODO (mwfarb): resolve missing request.version
 
     if not namespace_edit_permission(user=request.user, namespace=pk):
-        messages.error(request, f"User does not have permission for: {pk}.")
+        messages.error(request, f"User does not have edit permission for namespace: {pk}.")
         return redirect("users:user_profile")
     owners = []
     if User.objects.filter(username=pk).exists():
@@ -250,7 +251,7 @@ def scene_perm_detail(request, pk):
     version = TOPIC_SUPPORTED_API_VERSIONS[0]  # TODO (mwfarb): resolve missing request.version
 
     if not scene_edit_permission(user=request.user, scene=pk):
-        messages.error(request, f"User does not have permission for: {pk}.")
+        messages.error(request, f"User does not have edit permission for scene: {pk}.")
         return redirect("users:user_profile")
     owners = [pk.split("/")[0]]
     namespace_editors = []  # TODO: define namespaced_editors
@@ -318,7 +319,7 @@ def device_perm_detail(request, pk):
     version = TOPIC_SUPPORTED_API_VERSIONS[0]  # TODO (mwfarb): resolve missing request.version
 
     if not device_edit_permission(user=request.user, device=pk):
-        messages.error(request, f"User does not have permission for: {pk}.")
+        messages.error(request, f"User does not have edit permission for device: {pk}.")
         return redirect("users:user_profile")
     # now, make sure device exists before the other commands are tried
     try:
@@ -378,7 +379,7 @@ def scene_detail(request, pk):
     # check permissions model for namespace
     if not scene_edit_permission(user=request.user, scene=pk):
         return JsonResponse(
-            {"error": f"User does not have permission for: {pk}."},
+            {"error": f"User does not have edit permission for scene: {pk}."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -555,9 +556,8 @@ def get_my_edit_namespaces(user, version):
         # for staff, add any non-user namespaces in persist db
         if user.is_staff:  # admin/staff
             token = all_scenes_read_token(version)
-            p_scenes = get_persist_scenes_all(token)
-            for p_scene in p_scenes:
-                p_ns = p_scene.split("/")[0]  # TODO: replace with distinct call persist/!allnamespaces
+            p_nss = get_persist_ns_all(token)
+            for p_ns in p_nss:
                 if not any(dictionary.get("name") == p_ns for dictionary in ns_out):
                     if not User.objects.filter(username=p_ns).exists():
                         ns_out.append(vars(NamespaceDefault(name=p_ns)))
