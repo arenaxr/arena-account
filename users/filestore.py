@@ -291,7 +291,8 @@ def delete_filestore_user(user: User):
     # find user
     fs_user_token, status = use_filestore_auth(user)
     if not fs_user_token:
-        return False
+        print(f"delete_filestore_user: User '{user.username}' does not exist in filestore, returning true.")
+        return True
     payload = jwt.decode(fs_user_token, options={"verify_signature": False})
     try:
         r_user = requests.get(f"https://{host}/storemng/api/users/{payload['user']['id']}",
