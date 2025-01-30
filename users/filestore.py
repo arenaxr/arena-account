@@ -50,6 +50,18 @@ def get_user_login(user: User):
     return user_login
 
 
+def get_filestore_health():
+    """ Helper method of to test filebrowser system will respond."""
+    verify, host = get_rest_host()
+    try:
+        r_users = requests.get(f"https://{host}/storemng", verify=verify, timeout=FS_API_TIMEOUT)
+        r_users.raise_for_status()
+        return True
+    except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
+        print(err)
+        return False
+
+
 def use_filestore_auth(user: User):
     """ Helper method of to login to user.username's filebrowser account.
 

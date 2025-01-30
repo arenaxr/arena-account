@@ -21,7 +21,12 @@ from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser
 
-from .filestore import delete_filestore_user, login_filestore_user, set_filestore_scope
+from .filestore import (
+    delete_filestore_user,
+    get_filestore_health,
+    login_filestore_user,
+    set_filestore_scope,
+)
 from .forms import (
     DeviceForm,
     NamespaceForm,
@@ -755,27 +760,38 @@ def user_profile(request):
                 ids={"userclient": f"{request.user.username}-objects-delete"},
                 version=version,
             )
+            # delete devices permissions
+            u_devices = Device.objects.filter(name__startswith=f"{request.user.username}/")
+            for device in u_devices:
+                # delete account device data
+                device.delete()
+                messages.success(request, f"Removed device permissions: {device.name}")
             # delete scenes permissions/objects
-            u_scenes = Scene.objects.filter(
-                name__startswith=f'{request.user.username}/')
+            u_scenes = Scene.objects.filter(name__startswith=f"{request.user.username}/")
             for scene in u_scenes:
                 # delete account scene data
                 scene.delete()
+                messages.success(request, f"Removed scene permissions: {scene.name}")
                 # delete persist scene data
-                if not delete_scene_objects(token, scene.name):
-                    messages.error(
-                        request, f"Unable to delete {scene.name} objects from persistence database.")
-                    return redirect("users:user_profile")
+                if len(get_scene_objects(token, scene.name)) > 0:
+                    if not delete_scene_objects(token, scene.name):
+                        messages.error(request, f"Unable to delete {scene.name} objects from persistence database.")
+                        return redirect("users:user_profile")
+                    else:
+                        messages.success(request, f"Removed scene persistence objects: {scene.name}")
             # delete namespaces permissions
             u_namespaces = Namespace.objects.filter(name=request.user.username)
             for namespace in u_namespaces:
                 # delete account namespace data
                 namespace.delete()
+                messages.success(request, f"Removed namespace permissions: {namespace.name}")
             # delete filestore files/account
-            if not delete_filestore_user(request.user):
-                messages.error(
-                    request, "Unable to delete account/files from the filestore.")
-                return redirect("users:user_profile")
+            if get_filestore_health():
+                if not delete_filestore_user(request.user):
+                    messages.error(request, "Unable to delete account/files from the filestore.")
+                    return redirect("users:user_profile")
+                else:
+                    messages.success(request, f"Removed filestore directory: users/{request.user.username}")
 
             # Be careful of foreign keys, in that case this is suggested:
             # user.is_active = False
@@ -784,6 +800,7 @@ def user_profile(request):
                 # delete user account
                 user = request.user
                 user.delete()
+                messages.success(request, f"Removed user: {request.user.username}")
                 return logout_request(request)
             except User.DoesNotExist:
                 messages.error(request, "Unable to complete account delete.")
