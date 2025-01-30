@@ -23,7 +23,6 @@ ns_slash_id_regex = RegexValidator(
 class NamespaceDefault:
     def __init__(self, name=""):
         self.name = name
-        self.owners = []
         self.editors = []
         self.viewers = []
         self.is_default = True
@@ -33,7 +32,6 @@ class Namespace(models.Model):
     """Model representing a namespace's permissions."""
 
     name = models.CharField(max_length=100, blank=False, unique=True, validators=[ns_regex])
-    owners = models.ManyToManyField(User, blank=True, related_name="namespace_owners")
     editors = models.ManyToManyField(User, blank=True, related_name="namespace_editors")
     viewers = models.ManyToManyField(User, blank=True, related_name="namespace_viewers")
 
@@ -58,7 +56,6 @@ class Namespace(models.Model):
 class SceneDefault:
     def __init__(self, name=""):
         self.name = name
-        self.owners = []
         self.editors = []
         self.viewers = []
         self.public_read = SCENE_PUBLIC_READ_DEF
@@ -74,7 +71,6 @@ class Scene(models.Model):
 
     name = models.CharField(max_length=200, blank=False, unique=True, validators=[ns_slash_id_regex])
     summary = models.TextField(max_length=1000, blank=True)
-    owners = models.ManyToManyField(User, blank=True, related_name="scene_owners")
     editors = models.ManyToManyField(User, blank=True, related_name="scene_editors")
     viewers = models.ManyToManyField(User, blank=True, related_name="scene_viewers")
     creation_date = models.DateTimeField(auto_now_add=True)

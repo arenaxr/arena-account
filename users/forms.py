@@ -82,7 +82,7 @@ class NamespaceForm(forms.ModelForm):
 
     class Meta:
         model = Namespace
-        fields = ("owners", "editors", "viewers")
+        fields = ("editors", "viewers")
 
 
 class SceneForm(forms.ModelForm):
@@ -121,7 +121,7 @@ class SceneForm(forms.ModelForm):
     class Meta:
         model = Scene
         fields = ("public_read", "public_write",
-                  "anonymous_users", "video_conference", "users", "owners", "editors", "viewers")
+                  "anonymous_users", "video_conference", "users", "editors", "viewers")
 
 
 class DeviceForm(forms.ModelForm):
