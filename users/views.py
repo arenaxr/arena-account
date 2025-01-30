@@ -755,6 +755,7 @@ def user_profile(request):
                 ids={"userclient": f"{request.user.username}-objects-delete"},
                 version=version,
             )
+            # delete scenes permissions/objects
             u_scenes = Scene.objects.filter(
                 name__startswith=f'{request.user.username}/')
             for scene in u_scenes:
@@ -765,7 +766,11 @@ def user_profile(request):
                     messages.error(
                         request, f"Unable to delete {scene.name} objects from persistence database.")
                     return redirect("users:user_profile")
-
+            # delete namespaces permissions
+            u_namespaces = Namespace.objects.filter(name=request.user.username)
+            for namespace in u_namespaces:
+                # delete account namespace data
+                namespace.delete()
             # delete filestore files/account
             if not delete_filestore_user(request.user):
                 messages.error(
@@ -776,7 +781,7 @@ def user_profile(request):
             # user.is_active = False
             # user.save()
             try:
-                # delete account
+                # delete user account
                 user = request.user
                 user.delete()
                 return logout_request(request)
