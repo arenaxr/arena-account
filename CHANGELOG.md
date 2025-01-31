@@ -1,5 +1,6 @@
 # Changelog
 
+
 ## [2.0.2](https://github.com/arenaxr/arena-account/compare/v2.0.1...v2.0.2) (2024-12-17)
 
 
