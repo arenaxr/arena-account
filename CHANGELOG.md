@@ -1,6 +1,13 @@
 # Changelog
 
 
+## [2.1.0](https://github.com/arenaxr/arena-account/compare/v2.0.2...v2.1.0) (2025-01-31)
+
+
+### Features
+
+* **namespace:** allow editors/viewers by namespace ([d785641](https://github.com/arenaxr/arena-account/commit/d7856411df6e7233ebf0609f56556bc3aa0fe326))
+
 ## [2.0.2](https://github.com/arenaxr/arena-account/compare/v2.0.1...v2.0.2) (2024-12-17)
 
 
