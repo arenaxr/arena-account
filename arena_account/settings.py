@@ -27,7 +27,7 @@ SECRET_KEY = "tc9z5!qsr59+1@(h9v6oa4zhrwyf54vzk4tma@j$ky$mlj^#de"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", "arena-account", "host.docker.internal",  "localhost"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", "arena-account", "host.docker.internal", "localhost"]
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
 MQTT_TOKEN_PRIVKEY = os.getenv("MQTT_TOKEN_PRIVKEY")
@@ -129,7 +129,7 @@ REST_FRAMEWORK = {
     "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.NamespaceVersioning",
 }
 
-DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # allauth general config
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http"  # https for docker, http for localhost:8000
@@ -151,7 +151,10 @@ SOCIALACCOUNT_PROVIDERS = {
             "secret": os.getenv("GAUTH_CLIENTSECRET"),
             "key": "",
         },
-        "SCOPE": ["profile", "email", ],
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
         "AUTH_PARAMS": {
             "access_type": "online",
             "prompt": "select_account",
@@ -180,7 +183,7 @@ LOGGING = {
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
             "class": "logging.StreamHandler",
             "stream": sys.stdout,
-            "formatter": "verbose"
+            "formatter": "verbose",
         },
     },
     "loggers": {
@@ -241,9 +244,15 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", },
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator", },
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator", },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
 ]
 
 
@@ -278,9 +287,7 @@ else:
 PUBSUB = {
     "mqtt_server": {
         "host": "localhost",
-        "port": 1883,
-        "ws_port": 9001,
-        "wss_port": 8083,
+        "port": 8883,
     },
     "mqtt_realm": "realm",
     "mqtt_username": "arena_account",
