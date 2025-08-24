@@ -1,4 +1,4 @@
-Django==3.2.25
+Django==4.2.22
 django-crispy-forms==1.9.2
 django-allauth==0.44.0
 pyjwt==2.4.0
