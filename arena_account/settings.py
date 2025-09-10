@@ -27,7 +27,9 @@ SECRET_KEY = "tc9z5!qsr59+1@(h9v6oa4zhrwyf54vzk4tma@j$ky$mlj^#de"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", "arena-account", "host.docker.internal", "localhost"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", "arena-account", "host.docker.internal",  "localhost"]
+ALLOWED_SCHEME = "https://"
+CSRF_TRUSTED_ORIGINS = [ALLOWED_SCHEME + host for host in ALLOWED_HOSTS]
 
 X_FRAME_OPTIONS = "SAMEORIGIN"
 MQTT_TOKEN_PRIVKEY = os.getenv("MQTT_TOKEN_PRIVKEY")
@@ -264,7 +266,6 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 
 USE_I18N = True
-
 
 USE_TZ = True
 
