@@ -65,8 +65,8 @@ urlpatterns = [
     ),
     path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
     # autocomplete
-    re_path(
-        r"^user-autocomplete/$",
+    path(
+        "user-autocomplete/",
         views.UserAutocomplete.as_view(),
         name="user-autocomplete",
     ),
