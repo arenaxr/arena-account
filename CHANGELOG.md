@@ -1,6 +1,13 @@
 # Changelog
 
 
+## [2.1.1](https://github.com/arenaxr/arena-account/compare/v2.1.0...v2.1.1) (2025-09-10)
+
+
+### Bug Fixes
+
+* **django:** upgrade django to 4.2.24, bump most minor deps ([9d291a6](https://github.com/arenaxr/arena-account/commit/9d291a66bdad41c03048b18599dd3f6313f571f6))
+
 ## [2.1.0](https://github.com/arenaxr/arena-account/compare/v2.0.2...v2.1.0) (2025-01-31)
 
 
