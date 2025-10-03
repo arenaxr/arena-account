@@ -1,11 +1,28 @@
 import json
 
+import pymongo
 import requests
+from pymongo import MongoClient
 from requests.exceptions import HTTPError
 
 from .utils import get_rest_host
 
 PERSIST_TIMEOUT = 30  # 30 seconds
+
+client = MongoClient("mongodb://mongodb/arena_persist")
+
+db=client.admin
+print(db.command("serverStatus"))
+print(client.list_database_names())
+print(db.list_collection_names())
+
+collection = db['arena_persist']
+document = collection.find_one()
+if document:
+    field_names = document.keys()
+    print(f'mongodb fields {list(field_names)}')
+
+client.close()
 
 
 def get_scene_objects(token, scene):
