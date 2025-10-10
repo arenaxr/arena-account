@@ -1,7 +1,9 @@
 import json
+import logging
 
 import pymongo
 import requests
+from fastapi import FastAPI
 from pymongo import MongoClient
 from requests.exceptions import HTTPError
 
@@ -9,20 +11,30 @@ from .utils import get_rest_host
 
 PERSIST_TIMEOUT = 30  # 30 seconds
 
-client = MongoClient("mongodb://mongodb/arena_persist")
+_app = FastAPI()
+_client = None
 
-db=client.admin
-print(db.command("serverStatus"))
-print(client.list_database_names())
-print(db.list_collection_names())
+def open_db_connection():
+    logging.getLogger("pymongo").setLevel(logging.WARNING)
+    _client = MongoClient("mongodb://mongodb/arena_persist")
+    db = _client.admin
 
-collection = db['arena_persist']
-document = collection.find_one()
-if document:
-    field_names = document.keys()
-    print(f'mongodb fields {list(field_names)}')
+    try:
+        server_status = db.command('serverStatus')
+        current_connections = server_status['connections']['current']
+        total_connections = server_status['connections']['totalCreated']
 
-client.close()
+        print(f"arena_persist: current connections: {current_connections}")
+        print(f"arena_persist: total connections created: {total_connections}")
+
+    except Exception as e:
+        print(f"arena_persist: error retrieving connection status: {e}")
+
+
+@_app.on_event("shutdown")
+def close_db_connection():
+    if _client:
+        _client.close()
 
 
 def get_scene_objects(token, scene):
@@ -44,7 +56,7 @@ def delete_scene_objects(token, scene):
 
 
 def get_persist_ns_all(token):
-    # request all scenes from persist
+    # request all namespaces from persist
     verify, host = get_rest_host()
     url = f"https://{host}/persist/!allnamespaces"
     result = _urlopen(url, token, "GET", verify)
