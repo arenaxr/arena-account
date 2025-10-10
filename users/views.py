@@ -363,14 +363,52 @@ def device_perm_detail(request, pk):
 
 class UserAutocomplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
-        # Don't forget to filter out results depending on the visitor !
+        """Get/autocomplete list of users visible to user.
+        """
         if not self.request.user.is_authenticated:
             return User.objects.none()
 
         qs = User.objects.all()
 
         if self.q:
-            qs = qs.filter(username__istartswith=self.q)
+            qs = qs.filter(username__icontains=self.q)
+
+        return qs
+
+
+class NamespaceAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        """Get/autocomplete list of namespaces visible to user.
+        """
+        if not self.request.user.is_authenticated:
+            return Scene.objects.none()
+
+        # query scene permissions
+        qs = Scene.objects.all()
+
+        if self.q:
+            # qs = qs.filter(namespace__icontains=self.q)
+            qs = qs.filter(namespace__icontains=self.q).distinct("namespace")
+
+        return qs
+
+
+class SceneAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        """Get/autocomplete list of namespace/scenes visible to user.
+        """
+        if not self.request.user.is_authenticated:
+            return Scene.objects.none()
+
+        # query scene permissions
+        qs = Scene.objects.all()
+
+        #  TODO: query scene persist objects
+        # persist knows about lookup by namespace
+        # persist knows about lookup by namespace/scene
+
+        if self.q:
+            qs = qs.filter(name__icontains=self.q)
 
         return qs
 

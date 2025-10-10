@@ -49,7 +49,6 @@ urlpatterns = [
     path("profile_update_scene", views.profile_update_scene, name="profile_update_scene"),
     path("profile_update_device", views.profile_update_device, name="profile_update_device"),
     path("my_scenes", views.list_my_scenes, name="my_scenes"),
-    path("my_namespaces", views.list_my_namespaces, name="my_namespaces"),
     # namespace/scenename
     re_path(r"^scenes/(?P<pk>[^\/]+\/[^\/]+)$", views.scene_detail),
     # docs
@@ -69,6 +68,16 @@ urlpatterns = [
         "user-autocomplete/",
         views.UserAutocomplete.as_view(),
         name="user-autocomplete",
+    ),
+    path(
+        "namespace-autocomplete/",
+        views.NamespaceAutocomplete.as_view(),
+        name="namespace-autocomplete",
+    ),
+    path(
+        "scene-autocomplete/",
+        views.SceneAutocomplete.as_view(),
+        name="scene-autocomplete",
     ),
     # filebrowser auth
     path("storelogin", views.storelogin, name="storelogin"),
