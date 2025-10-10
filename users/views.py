@@ -850,13 +850,6 @@ class SocialSignupView(SocialSignupViewDefault):
             {"form": social_form, "account": self.sociallogin.account},
         )
 
-    @transaction.atomic
-    def form_valid(self, social_form):
-        self.request.session.pop("socialaccount_sociallogin", None)
-        user = social_form.save(self.request)
-        name = self.sociallogin.account.extra_data.get("name", "")
-        return helpers.complete_social_signup(self.request, self.sociallogin)
-
 
 @api_view(["GET", "POST"])
 def user_state(request):

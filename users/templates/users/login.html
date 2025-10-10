@@ -24,20 +24,23 @@
                     </div>
                 </div>
                 <div class="row">
-                    <form id="loginForm">
-                        {% csrf_token %}
-                        <div class="form-floating mb-3" id="usernameContainer">
-                            <input class="form-control" id="usernameInput" type="text" required
-                                pattern="^(?=[^A-Za-z]*[A-Za-z]{2,})[ -~]*$" title="Display Name of at least 2 characters">
-                            <label for="usernameInput">Display Name</label>
-                        </div>
+                    <div class="form-floating mb-3" id="usernameContainer">
+                        <input class="form-control" id="usernameInput" type="text" required
+                            pattern="^(?=[^A-Za-z]*[A-Za-z]{2,})[ -~]*$" title="Display Name of at least 2 characters">
+                        <label for="usernameInput">Display Name</label>
+                    </div>
 
-                        <a class="form-floating mb-3 btn btn-primary btn-lg w-100 text-left" id="customBtnGoogle"
-                            style="background-color: #4285F4" href="{% provider_login_url 'google' %}">
+                    <form action="{% provider_login_url 'google' %}" method="post">
+                        {% csrf_token %}
+                        <button class="form-floating mb-3 btn btn-primary btn-lg w-100 text-left" id="customBtnGoogle"
+                            style="background-color: #4285F4" type="submit">
                             <span class="icon me-2"></span>
                             <span class="buttonText">Sign In with Google</span>
-                        </a>
+                        </button>
+                    </form>
 
+                    <form id="loginAnonForm">
+                        {% csrf_token %}
                         <button class="form-floating mb-3 btn btn-primary btn-lg w-100 text-left" id="anonBtn"
                             type="submit" style="background-color: #777777">
                             <span class="icon fas fa-user-secret fa-2x me-2"></span>

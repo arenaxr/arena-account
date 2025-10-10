@@ -56,5 +56,5 @@ document.addEventListener('DOMContentLoaded', function () {   // document.ready(
             form.reportValidity();
         }
     };
-    document.getElementById('loginForm').addEventListener('submit', anonFormHandler);
+    document.getElementById('loginAnonForm').addEventListener('submit', anonFormHandler);
 });
