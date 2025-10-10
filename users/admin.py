@@ -13,10 +13,13 @@ class NamespaceAdmin(admin.ModelAdmin):
 
 @admin.register(Scene)
 class SceneAdmin(admin.ModelAdmin):
-    list_display = ["name", "is_default", "public_read", "public_write", "anonymous_users", "video_conference", "users"]
-    list_filter = ["public_read", "public_write", "anonymous_users", "video_conference", "users", "editors", "viewers"]
+    list_display = ["name", "is_default", "public_read", "public_write", "anonymous_users", "video_conference", "users", "creation_date"]
+    list_filter = ["creation_date", "public_read", "public_write", "anonymous_users", "video_conference", "users", "editors", "viewers"]
     search_fields = ["name"]
     autocomplete_fields = ["editors", "viewers"]
 
-
-admin.site.register(Device)
+@admin.register(Device)
+class DeviceAdmin(admin.ModelAdmin):
+    list_display = ["name", "creation_date"]
+    list_filter = ["creation_date"]
+    search_fields = ["name", "summary"]
