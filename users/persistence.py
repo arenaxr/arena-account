@@ -15,8 +15,11 @@ _app = FastAPI()
 _client = None
 
 def open_db_connection():
+    # avoid verbose mongo logging in account docker
     logging.getLogger("pymongo").setLevel(logging.WARNING)
-    _client = MongoClient("mongodb://mongodb/arena_persist")
+
+    # connect to mongodb, read-only
+    _client = MongoClient("mongodb://mongodb/arena_persist?readPreference=primaryPreferred")
     db = _client.admin
 
     try:
@@ -33,6 +36,7 @@ def open_db_connection():
 
 @_app.on_event("shutdown")
 def close_db_connection():
+    # disconnect from mongodb
     if _client:
         _client.close()
 
@@ -76,6 +80,11 @@ def get_persist_scenes_all(token):
 
 
 def get_persist_scenes_ns(token, namespace):
+    global _client
+    results = _client.collection.find({"namespace": {"$regex": namespace, "$options": "i"}})
+    for document in results:
+        print(f"get_persist_scenes_ns: {document}")
+
     # request all namespace scenes from persist
     verify, host = get_rest_host()
     url = f"https://{host}/persist/{namespace}/!allscenes"
