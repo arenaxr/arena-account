@@ -236,9 +236,26 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+    },
+    "persist": {
+        'ENGINE': 'djongo',
+        'NAME': 'arena_persist',
+        'ENFORCE_SCHEMA': False,
+        'CLIENT': {
+            'host': 'mongodb://mongodb/arena_persist?readPreference=primaryPreferred'
+            # 'host': 'mongodb://mongodb/arena_persist'
+        },
+        # 'LOGGING': {
+        #     'version': 1,
+        #     'loggers': {
+        #         'djongo': {
+        #             'level': 'WARNING',
+        #             # 'propagate': False,
+        #         }
+        #     }
+        # }
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators

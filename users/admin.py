@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Device, Namespace, Scene
+from .models import ArenaObject, Device, Namespace, Scene
 
 
 @admin.register(Namespace)
@@ -23,3 +23,10 @@ class DeviceAdmin(admin.ModelAdmin):
     list_display = ["name", "creation_date"]
     list_filter = ["creation_date"]
     search_fields = ["name", "summary"]
+
+
+class ArenaObjectModelAdmin(admin.ModelAdmin):
+    def get_queryset(self, request):
+        return super().get_queryset(request).using('persist').order_by(*[])
+
+# admin.site.register(ArenaObject, ArenaObjectModelAdmin)
