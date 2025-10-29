@@ -84,10 +84,33 @@ class MongoJSONEncoder(json.JSONEncoder):
         return super().default(o)  # Call the default method for other types
 
 
-def get_all_arenaobject(request):
+def get_all_arenaobjects(request):
     arenaobjects = arenaobjects_collection.find()
-    arenaobject_list = list(arenaobjects)
-    return JsonResponse(MongoJSONEncoder().encode(arenaobject_list), safe=False)
+    return JsonResponse(MongoJSONEncoder().encode(list(arenaobjects)), safe=False)
+
+def get_all_namespaces(request):
+    # arenaobjects = arenaobjects_collection.find()
+    arenaobjects = arenaobjects_collection.aggregate([{
+        "$group": {
+            "_id": {
+                "namespace": "$namespace",
+                }
+            }
+        }
+    ])
+    return JsonResponse(MongoJSONEncoder().encode(list(arenaobjects)), safe=False)
+
+def get_all_scenes(request):
+    arenaobjects = arenaobjects_collection.aggregate([{
+        "$group": {
+            "_id": {
+                "namespace": "$namespace",
+                "sceneId": "$sceneId",
+                }
+            }
+        }
+    ])
+    return JsonResponse(MongoJSONEncoder().encode(list(arenaobjects)), safe=False)
 
 
 @csrf_exempt

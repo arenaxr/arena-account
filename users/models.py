@@ -5,9 +5,6 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.urls import reverse
 
-# from djongo import models as djongo_models
-
-
 # Scene permissions defaults
 SCENE_PUBLIC_READ_DEF = True
 SCENE_PUBLIC_WRITE_DEF = False
@@ -23,34 +20,20 @@ ns_slash_id_regex = RegexValidator(
     RE_NS_SLASH_ID, "Only alphanumeric, underscore, hyphen, in namespace/idname format allowed."
 )
 
+# assign accessible model for persist collection
 arenaobjects_collection = db['arenaobjects']
 
-# class ArenaObject(djongo_models.Model):
-#     _id = djongo_models.ObjectIdField()
-#     # object_id: {type: String, required: true, index: true},
-#     object_id = djongo_models.CharField(blank=False, max_length=255)
-#     # type: {type: String, required: true, index: true},
-#     type = djongo_models.CharField(blank=False, max_length=100)
-#     # attributes: {type: Object, required: true, default: {}},
-#     attributes = djongo_models.TextField(blank=False, default='{}')
-#     # expireAt: {type: Date, expires: 0},
-#     expireAt = djongo_models.DateTimeField(blank=True)
-#     # realm: {type: String, required: true, index: true},
-#     realm = djongo_models.CharField(blank=False, max_length=100)
-#     # namespace: {type: String, required: true, index: true, default: 'public'},
-#     namespace = djongo_models.CharField(blank=False, max_length=100, default='public')
-#     # sceneId: {type: String, required: true, index: true},
-#     sceneId = djongo_models.CharField(blank=False, max_length=100)
-#     # private: {type: Boolean},
-#     private = djongo_models.BooleanField()
-#     # program_id: {type: String},
-#     program_id = djongo_models.CharField(blank=True, max_length=100)
-
-#     objects = djongo_models.DjongoManager()
-
-#     class Meta:
-#         db_table = 'arenaobjects'
-#         # ordering = ['namespace', 'sceneId', 'object_id']
+# arenaobjects schema reference:
+# https://github.com/arenaxr/arena-persist/blob/master/server.js#L28-L42
+# object_id: {type: String, required: true, index: true},
+# type: {type: String, required: true, index: true},
+# attributes: {type: Object, required: true, default: {}},
+# expireAt: {type: Date, expires: 0},
+# realm: {type: String, required: true, index: true},
+# namespace: {type: String, required: true, index: true, default: 'public'},
+# sceneId: {type: String, required: true, index: true},
+# private: {type: Boolean},
+# program_id: {type: String},
 
 
 class NamespaceDefault:
