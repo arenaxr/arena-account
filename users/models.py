@@ -29,7 +29,7 @@ class ArenaObject(djongo_models.Model):
     # attributes: {type: Object, required: true, default: {}},
     attributes = djongo_models.TextField(blank=False, default='{}')
     # expireAt: {type: Date, expires: 0},
-    expireAt = djongo_models.DateTimeField()
+    expireAt = djongo_models.DateTimeField(blank=True)
     # realm: {type: String, required: true, index: true},
     realm = djongo_models.CharField(blank=False, max_length=100)
     # namespace: {type: String, required: true, index: true, default: 'public'},
@@ -39,14 +39,14 @@ class ArenaObject(djongo_models.Model):
     # private: {type: Boolean},
     private = djongo_models.BooleanField()
     # program_id: {type: String},
-    program_id = djongo_models.CharField(max_length=100)
+    program_id = djongo_models.CharField(blank=True, max_length=100)
 
     objects = djongo_models.DjongoManager()
 
     class Meta:
-        # app_label = 'arena_persist'
         db_table = 'arenaobjects'
-        ordering = ['namespace', 'sceneId']
+        ordering = []
+        # ordering = ['namespace', 'sceneId']
 
 
 class NamespaceDefault:
