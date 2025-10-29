@@ -1,12 +1,16 @@
 import datetime
+import json
+import logging
 import os
 import re
 import secrets
+from datetime import datetime
 from operator import itemgetter
 
 from allauth.socialaccount import helpers
 from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.views import SignupView as SocialSignupViewDefault
+from bson import ObjectId
 from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -15,6 +19,7 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
+from django.views.decorators.csrf import csrf_exempt
 from google.auth.transport import requests as grequests
 from google.oauth2 import id_token
 from rest_framework import permissions, status
@@ -44,6 +49,7 @@ from .models import (
     NamespaceDefault,
     Scene,
     SceneDefault,
+    arenaobjects_collection,
 )
 from .mqtt import (
     ANON_REGEX,
@@ -67,6 +73,52 @@ from .serializers import (
     SceneNameSerializer,
     SceneSerializer,
 )
+
+
+class MongoJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)  # Convert ObjectId to string
+        if isinstance(o, datetime):
+            return o.isoformat()  # Convert datetime to ISO format
+        return super().default(o)  # Call the default method for other types
+
+
+def get_all_arenaobject(request):
+    arenaobjects = arenaobjects_collection.find()
+    arenaobject_list = list(arenaobjects)
+    return JsonResponse(MongoJSONEncoder().encode(arenaobject_list), safe=False)
+
+
+@csrf_exempt
+def add_arenaobject(request):
+    if request.method == 'POST':
+        try:
+            # Print the raw body for debugging
+            logging.info(f"Request Body: {request.body}")
+
+            # Parse JSON data from the request
+            data = json.loads(request.body.decode('utf-8'))
+
+            # Check if the data is a list
+            if not isinstance(data, list):
+                return JsonResponse({'error': 'Data must be an array of objects'}, status=400)
+
+            # Validate each object in the list
+            for arenaobject in data:
+                if 'namespace' not in arenaobject or 'sceneId' not in arenaobject:
+                    return JsonResponse({'error': 'Missing required fields in one or more objects'}, status=400)
+
+            # Insert multiple records into MongoDB
+            arenaobjects_collection.insert_many(data)
+
+            return JsonResponse({'message': f'{len(data)} arenaobjects added successfully'}, status=201)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+    else:
+        return JsonResponse({'error': 'Invalid HTTP method'}, status=405)
+
 
 # namespaced scene regular expression
 RE_PATTERN_NS_SLASH_ID = re.compile(RE_NS_SLASH_ID)

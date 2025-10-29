@@ -6,7 +6,6 @@ def post_migration_callback(sender, **kwargs):
     from . import persistence, startup
 
     startup.setup_socialapps()
-    # persistence.open_db_connection()
 
 
 class UsersConfig(AppConfig):
