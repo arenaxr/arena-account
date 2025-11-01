@@ -2,7 +2,7 @@ Django==4.2.25
 django-crispy-forms==2.4.0
 django-allauth[socialaccount]==65.12.0
 pyjwt==2.10.1
-cryptography==46.0.2
+cryptography==46.0.3
 google-api-python-client==2.184.0
 djangorestframework==3.16.1
 django-rest-swagger==2.2.0
