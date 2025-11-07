@@ -72,8 +72,4 @@ urlpatterns = [
     ),
     # filebrowser auth
     path("storelogin", views.storelogin, name="storelogin"),
-
-    path('show_arenaobjects/', views.get_all_arenaobjects),
-    path('show_scenes/', views.get_all_scenes),
-    path('show_namespaces/', views.get_all_namespaces),
 ]
