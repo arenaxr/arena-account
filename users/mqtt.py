@@ -291,18 +291,28 @@ def set_scene_perms_api_v2(
             # scene owners have rights to their scene objects only
             topicv2_add_scene_reader(pubs, subs, realm, username, "+", ids)
             topicv2_add_scene_writer(pubs, subs, realm, username, "+", ids)
+
             # add namespaces that have been granted by other owners
-            u_namespaces = Namespace.objects.filter(editors=user)
-            for u_namespace in u_namespaces:
+            e_namespaces = Namespace.objects.filter(editors=user)
+            for u_namespace in e_namespaces:
                 if not sceneid or u_namespace.name == f"{namespace}":
                     topicv2_add_scene_reader(pubs, subs, realm, u_namespace.name, "+", ids)
                     topicv2_add_scene_writer(pubs, subs, realm, u_namespace.name, "+", ids)
+            v_namespaces = Namespace.objects.filter(viewers=user)
+            for u_namespace in v_namespaces:
+                if not sceneid or u_namespace.name == f"{namespace}":
+                    topicv2_add_scene_reader(pubs, subs, realm, u_namespace.name, "+", ids)
+
             # add scenes that have been granted by other owners
-            u_scenes = Scene.objects.filter(editors=user)
-            for u_scene in u_scenes:
+            e_scenes = Scene.objects.filter(editors=user)
+            for u_scene in e_scenes:
                 if not sceneid or (sceneid and u_scene.name == f"{namespace}/{sceneid}"):
                     topicv2_add_scene_reader(pubs, subs, realm, u_scene.namespace, u_scene.sceneid, ids)
                     topicv2_add_scene_writer(pubs, subs, realm, u_scene.namespace, u_scene.sceneid, ids)
+            v_scenes = Scene.objects.filter(viewers=user)
+            for u_scene in v_scenes:
+                if not sceneid or (sceneid and u_scene.name == f"{namespace}/{sceneid}"):
+                    topicv2_add_scene_reader(pubs, subs, realm, u_scene.namespace, u_scene.sceneid, ids)
     # anon/non-owners have rights to view scene objects only
     if sceneid:
         # did the user set specific public read or public write?
