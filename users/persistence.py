@@ -9,10 +9,11 @@ from requests.exceptions import HTTPError
 from .models import arenaobjects_collection
 from .utils import get_rest_host
 
-# https://pymongo.readthedocs.io/en/stable/index.html
-
-
 PERSIST_TIMEOUT = 30  # 30 seconds
+
+
+# Mongo DB PyMongo queries for Persist:
+# https://pymongo.readthedocs.io/en/stable/index.html
 
 
 class MongoJSONEncoder(json.JSONEncoder):
@@ -24,12 +25,12 @@ class MongoJSONEncoder(json.JSONEncoder):
         return super().default(o)  # Call the default method for other types
 
 
-def get_all_arenaobjects():
+def read_all_arenaobjects():
     arenaobjects = arenaobjects_collection.find()
     return MongoJSONEncoder().encode(list(arenaobjects))
 
 
-def get_all_namespaces():
+def read_persist_ns_all():
     arenaobjects = arenaobjects_collection.aggregate([{
         "$group": {
             "_id": {
@@ -41,7 +42,7 @@ def get_all_namespaces():
     return MongoJSONEncoder().encode(list(arenaobjects))
 
 
-def get_all_scenes():
+def read_persist_scenes_all():
     arenaobjects = arenaobjects_collection.aggregate([{
         "$group": {
             "_id": {
@@ -54,8 +55,11 @@ def get_all_scenes():
     return MongoJSONEncoder().encode(list(arenaobjects))
 
 
+# Mongo DB REST queries for Persist:
+
+
 def get_scene_objects(token, scene):
-    # get scene from persist
+    # get scene objects from persist
     verify, host = get_rest_host()
     url = f"https://{host}/persist/{scene}"
     result = _urlopen(url, token, "GET", verify)
@@ -65,7 +69,7 @@ def get_scene_objects(token, scene):
 
 
 def delete_scene_objects(token, scene):
-    # delete scene from persist
+    # delete scene objects from persist
     verify, host = get_rest_host()
     url = f"https://{host}/persist/{scene}"
     result = _urlopen(url, token, "DELETE", verify)
@@ -73,7 +77,7 @@ def delete_scene_objects(token, scene):
 
 
 def get_persist_ns_all(token):
-    # request all namespaces from persist
+    # request all namespace names from persist
     verify, host = get_rest_host()
     url = f"https://{host}/persist/!allnamespaces"
     result = _urlopen(url, token, "GET", verify)
@@ -83,7 +87,7 @@ def get_persist_ns_all(token):
 
 
 def get_persist_scenes_all(token):
-    # request all scenes from persist
+    # request all scene names from persist
     verify, host = get_rest_host()
     url = f"https://{host}/persist/!allscenes"
     result = _urlopen(url, token, "GET", verify)
@@ -93,7 +97,7 @@ def get_persist_scenes_all(token):
 
 
 def get_persist_scenes_ns(token, namespace):
-    # request all namespace scenes from persist
+    # request all namespace scene names from persist
     verify, host = get_rest_host()
     url = f"https://{host}/persist/{namespace}/!allscenes"
     result = _urlopen(url, token, "GET", verify)

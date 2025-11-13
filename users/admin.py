@@ -18,6 +18,7 @@ class SceneAdmin(admin.ModelAdmin):
     search_fields = ["name"]
     autocomplete_fields = ["editors", "viewers"]
 
+
 @admin.register(Device)
 class DeviceAdmin(admin.ModelAdmin):
     list_display = ["name", "creation_date"]

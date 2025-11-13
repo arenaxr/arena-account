@@ -13,7 +13,7 @@ class NamespaceSerializer(serializers.ModelSerializer):
             "name",
             "editors",
             "viewers",
-            "is_default",
+            # "is_default",
         ]
 
 
@@ -42,7 +42,7 @@ class SceneSerializer(serializers.ModelSerializer):
             "anonymous_users",
             "video_conference",
             "users",
-            "is_default",
+            # "is_default",
         ]
 
 
