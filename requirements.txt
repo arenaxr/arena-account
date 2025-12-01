@@ -1,6 +1,6 @@
 Django==4.2.26
 django-crispy-forms==2.4.0
-django-allauth[socialaccount]==65.13.0
+django-allauth[socialaccount]==65.13.1
 pyjwt==2.10.1
 cryptography==46.0.3
 google-api-python-client==2.187.0
