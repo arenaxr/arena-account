@@ -10,4 +10,4 @@ updates:
       interval: "monthly"
     ignore:
       - dependency-name: "django"
-        versions: [ "<5" ]
+        versions: [ ">=5" ]
