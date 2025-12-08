@@ -1,6 +1,6 @@
-Django==4.2.26
-django-crispy-forms==2.4.0
-django-allauth[socialaccount]==65.13.0
+Django==4.2.27
+django-crispy-forms==2.5.0
+django-allauth[socialaccount]==65.13.1
 pyjwt==2.10.1
 cryptography==46.0.3
 google-api-python-client==2.187.0
@@ -13,4 +13,4 @@ drf-yasg==1.21.11
 python-dotenv==1.2.1
 requests==2.32.5
 django-autocomplete-light==3.12.1
-pre-commit==4.3.0
+pre-commit==4.5.0
