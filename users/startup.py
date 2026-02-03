@@ -24,6 +24,7 @@ def setup_socialapps():
             id_inst.save()
     else:
         id_inst = Site(id=site_id, name=host, domain=host)
+        id_inst.save()
 
     # social apps are defined in settings.py, so remove legacy allauth entires that might conflict
     SocialApp.objects.filter(provider='google').delete()
