@@ -58,8 +58,7 @@ from .persistence import (
     delete_scene_objects,
     get_persist_ns_all,
     get_persist_scenes_all,
-    get_persist_scenes_ns,
-    get_scene_objects,
+    read_persist_scenes_for_namespaces,
 )
 from .serializers import (
     NamespaceNameSerializer,
@@ -616,13 +615,16 @@ def get_my_edit_scenes(user, version):
     sc_out = serializer.data
     if user.is_authenticated:
         # update scene list from object persistence db
+        p_scenes = []
         token = all_scenes_read_token(version)
         if user.is_staff:  # admin/staff
             p_scenes = get_persist_scenes_all(token)
         else:  # standard user
-            p_scenes = get_persist_scenes_ns(token, user.username)
+            # batch query for all namespaces
+            req_namespaces = [user.username]
             for editor_namespace in editor_namespaces:
-                p_scenes = p_scenes + get_persist_scenes_ns(token, editor_namespace)
+                req_namespaces.append(editor_namespace.name)
+            p_scenes = read_persist_scenes_for_namespaces(req_namespaces)
         for p_scene in p_scenes:
             # always add queried persisted scenes
             if not any(dictionary.get("name") == p_scene for dictionary in sc_out):
@@ -656,11 +658,12 @@ def get_my_view_scenes(user, version):
     sc_out = serializer.data
     if user.is_authenticated:
         # update scene list from object persistence db
-        token = all_scenes_read_token(version)
         p_scenes = []
         if not user.is_staff:  # admin/staff
+            req_namespaces = []
             for viewer_namespace in viewer_namespaces:
-                p_scenes = p_scenes + get_persist_scenes_ns(token, viewer_namespace)
+                req_namespaces.append(viewer_namespace.name)
+            p_scenes = read_persist_scenes_for_namespaces(req_namespaces)
         for p_scene in p_scenes:
             # always add queried persisted scenes
             if not any(dictionary.get("name") == p_scene for dictionary in sc_out):

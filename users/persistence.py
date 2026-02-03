@@ -55,6 +55,31 @@ def read_persist_scenes_all():
     return MongoJSONEncoder().encode(list(arenaobjects))
 
 
+def read_persist_scenes_for_namespaces(namespaces):
+    arenaobjects = get_arenaobjects_collection().aggregate([
+        {
+            "$match": {
+                "namespace": {"$in": namespaces}
+            }
+        },
+        {
+            "$group": {
+                "_id": {
+                    "namespace": "$namespace",
+                    "sceneId": "$sceneId",
+                }
+            }
+        }
+    ])
+    unique_scenes = []
+    for doc in arenaobjects:
+        ns = doc['_id']['namespace']
+        sc = doc['_id']['sceneId']
+        unique_scenes.append(f"{ns}/{sc}")
+
+    return unique_scenes
+
+
 # Mongo DB REST queries for Persist:
 
 

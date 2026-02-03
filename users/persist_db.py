@@ -18,7 +18,7 @@ logging.getLogger("pymongo").setLevel(logging.WARNING)
 
 def get_persist_db():
     global client, db
-    if db:
+    if db is not None:
         return db
 
     # connect to mongodb, read-only
