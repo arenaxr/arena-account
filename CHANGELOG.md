@@ -1,6 +1,16 @@
 # Changelog
 
 
+## [2.1.2](https://github.com/arenaxr/arena-account/compare/v2.1.1...v2.1.2) (2025-12-08)
+
+
+### Bug Fixes
+
+* **admin:** allow admin to sort by date, name, summary ([2c7d75f](https://github.com/arenaxr/arena-account/commit/2c7d75f7377ee23b17245784722e9a97ea288f78))
+* **allauth:** upgrade allauth v62 removes custom form validation ([84909d9](https://github.com/arenaxr/arena-account/commit/84909d93891892041c4f01d2bbc75249924d9c9e))
+* **google:** migrate to login post only allauth v56 ([a8dceaf](https://github.com/arenaxr/arena-account/commit/a8dceaf2cca8779ef1f80a2d7448514a6bd4e9d9))
+* **mqtt:** allow subscription by namespace and scene viewer perms ([dcf9543](https://github.com/arenaxr/arena-account/commit/dcf9543733057aef6c0b3973486ea93f60f98bc2))
+
 ## [2.1.1](https://github.com/arenaxr/arena-account/compare/v2.1.0...v2.1.1) (2025-09-10)
 
 

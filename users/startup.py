@@ -1,5 +1,6 @@
 import os
 
+from allauth.socialaccount.models import SocialApp
 from django.conf import settings
 from django.contrib.sites.models import Site
 
@@ -23,3 +24,7 @@ def setup_socialapps():
             id_inst.save()
     else:
         id_inst = Site(id=site_id, name=host, domain=host)
+        id_inst.save()
+
+    # social apps are defined in settings.py, so remove legacy allauth entires that might conflict
+    SocialApp.objects.filter(provider='google').delete()
