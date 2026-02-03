@@ -6,8 +6,8 @@ from pymongo.database import Database
 
 '''
 persist_db.py: This Mongo connection manager is triggered at startup and checked
-before each database call, this allowing a lazy connection to Mongo. There is no
-exlict disconnect from Mongo. PyMongo manages its own connection pooling and the OS
+before each database call, this allows a lazy connection to Mongo. There is no
+explicit disconnect from Mongo. PyMongo manages its own connection pooling and the OS
 handles socket cleanup on process exit. Plus, Django shutdown is hard to detect.
 '''
 
