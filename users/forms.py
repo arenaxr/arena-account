@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 
 from .models import Device, Namespace, Scene
 from .mqtt import TOPIC_SUPPORTED_API_VERSIONS, all_scenes_read_token
-from .persistence import read_persist_scenes_for_namespaces
+from .persistence import read_persist_scenes_by_namespace
 
 
 class SocialSignupForm(_SocialSignupForm):
@@ -30,7 +30,7 @@ class SocialSignupForm(_SocialSignupForm):
             self.add_error("username", msg)
         # reject usernames in form on signup: Namespace used in persist db
         else:
-            if len(read_persist_scenes_for_namespaces([username])) > 0:
+            if len(read_persist_scenes_by_namespace([username])) > 0:
                 msg = f"Sorry, '{username}' is a persistence namespace."
                 self.add_error("username", msg)
 

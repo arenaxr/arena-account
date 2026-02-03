@@ -43,19 +43,27 @@ def read_persist_ns_all():
 
 
 def read_persist_scenes_all():
-    arenaobjects = get_arenaobjects_collection().aggregate([{
-        "$group": {
-            "_id": {
-                "namespace": "$namespace",
-                "sceneId": "$sceneId",
+    arenaobjects = get_arenaobjects_collection().aggregate([
+        {
+            "$group": {
+                "_id": {
+                    "namespace": "$namespace",
+                    "sceneId": "$sceneId",
                 }
             }
         }
     ])
-    return MongoJSONEncoder().encode(list(arenaobjects))
+    unique_scenes = []
+    for doc in arenaobjects:
+        ns = doc['_id']['namespace']
+        sc = doc['_id']['sceneId']
+        unique_scenes.append(f"{ns}/{sc}")
+
+    return unique_scenes
 
 
-def read_persist_scenes_for_namespaces(namespaces):
+
+def read_persist_scenes_by_namespace(namespaces):
     arenaobjects = get_arenaobjects_collection().aggregate([
         {
             "$match": {
