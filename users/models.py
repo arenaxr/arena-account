@@ -1,4 +1,3 @@
-from db_persist import db
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
@@ -21,7 +20,9 @@ ns_slash_id_regex = RegexValidator(
 )
 
 # assign accessible model for persist collection
-arenaobjects_collection = db['arenaobjects']
+def get_arenaobjects_collection():
+    from .persist_db import get_persist_db
+    return get_persist_db()['arenaobjects']
 
 # arenaobjects schema reference:
 # https://github.com/arenaxr/arena-persist/blob/master/server.js#L28-L42

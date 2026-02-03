@@ -14,4 +14,3 @@ python-dotenv==1.2.1
 requests==2.32.5
 django-autocomplete-light==3.12.1
 pymongo==4.10.1
-fastapi==0.118.3

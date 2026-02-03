@@ -5,7 +5,7 @@ from django.db.models.signals import post_migrate
 def post_migration_callback(sender, **kwargs):
     from . import startup
 
-    startup.setup_socialapps()
+    startup.setup_databases()
 
 
 class UsersConfig(AppConfig):

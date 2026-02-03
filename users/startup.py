@@ -13,7 +13,12 @@ from users.models import (
 )
 
 
-def setup_socialapps():
+from users.persist_db import get_persist_db
+
+def setup_databases():
+    # Force db connection
+    get_persist_db()
+
     # Sites db must have a SITE_ID row that equals our host
     host = os.getenv("HOSTNAME")
     site_id = settings.SITE_ID

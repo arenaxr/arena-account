@@ -6,7 +6,7 @@ import requests
 from bson import ObjectId
 from requests.exceptions import HTTPError
 
-from .models import arenaobjects_collection
+from .models import get_arenaobjects_collection
 from .utils import get_rest_host
 
 PERSIST_TIMEOUT = 30  # 30 seconds
@@ -26,12 +26,12 @@ class MongoJSONEncoder(json.JSONEncoder):
 
 
 def read_all_arenaobjects():
-    arenaobjects = arenaobjects_collection.find()
+    arenaobjects = get_arenaobjects_collection().find()
     return MongoJSONEncoder().encode(list(arenaobjects))
 
 
 def read_persist_ns_all():
-    arenaobjects = arenaobjects_collection.aggregate([{
+    arenaobjects = get_arenaobjects_collection().aggregate([{
         "$group": {
             "_id": {
                 "namespace": "$namespace",
@@ -43,7 +43,7 @@ def read_persist_ns_all():
 
 
 def read_persist_scenes_all():
-    arenaobjects = arenaobjects_collection.aggregate([{
+    arenaobjects = get_arenaobjects_collection().aggregate([{
         "$group": {
             "_id": {
                 "namespace": "$namespace",
