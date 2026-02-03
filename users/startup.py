@@ -41,7 +41,7 @@ def setup_socialapps():
     if count > 0:
         print(f"Deleted legacy SocialApp entries: {count}")
 
-    # check for scenes where Scene.is_default is True and remove them
+    # check for scene permissions where Scene.is_default is True and remove them
     count, _ = Scene.objects.filter(
         public_read=SCENE_PUBLIC_READ_DEF,
         public_write=SCENE_PUBLIC_WRITE_DEF,
@@ -52,4 +52,4 @@ def setup_socialapps():
         viewers__isnull=True,
     ).delete()
     if count > 0:
-        print(f"Deleted redundant default Scene entries: {count}")
+        print(f"Deleted redundant default Scene permission entries: {count}")
