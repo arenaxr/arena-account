@@ -569,8 +569,10 @@ def get_my_edit_namespaces(user, version):
                         existing_names.add(p_ns)
 
     # count persisted
+    all_names = [ns["name"] for ns in ns_out]
+    existing_users = set(User.objects.filter(username__in=all_names).values_list("username", flat=True))
     for ns in ns_out:
-        ns["account"] = User.objects.filter(username=ns["name"]).exists()
+        ns["account"] = ns["name"] in existing_users
 
     return sorted(ns_out, key=itemgetter("name"))
 
@@ -635,8 +637,9 @@ def get_my_edit_scenes(user, version):
                 existing_names.add(p_scene)
         if user.is_staff:  # admin/staff
             # count persisted
+            p_scenes_set = set(p_scenes)
             for sc in sc_out:
-                sc["persisted"] = sc["name"] in p_scenes
+                sc["persisted"] = sc["name"] in p_scenes_set
 
     return sorted(sc_out, key=itemgetter("name"))
 
