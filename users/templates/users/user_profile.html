@@ -381,7 +381,8 @@
             const {
                 value: text
             } = await Swal.fire({
-                title: 'Are you sure you want to delete account {{ user.get_username }} and all {{ user.get_username }}/+ scenes?',
+                title: 'Are you sure you want to delete account "{{ user.get_username }}" and all files and scenes for: {{ user.get_username }}/+?',
+                icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: `Yes`,
                 customClass: {

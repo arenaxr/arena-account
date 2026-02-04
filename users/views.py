@@ -235,8 +235,13 @@ def namespace_perm_detail(request, pk):
                 return redirect("users:user_profile")
         elif "delete" in request.POST:
             # delete account namespace data
-            namespace.delete()
-            messages.success(request, f"Removed namespace permissions: {pk}")
+            if namespace.pk:
+                namespace.delete()
+                messages.success(request, f"Removed namespace permissions: {pk}")
+            # delete persist objects for this namespace
+            if delete_persist_namespace_objects(pk):
+                messages.success(request, f"Removed namespace persistence objects: {pk}")
+
             return redirect("users:user_profile")
     else:
         form = NamespaceForm(instance=namespace)
@@ -275,8 +280,9 @@ def scene_perm_detail(request, pk):
                 return redirect("users:user_profile")
         elif "delete" in request.POST:
             # delete account scene data
-            scene.delete()
-            messages.success(request, f"Removed scene permissions: {pk}")
+            if scene.pk:
+                scene.delete()
+                messages.success(request, f"Removed scene permissions: {pk}")
             # delete persist scene data
             namespace, sceneId = pk.split("/")
             if delete_persist_scene_objects(namespace, sceneId):
@@ -336,8 +342,9 @@ def device_perm_detail(request, pk):
                 return redirect("users:user_profile")
         elif "delete" in request.POST:
             # delete account device data
-            device.delete()
-            messages.success(request, f"Removed device permissions: {pk}")
+            if device.pk:
+                device.delete()
+                messages.success(request, f"Removed device permissions: {pk}")
             return redirect("users:user_profile")
         elif "token" in request.POST:
             token = generate_arena_token(

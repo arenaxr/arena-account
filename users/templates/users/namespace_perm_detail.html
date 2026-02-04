@@ -16,25 +16,28 @@
                     <td><b>Namespace Name:</b></td>
                     <td><b>{{ namespace.name }}</b></td>
                     <td></td>
-                </tr>
-                <tr>
-                    <td><b>Owners:</b></td>
-                    <td>{{ owners|join:", " }}</td>
-                    <td>Owners cannot be removed. Includes Editor permissions.</td>
-                </tr>
-                <tr>
-                    <td><b>Editors:</b></td>
-                    <td>{{ form.editors }}</td>
-                    <td>Add/remove additional Editors. Editors can change namespace objects and permissions. Includes Viewer permissions.</td>
-                </tr>
-                <tr>
-                    <td><b>Viewers:</b></td>
-                    <td>{{ form.viewers }}</td>
-                    <td>Add/remove additional Viewers. Viewers can see namespace names in lists.</td>
-                </tr>                </table>
+                    </tr>
+                    <tr>
+                        <td><b>Owners:</b></td>
+                        <td>{{ owners|join:", " }}</td>
+                        <td>Owners cannot be removed. Includes Editor permissions.</td>
+                    </tr>
+                    <tr>
+                        <td><b>Editors:</b></td>
+                        <td>{{ form.editors }}</td>
+                        <td>Add/remove additional Editors. Editors can change namespace objects and permissions.
+                            Includes Viewer permissions.</td>
+                    </tr>
+                    <tr>
+                        <td><b>Viewers:</b></td>
+                        <td>{{ form.viewers }}</td>
+                        <td>Add/remove additional Viewers. Viewers can see namespace names in lists.</td>
+                    </tr>
+                </table>
                 <button type="submit" class="btn btn-secondary btn-sm" name="save">Save</button>
                 <hr />
-                <input type="button" class="btn btn-danger btn-sm" onclick="clickDelete(this);" value="Delete Permissions" />
+                <input type="button" class="btn btn-danger btn-sm" onclick="clickDelete(this);"
+                    value="Delete Namespace Objects and Permissions" />
             </form>
 
         </div>
@@ -47,7 +50,8 @@
 
         async function clickDelete() {
             Swal.fire({
-                title: 'Are you sure you want to delete namespace permissions: {{ namespace.name }}?',
+                title: 'Are you sure you want to delete all namespace objects and permissions for: {{ namespace.name }}/+?',
+                icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: `Yes`,
                 customClass: {
