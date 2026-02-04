@@ -39,15 +39,16 @@ def read_persist_scenes_all():
                     "sceneId": "$sceneId",
                 }
             }
+        },
+        {
+            "$project": {
+                "name": {
+                    "$concat": ["$_id.namespace", "/", "$_id.sceneId"]
+                }
+            }
         }
     ])
-    unique_scenes = []
-    for doc in arenaobjects:
-        ns = doc['_id']['namespace']
-        sc = doc['_id']['sceneId']
-        unique_scenes.append(f"{ns}/{sc}")
-
-    return unique_scenes
+    return [doc['name'] for doc in arenaobjects]
 
 
 def read_persist_scenes_by_namespace(namespaces):
@@ -64,15 +65,16 @@ def read_persist_scenes_by_namespace(namespaces):
                     "sceneId": "$sceneId",
                 }
             }
+        },
+        {
+            "$project": {
+                "name": {
+                    "$concat": ["$_id.namespace", "/", "$_id.sceneId"]
+                }
+            }
         }
     ])
-    unique_scenes = []
-    for doc in arenaobjects:
-        ns = doc['_id']['namespace']
-        sc = doc['_id']['sceneId']
-        unique_scenes.append(f"{ns}/{sc}")
-
-    return unique_scenes
+    return [doc['name'] for doc in arenaobjects]
 
 
 def read_persist_scene_objects(namespace, scene):
