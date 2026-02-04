@@ -555,15 +555,18 @@ def get_my_edit_namespaces(user, version):
     ns_out = serializer.data
     if user.is_authenticated:
         # always add current user's namespace
-        if not any(dictionary.get("name") == user.username for dictionary in ns_out):
+        existing_names = {d.get("name") for d in ns_out}
+        if user.username not in existing_names:
             ns_out.append(vars(NamespaceDefault(name=user.username)))
+            existing_names.add(user.username)
         # for staff, add any non-user namespaces in persist db
         if user.is_staff:  # admin/staff
             p_nss = read_persist_ns_all()
             for p_ns in p_nss:
-                if not any(dictionary.get("name") == p_ns for dictionary in ns_out):
+                if p_ns not in existing_names:
                     if not User.objects.filter(username=p_ns).exists():
                         ns_out.append(vars(NamespaceDefault(name=p_ns)))
+                        existing_names.add(p_ns)
 
     # count persisted
     for ns in ns_out:
@@ -623,10 +626,13 @@ def get_my_edit_scenes(user, version):
             for editor_namespace in editor_namespaces:
                 req_namespaces.append(editor_namespace.name)
             p_scenes = read_persist_scenes_by_namespace(req_namespaces)
+
+        existing_names = {d.get("name") for d in sc_out}
         for p_scene in p_scenes:
             # always add queried persisted scenes
-            if not any(dictionary.get("name") == p_scene for dictionary in sc_out):
+            if p_scene not in existing_names:
                 sc_out.append(vars(SceneDefault(name=p_scene)))
+                existing_names.add(p_scene)
         if user.is_staff:  # admin/staff
             # count persisted
             for sc in sc_out:
@@ -662,10 +668,13 @@ def get_my_view_scenes(user, version):
             for viewer_namespace in viewer_namespaces:
                 req_namespaces.append(viewer_namespace.name)
             p_scenes = read_persist_scenes_by_namespace(req_namespaces)
+
+        existing_names = {d.get("name") for d in sc_out}
         for p_scene in p_scenes:
             # always add queried persisted scenes
-            if not any(dictionary.get("name") == p_scene for dictionary in sc_out):
+            if p_scene not in existing_names:
                 sc_out.append(vars(SceneDefault(name=p_scene)))
+                existing_names.add(p_scene)
 
     return sorted(sc_out, key=itemgetter("name"))
 
