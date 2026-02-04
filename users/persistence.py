@@ -88,6 +88,14 @@ def read_persist_scenes_by_namespace(namespaces):
     return unique_scenes
 
 
+
+def read_persist_scene_objects(namespace, scene):
+    query = {"namespace": namespace, "sceneId": scene}
+    arenaobjects = get_arenaobjects_collection().find(query)
+    json_str = MongoJSONEncoder().encode(list(arenaobjects))
+    return json.loads(json_str)
+
+
 # Mongo DB REST queries for Persist:
 
 

@@ -57,7 +57,7 @@ from .mqtt import (
 from .persistence import (
     delete_scene_objects,
     get_persist_ns_all,
-    get_scene_objects,
+    read_persist_scene_objects,
     read_persist_scenes_all,
     read_persist_scenes_by_namespace,
 )
@@ -293,8 +293,8 @@ def scene_perm_detail(request, pk):
     else:
         form = SceneForm(instance=scene)
 
-    token = all_scenes_read_token(version)
-    objects = get_scene_objects(token, pk)
+    namespace, sceneId = pk.split("/")
+    objects = read_persist_scene_objects(namespace, sceneId)
     objects_updated = None
     if len(objects) > 0:
         updated_ts = sorted(objects, reverse=True, key=itemgetter("updatedAt"))[0]["updatedAt"]
@@ -776,7 +776,8 @@ def user_profile(request):
                 scene.delete()
                 messages.success(request, f"Removed scene permissions: {scene.name}")
                 # delete persist scene data
-                if len(get_scene_objects(token, scene.name)) > 0:
+                namespace, sceneId = scene.name.split("/")
+                if len(read_persist_scene_objects(namespace, sceneId)) > 0:
                     if not delete_scene_objects(token, scene.name):
                         messages.error(request, f"Unable to delete {scene.name} objects from persistence database.")
                         return redirect("users:user_profile")
