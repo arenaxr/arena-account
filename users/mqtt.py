@@ -29,31 +29,6 @@ API_V2 = "v2"  # url /user/v2/, full topic structure refactor
 TOPIC_SUPPORTED_API_VERSIONS = [API_V2]
 
 
-def all_scenes_read_token(version):
-    config = settings.PUBSUB
-    privkeyfile = settings.MQTT_TOKEN_PRIVKEY
-    if not os.path.exists(privkeyfile):
-        print("Error: keyfile not found" + privkeyfile)
-        return None
-    with open(privkeyfile) as privatefile:
-        private_key = privatefile.read()
-
-    realm = config["mqtt_realm"]
-    username = config["mqtt_username"]
-
-    payload = {}
-    payload["sub"] = username
-    payload["exp"] = datetime.datetime.utcnow() + DEF_JWT_DURATION
-
-    if version == API_V2:
-        payload["subs"] = [f"{realm}/s/+/+/o/+/+"]  # v2
-    else:
-        payload["subs"] = [f"{realm}/s/#"]  # v1
-
-    token = jwt.encode(payload, private_key, algorithm="RS256")
-    return token
-
-
 def generate_arena_token(
     *,
     user,

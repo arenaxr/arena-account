@@ -1,5 +1,4 @@
 import json
-import logging
 from datetime import datetime
 
 import requests
@@ -25,11 +24,6 @@ class MongoJSONEncoder(json.JSONEncoder):
         return super().default(o)  # Call the default method for other types
 
 
-def read_all_arenaobjects():
-    arenaobjects = get_arenaobjects_collection().find()
-    return MongoJSONEncoder().encode(list(arenaobjects))
-
-
 def read_persist_ns_all():
     arenaobjects = get_arenaobjects_collection().aggregate([{
         "$group": {
@@ -39,7 +33,7 @@ def read_persist_ns_all():
             }
         }
     ])
-    return MongoJSONEncoder().encode(list(arenaobjects))
+    return [doc['_id']['namespace'] for doc in arenaobjects]
 
 
 def read_persist_scenes_all():
@@ -60,7 +54,6 @@ def read_persist_scenes_all():
         unique_scenes.append(f"{ns}/{sc}")
 
     return unique_scenes
-
 
 
 def read_persist_scenes_by_namespace(namespaces):
@@ -88,7 +81,6 @@ def read_persist_scenes_by_namespace(namespaces):
     return unique_scenes
 
 
-
 def read_persist_scene_objects(namespace, scene):
     query = {"namespace": namespace, "sceneId": scene}
     arenaobjects = get_arenaobjects_collection().find(query)
@@ -99,52 +91,12 @@ def read_persist_scene_objects(namespace, scene):
 # Mongo DB REST queries for Persist:
 
 
-def get_scene_objects(token, scene):
-    # get scene objects from persist
-    verify, host = get_rest_host()
-    url = f"https://{host}/persist/{scene}"
-    result = _urlopen(url, token, "GET", verify)
-    if result:
-        return json.loads(result)
-    return []
-
-
 def delete_scene_objects(token, scene):
     # delete scene objects from persist
     verify, host = get_rest_host()
     url = f"https://{host}/persist/{scene}"
     result = _urlopen(url, token, "DELETE", verify)
     return result
-
-
-def get_persist_ns_all(token):
-    # request all namespace names from persist
-    verify, host = get_rest_host()
-    url = f"https://{host}/persist/!allnamespaces"
-    result = _urlopen(url, token, "GET", verify)
-    if result:
-        return json.loads(result)
-    return []
-
-
-def get_persist_scenes_all(token):
-    # request all scene names from persist
-    verify, host = get_rest_host()
-    url = f"https://{host}/persist/!allscenes"
-    result = _urlopen(url, token, "GET", verify)
-    if result:
-        return json.loads(result)
-    return []
-
-
-def get_persist_scenes_ns(token, namespace):
-    # request all namespace scene names from persist
-    verify, host = get_rest_host()
-    url = f"https://{host}/persist/{namespace}/!allscenes"
-    result = _urlopen(url, token, "GET", verify)
-    if result:
-        return json.loads(result)
-    return []
 
 
 def _urlopen(url, token, method, verify):

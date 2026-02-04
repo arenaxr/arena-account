@@ -51,12 +51,11 @@ from .mqtt import (
     CLIENT_REGEX,
     PUBLIC_NAMESPACE,
     TOPIC_SUPPORTED_API_VERSIONS,
-    all_scenes_read_token,
     generate_arena_token,
 )
 from .persistence import (
     delete_scene_objects,
-    get_persist_ns_all,
+    read_persist_ns_all,
     read_persist_scene_objects,
     read_persist_scenes_all,
     read_persist_scenes_by_namespace,
@@ -560,8 +559,7 @@ def get_my_edit_namespaces(user, version):
             ns_out.append(vars(NamespaceDefault(name=user.username)))
         # for staff, add any non-user namespaces in persist db
         if user.is_staff:  # admin/staff
-            token = all_scenes_read_token(version)
-            p_nss = get_persist_ns_all(token)
+            p_nss = read_persist_ns_all()
             for p_ns in p_nss:
                 if not any(dictionary.get("name") == p_ns for dictionary in ns_out):
                     if not User.objects.filter(username=p_ns).exists():

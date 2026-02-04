@@ -5,7 +5,6 @@ from django.conf import settings
 from django.contrib.auth.models import User
 
 from .models import Device, Namespace, Scene
-from .mqtt import TOPIC_SUPPORTED_API_VERSIONS, all_scenes_read_token
 from .persistence import read_persist_scenes_by_namespace
 
 
