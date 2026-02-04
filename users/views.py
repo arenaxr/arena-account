@@ -51,15 +51,14 @@ from .mqtt import (
     CLIENT_REGEX,
     PUBLIC_NAMESPACE,
     TOPIC_SUPPORTED_API_VERSIONS,
-    all_scenes_read_token,
     generate_arena_token,
 )
 from .persistence import (
     delete_scene_objects,
-    get_persist_ns_all,
-    get_persist_scenes_all,
-    get_persist_scenes_ns,
-    get_scene_objects,
+    read_persist_ns_all,
+    read_persist_scene_objects,
+    read_persist_scenes_all,
+    read_persist_scenes_by_namespace,
 )
 from .serializers import (
     NamespaceNameSerializer,
@@ -293,8 +292,8 @@ def scene_perm_detail(request, pk):
     else:
         form = SceneForm(instance=scene)
 
-    token = all_scenes_read_token(version)
-    objects = get_scene_objects(token, pk)
+    namespace, sceneId = pk.split("/")
+    objects = read_persist_scene_objects(namespace, sceneId)
     objects_updated = None
     if len(objects) > 0:
         updated_ts = sorted(objects, reverse=True, key=itemgetter("updatedAt"))[0]["updatedAt"]
@@ -556,16 +555,18 @@ def get_my_edit_namespaces(user, version):
     ns_out = serializer.data
     if user.is_authenticated:
         # always add current user's namespace
-        if not any(dictionary.get("name") == user.username for dictionary in ns_out):
+        existing_names = {d.get("name") for d in ns_out}
+        if user.username not in existing_names:
             ns_out.append(vars(NamespaceDefault(name=user.username)))
+            existing_names.add(user.username)
         # for staff, add any non-user namespaces in persist db
         if user.is_staff:  # admin/staff
-            token = all_scenes_read_token(version)
-            p_nss = get_persist_ns_all(token)
+            p_nss = read_persist_ns_all()
             for p_ns in p_nss:
-                if not any(dictionary.get("name") == p_ns for dictionary in ns_out):
+                if p_ns not in existing_names:
                     if not User.objects.filter(username=p_ns).exists():
                         ns_out.append(vars(NamespaceDefault(name=p_ns)))
+                        existing_names.add(p_ns)
 
     # count persisted
     for ns in ns_out:
@@ -616,17 +617,22 @@ def get_my_edit_scenes(user, version):
     sc_out = serializer.data
     if user.is_authenticated:
         # update scene list from object persistence db
-        token = all_scenes_read_token(version)
+        p_scenes = []
         if user.is_staff:  # admin/staff
-            p_scenes = get_persist_scenes_all(token)
+            p_scenes = read_persist_scenes_all()
         else:  # standard user
-            p_scenes = get_persist_scenes_ns(token, user.username)
+            # batch query for all namespaces
+            req_namespaces = [user.username]
             for editor_namespace in editor_namespaces:
-                p_scenes = p_scenes + get_persist_scenes_ns(token, editor_namespace)
+                req_namespaces.append(editor_namespace.name)
+            p_scenes = read_persist_scenes_by_namespace(req_namespaces)
+
+        existing_names = {d.get("name") for d in sc_out}
         for p_scene in p_scenes:
             # always add queried persisted scenes
-            if not any(dictionary.get("name") == p_scene for dictionary in sc_out):
+            if p_scene not in existing_names:
                 sc_out.append(vars(SceneDefault(name=p_scene)))
+                existing_names.add(p_scene)
         if user.is_staff:  # admin/staff
             # count persisted
             for sc in sc_out:
@@ -656,15 +662,19 @@ def get_my_view_scenes(user, version):
     sc_out = serializer.data
     if user.is_authenticated:
         # update scene list from object persistence db
-        token = all_scenes_read_token(version)
         p_scenes = []
         if not user.is_staff:  # admin/staff
+            req_namespaces = []
             for viewer_namespace in viewer_namespaces:
-                p_scenes = p_scenes + get_persist_scenes_ns(token, viewer_namespace)
+                req_namespaces.append(viewer_namespace.name)
+            p_scenes = read_persist_scenes_by_namespace(req_namespaces)
+
+        existing_names = {d.get("name") for d in sc_out}
         for p_scene in p_scenes:
             # always add queried persisted scenes
-            if not any(dictionary.get("name") == p_scene for dictionary in sc_out):
+            if p_scene not in existing_names:
                 sc_out.append(vars(SceneDefault(name=p_scene)))
+                existing_names.add(p_scene)
 
     return sorted(sc_out, key=itemgetter("name"))
 
@@ -773,7 +783,8 @@ def user_profile(request):
                 scene.delete()
                 messages.success(request, f"Removed scene permissions: {scene.name}")
                 # delete persist scene data
-                if len(get_scene_objects(token, scene.name)) > 0:
+                namespace, sceneId = scene.name.split("/")
+                if len(read_persist_scene_objects(namespace, sceneId)) > 0:
                     if not delete_scene_objects(token, scene.name):
                         messages.error(request, f"Unable to delete {scene.name} objects from persistence database.")
                         return redirect("users:user_profile")

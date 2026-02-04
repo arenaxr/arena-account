@@ -19,6 +19,23 @@ ns_slash_id_regex = RegexValidator(
     RE_NS_SLASH_ID, "Only alphanumeric, underscore, hyphen, in namespace/idname format allowed."
 )
 
+# assign accessible model for persist collection
+def get_arenaobjects_collection():
+    from .persist_db import get_persist_db
+    return get_persist_db()['arenaobjects']
+
+# arenaobjects schema reference:
+# https://github.com/arenaxr/arena-persist/blob/master/server.js#L28-L42
+# object_id: {type: String, required: true, index: true},
+# type: {type: String, required: true, index: true},
+# attributes: {type: Object, required: true, default: {}},
+# expireAt: {type: Date, expires: 0},
+# realm: {type: String, required: true, index: true},
+# namespace: {type: String, required: true, index: true, default: 'public'},
+# sceneId: {type: String, required: true, index: true},
+# private: {type: Boolean},
+# program_id: {type: String},
+
 
 class NamespaceDefault:
     def __init__(self, name=""):
