@@ -54,7 +54,8 @@ from .mqtt import (
     generate_arena_token,
 )
 from .persistence import (
-    delete_scene_objects,
+    delete_persist_namespace_objects,
+    delete_persist_scene_objects,
     read_persist_ns_all,
     read_persist_scene_objects,
     read_persist_scenes_all,
@@ -273,17 +274,12 @@ def scene_perm_detail(request, pk):
                 messages.success(request, f"Updated scene permissions: {pk}")
                 return redirect("users:user_profile")
         elif "delete" in request.POST:
-            token = generate_arena_token(
-                user=request.user,
-                username=request.user.username,
-                ids={"userclient": f"{request.user.username}-objects-delete"},
-                version=version,
-            )
             # delete account scene data
             scene.delete()
             messages.success(request, f"Removed scene permissions: {pk}")
             # delete persist scene data
-            if delete_scene_objects(token, pk):
+            namespace, sceneId = pk.split("/")
+            if delete_persist_scene_objects(namespace, sceneId):
                 messages.success(request, f"Removed scene persisted objects: {pk}")
             else:
                 messages.error(request, f"Unable to delete {pk} objects from persistence database.")
@@ -767,38 +763,24 @@ def user_profile(request):
         # account delete request
         confirm_text = f'delete {request.user.username} account and scenes'
         if confirm_text in request.POST:
-            token = generate_arena_token(
-                user=request.user,
-                username=request.user.username,
-                ids={"userclient": f"{request.user.username}-objects-delete"},
-                version=version,
-            )
             # delete devices permissions
             u_devices = Device.objects.filter(name__startswith=f"{request.user.username}/")
-            for device in u_devices:
-                # delete account device data
-                device.delete()
-                messages.success(request, f"Removed device permissions: {device.name}")
-            # delete scenes permissions/objects
+            del_count, _ = u_devices.delete()
+            if del_count > 0:
+                messages.success(request, f"Removed {del_count} device permissions.")
+            # delete scenes permissions
             u_scenes = Scene.objects.filter(name__startswith=f"{request.user.username}/")
-            for scene in u_scenes:
-                # delete account scene data
-                scene.delete()
-                messages.success(request, f"Removed scene permissions: {scene.name}")
-                # delete persist scene data
-                namespace, sceneId = scene.name.split("/")
-                if len(read_persist_scene_objects(namespace, sceneId)) > 0:
-                    if not delete_scene_objects(token, scene.name):
-                        messages.error(request, f"Unable to delete {scene.name} objects from persistence database.")
-                        return redirect("users:user_profile")
-                    else:
-                        messages.success(request, f"Removed scene persistence objects: {scene.name}")
+            del_count, _ = u_scenes.delete()
+            if del_count > 0:
+                messages.success(request, f"Removed {del_count} scene permissions.")
+            # delete persist objects for this namespace
+            if delete_persist_namespace_objects(request.user.username):
+                messages.success(request, f"Removed namespace persistence objects: {request.user.username}")
             # delete namespaces permissions
             u_namespaces = Namespace.objects.filter(name=request.user.username)
-            for namespace in u_namespaces:
-                # delete account namespace data
-                namespace.delete()
-                messages.success(request, f"Removed namespace permissions: {namespace.name}")
+            del_count, _ = u_namespaces.delete()
+            if del_count > 0:
+                messages.success(request, f"Removed {del_count} namespace permissions.")
             # delete filestore files/account
             if get_filestore_health():
                 if not delete_filestore_user(request.user):

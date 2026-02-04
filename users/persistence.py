@@ -1,15 +1,9 @@
 import json
 from datetime import datetime
 
-import requests
 from bson import ObjectId
-from requests.exceptions import HTTPError
 
 from .models import get_arenaobjects_collection
-from .utils import get_rest_host
-
-PERSIST_TIMEOUT = 30  # 30 seconds
-
 
 # Mongo DB PyMongo queries for Persist:
 # https://pymongo.readthedocs.io/en/stable/index.html
@@ -88,31 +82,13 @@ def read_persist_scene_objects(namespace, scene):
     return json.loads(json_str)
 
 
-# Mongo DB REST queries for Persist:
-
-
-def delete_scene_objects(token, scene):
-    # delete scene objects from persist
-    verify, host = get_rest_host()
-    url = f"https://{host}/persist/{scene}"
-    result = _urlopen(url, token, "DELETE", verify)
+def delete_persist_scene_objects(namespace, scene):
+    query = {"namespace": namespace, "sceneId": scene}
+    result = get_arenaobjects_collection().delete_many(query)
     return result
 
 
-def _urlopen(url, token, method, verify):
-    if not token:
-        print("Error: mqtt_token for persist not available")
-        return None
-    headers = {"Cookie": f"mqtt_token={token}"}
-    cookies = {"mqtt_token": token}
-    try:
-        if method == "GET":
-            response = requests.get(url, headers=headers, cookies=cookies, verify=verify, timeout=PERSIST_TIMEOUT)
-        elif method == "DELETE":
-            response = requests.delete(url, headers=headers, cookies=cookies, verify=verify, timeout=PERSIST_TIMEOUT)
-        return response.text
-    except (requests.exceptions.ConnectionError, HTTPError) as err:
-        print(f"{err}: {url}")
-    except ValueError as err:
-        print(f"{response.text} {err}: {url}")
-    return None
+def delete_persist_namespace_objects(namespace):
+    query = {"namespace": namespace}
+    result = get_arenaobjects_collection().delete_many(query)
+    return result
