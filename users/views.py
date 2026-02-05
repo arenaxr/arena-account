@@ -502,9 +502,10 @@ def list_my_namespaces(request):
     merged_list = edit_namespaces + view_namespaces
     merged_dict = {}
     for entry in merged_list:
-        merged_dict[entry["name"]] = {"name": entry["name"]}
+        if entry.get("name"):
+            merged_dict[entry["name"]] = {"name": entry["name"]}
 
-    output_list = sorted(list(merged_dict.values()), key=lambda d: d.get("name") or "")
+    output_list = sorted(list(merged_dict.values()), key=itemgetter("name"))
     return JsonResponse(output_list, safe=False)
 
 
@@ -532,9 +533,10 @@ def list_my_scenes(request):
     merged_list = edit_scenes + view_scenes
     merged_dict = {}
     for entry in merged_list:
-        merged_dict[entry["name"]] = {"name": entry["name"]}
+        if entry.get("name"):
+            merged_dict[entry["name"]] = {"name": entry["name"]}
 
-    output_list = sorted(list(merged_dict.values()), key=lambda d: d.get("name") or "")
+    output_list = sorted(list(merged_dict.values()), key=itemgetter("name"))
     return JsonResponse(output_list, safe=False)
 
 
@@ -577,7 +579,8 @@ def get_my_edit_namespaces(user, version):
     for ns in ns_out:
         ns["account"] = ns["name"] in existing_users
 
-    return sorted(ns_out, key=lambda d: d.get("name") or "")
+    ns_out = [ns for ns in ns_out if ns.get("name")]
+    return sorted(ns_out, key=itemgetter("name"))
 
 
 def get_my_view_namespaces(user):
@@ -593,7 +596,8 @@ def get_my_view_namespaces(user):
     serializer = NamespaceSerializer(viewer_namespaces, many=True)
     ns_out = serializer.data
 
-    return sorted(ns_out, key=lambda d: d.get("name") or "")
+    ns_out = [ns for ns in ns_out if ns.get("name")]
+    return sorted(ns_out, key=itemgetter("name"))
 
 
 def get_my_edit_scenes(user, version):
@@ -644,7 +648,8 @@ def get_my_edit_scenes(user, version):
             for sc in sc_out:
                 sc["persisted"] = sc["name"] in p_scenes_set
 
-    return sorted(sc_out, key=lambda d: d.get("name") or "")
+    sc_out = [sc for sc in sc_out if sc.get("name")]
+    return sorted(sc_out, key=itemgetter("name"))
 
 
 def get_my_view_scenes(user, version):
@@ -682,7 +687,8 @@ def get_my_view_scenes(user, version):
                 sc_out.append(vars(SceneDefault(name=p_scene)))
                 existing_names.add(p_scene)
 
-    return sorted(sc_out, key=lambda d: d.get("name") or "")
+    sc_out = [sc for sc in sc_out if sc.get("name")]
+    return sorted(sc_out, key=itemgetter("name"))
 
 
 def get_my_devices(user):
