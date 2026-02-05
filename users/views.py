@@ -504,7 +504,7 @@ def list_my_namespaces(request):
     for entry in merged_list:
         merged_dict[entry["name"]] = {"name": entry["name"]}
 
-    output_list = sorted(list(merged_dict.values()), key=lambda d: d["name"])
+    output_list = sorted(list(merged_dict.values()), key=lambda d: d.get("name") or "")
     return JsonResponse(output_list, safe=False)
 
 
@@ -534,7 +534,7 @@ def list_my_scenes(request):
     for entry in merged_list:
         merged_dict[entry["name"]] = {"name": entry["name"]}
 
-    output_list = sorted(list(merged_dict.values()), key=lambda d: d["name"])
+    output_list = sorted(list(merged_dict.values()), key=lambda d: d.get("name") or "")
     return JsonResponse(output_list, safe=False)
 
 
@@ -577,7 +577,7 @@ def get_my_edit_namespaces(user, version):
     for ns in ns_out:
         ns["account"] = ns["name"] in existing_users
 
-    return sorted(ns_out, key=itemgetter("name"))
+    return sorted(ns_out, key=lambda d: d.get("name") or "")
 
 
 def get_my_view_namespaces(user):
@@ -593,7 +593,7 @@ def get_my_view_namespaces(user):
     serializer = NamespaceSerializer(viewer_namespaces, many=True)
     ns_out = serializer.data
 
-    return sorted(ns_out, key=itemgetter("name"))
+    return sorted(ns_out, key=lambda d: d.get("name") or "")
 
 
 def get_my_edit_scenes(user, version):
@@ -644,7 +644,7 @@ def get_my_edit_scenes(user, version):
             for sc in sc_out:
                 sc["persisted"] = sc["name"] in p_scenes_set
 
-    return sorted(sc_out, key=itemgetter("name"))
+    return sorted(sc_out, key=lambda d: d.get("name") or "")
 
 
 def get_my_view_scenes(user, version):
@@ -682,7 +682,7 @@ def get_my_view_scenes(user, version):
                 sc_out.append(vars(SceneDefault(name=p_scene)))
                 existing_names.add(p_scene)
 
-    return sorted(sc_out, key=itemgetter("name"))
+    return sorted(sc_out, key=lambda d: d.get("name") or "")
 
 
 def get_my_devices(user):
