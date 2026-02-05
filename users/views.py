@@ -1063,13 +1063,14 @@ def arena_token(request):
     response = JsonResponse(data)
     # Careful of token size in cookie:
     # RFC 6265 states that user agents should support cookies of at least 4096 bytes. For many browsers this is also the maximum size. Django will not raise an exception if there’s an attempt to store a cookie of more than 4096 bytes, but many browsers will not set the cookie correctly.
-    response.set_cookie(
-        "mqtt_token",
-        token,
-        max_age=86400000,
-        httponly=True,
-        secure=True,
-    )
+    if len(token) < 4096:
+        response.set_cookie(
+            "mqtt_token",
+            token,
+            max_age=86400000,
+            httponly=True,
+            secure=True,
+        )
     return response
 
 
