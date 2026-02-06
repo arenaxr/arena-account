@@ -1,6 +1,27 @@
 # Changelog
 
 
+## [2.2.0](https://github.com/arenaxr/arena-account/compare/v2.1.2...v2.2.0) (2026-02-05)
+
+
+### Features
+
+* **persist:** replaced persist O(n2) REST calls with O(1) PyMongo calls ([6d38239](https://github.com/arenaxr/arena-account/commit/6d382391875ffed2c6f771ac5267fc66961fc7bf))
+
+
+### Bug Fixes
+
+* **allauth:** ensure generated site entries in db are saved correctly ([f97d822](https://github.com/arenaxr/arena-account/commit/f97d82222a8a1fa9c1edac4251a076bc31ca39ba))
+* **allauth:** remomve conflicting db social apps from legacy allauth ([6bf521c](https://github.com/arenaxr/arena-account/commit/6bf521c02496e4b6214159d643254742d7b24e2f))
+* **jwt:** allow large token in response, but limit large token in cookie. Closes [#115](https://github.com/arenaxr/arena-account/issues/115) ([2412865](https://github.com/arenaxr/arena-account/commit/24128656afb04c898ec52145a51e51b8c7dd2346))
+* **namespace:** update namespace deletes to include objects, increase delete warnings ([2990d75](https://github.com/arenaxr/arena-account/commit/2990d754d7a5b8a6286ab3ed3350b7fcb77821c6))
+* **navbar:** updated header links for programs, docs ([b24fb86](https://github.com/arenaxr/arena-account/commit/b24fb86bd89dca1afc0e8226890089ed67a882d0))
+* **persist:** use mongo concat to avoid reparsing scenes queries ([ed95d29](https://github.com/arenaxr/arena-account/commit/ed95d29402fddedee5bee5c8fb361551f4ae79a2))
+* **REST:** reduce my_scenes endpoint query complexity with python sets and mongo db direct calls ([7087f3f](https://github.com/arenaxr/arena-account/commit/7087f3f9364a1e671ed7ac63581029f984dafb57))
+* **scenes:** fixed my_scenes sort to handle None values safely ([03c5898](https://github.com/arenaxr/arena-account/commit/03c58981d619a883c5fd70a893cf7ccbb01549ad))
+* **scenes:** fixed my_scenes sort to handle None values safely ([9208b85](https://github.com/arenaxr/arena-account/commit/9208b85b41fc89ac0cec288f4315162964a12656))
+* **scenes:** remove legacy redundant default scenes from db ([3151ffa](https://github.com/arenaxr/arena-account/commit/3151ffa044fb1927fe63a887cd05a0b1e66d5bed))
+
 ## [2.1.2](https://github.com/arenaxr/arena-account/compare/v2.1.1...v2.1.2) (2025-12-08)
 
 
