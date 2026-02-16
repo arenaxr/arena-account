@@ -17,9 +17,8 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from google.auth.transport import requests as grequests
 from google.oauth2 import id_token
-from rest_framework import permissions, status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.parsers import JSONParser
+from http import HTTPStatus
+
 
 from .filestore import (
     delete_filestore_user,
@@ -66,6 +65,14 @@ from .serializers import (
     NamespaceSerializer,
     SceneNameSerializer,
     SceneSerializer,
+)
+from .utils import (
+    get_my_edit_namespaces,
+    get_my_view_namespaces,
+    get_my_edit_scenes,
+    get_my_view_scenes,
+    namespace_edit_permission,
+    scene_edit_permission,
 )
 
 # namespaced scene regular expression
@@ -117,15 +124,14 @@ def logout_request(request):
     return response
 
 
-@permission_classes([permissions.IsAuthenticated])
 def profile_update_namespace(request):
     """
     Handle User Profile page, namespace post submit requests.
     """
     if request.method != "POST":
-        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({}, status=HTTPStatus.BAD_REQUEST)
     if not request.user.is_authenticated:
-        return JsonResponse({"error": "Not authenticated."}, status=status.HTTP_403_FORBIDDEN)
+        return JsonResponse({"error": "Not authenticated."}, status=HTTPStatus.FORBIDDEN)
     form = UpdateNamespaceForm(request.POST)
     if not form.is_valid():
         messages.error(request, "Invalid parameters")
@@ -145,16 +151,15 @@ def profile_update_namespace(request):
     return redirect("users:user_profile")
 
 
-@permission_classes([permissions.IsAuthenticated])
 def profile_update_scene(request):
     """
     Handle User Profile page, scene post submit requests.
     """
     if request.method != "POST":
-        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({}, status=HTTPStatus.BAD_REQUEST)
     if not request.user.is_authenticated:
         return JsonResponse(
-            {"error": "Not authenticated."}, status=status.HTTP_403_FORBIDDEN
+            {"error": "Not authenticated."}, status=HTTPStatus.FORBIDDEN
         )
     form = UpdateSceneForm(request.POST)
     if not form.is_valid():
@@ -177,16 +182,15 @@ def profile_update_scene(request):
     return redirect("users:user_profile")
 
 
-@permission_classes([permissions.IsAuthenticated])
 def profile_update_device(request):
     """
     Handle User Profile page, device post submit requests.
     """
     if request.method != "POST":
-        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({}, status=HTTPStatus.BAD_REQUEST)
     if not request.user.is_authenticated:
         return JsonResponse(
-            {"error": "Not authenticated."}, status=status.HTTP_403_FORBIDDEN
+            {"error": "Not authenticated."}, status=HTTPStatus.FORBIDDEN
         )
     form = UpdateDeviceForm(request.POST)
     if not form.is_valid():
@@ -377,91 +381,20 @@ class UserAutocomplete(autocomplete.Select2QuerySetView):
         return qs
 
 
-@api_view(["POST", "GET", "PUT", "DELETE"])
-@permission_classes([permissions.IsAuthenticated])
-def scene_detail(request, pk):
-    """
-    Scene Permissions headless endpoint for editing permission: POST, GET, PUT, DELETE.
-    """
-    # check permissions model for namespace
-    if not scene_edit_permission(user=request.user, scene=pk):
-        return JsonResponse(
-            {"error": f"User does not have edit permission for scene: {pk}."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
-    username = request.user.username
-
-    # try POST first, since it doesn't/shouldn't exist yet
-    if request.method == "POST":
-        if Scene.objects.filter(name=pk).exists():
-            return JsonResponse(
-                {"error": f"Unable to claim existing scene: {pk}, use PUT."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        if request.body:
-            scene_serializer = SceneSerializer(data=scene_data)
-            if scene_serializer.is_valid():
-                scene_serializer.save()
-                return JsonResponse(
-                    scene_serializer.data, status=status.HTTP_201_CREATED
-                )
-            return JsonResponse(
-                scene_serializer.errors, status=status.HTTP_400_BAD_REQUEST
-            )
-        else:
-            s = Scene(
-                name=pk,
-                summary=f"User {username} adding new scene {pk} to account database.",
-            )
-            s.save()
-            return JsonResponse(
-                {"message": f"Scene {pk} added successfully!"},
-                status=status.HTTP_200_OK,
-            )
-
-    # now, make sure scene exists before the other commands are tried
-    try:
-        scene = Scene.objects.get(name=pk)
-    except Scene.DoesNotExist:
-        return JsonResponse(
-            {"message": "The scene does not exist"}, status=status.HTTP_404_NOT_FOUND
-        )
-
-    if request.method == "GET":
-        scene_serializer = SceneSerializer(scene)
-        return JsonResponse(scene_serializer.data)
-
-    elif request.method == "PUT":
-        scene_data = JSONParser().parse(request)
-        scene_serializer = SceneSerializer(scene, data=scene_data)
-        if scene_serializer.is_valid():
-            scene_serializer.save()
-            return JsonResponse(scene_serializer.data)
-        return JsonResponse(scene_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    elif request.method == "DELETE":
-        scene.delete()
-        return JsonResponse(
-            {"message": "Scene was deleted successfully!"}, status=status.HTTP_200_OK
-        )
-
-
-@permission_classes([permissions.IsAdminUser])
 def profile_update_staff(request):
     """
     Profile page GET/POST handler for editing Staff permissions.
     """
     # update staff status if allowed
     if request.method != "POST":
-        return JsonResponse({}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({}, status=HTTPStatus.BAD_REQUEST)
     form = UpdateStaffForm(request.POST)
     if not request.user.is_authenticated:
-        return JsonResponse({"error": "Not authenticated."}, status=status.HTTP_403_FORBIDDEN)
+        return JsonResponse({"error": "Not authenticated."}, status=HTTPStatus.FORBIDDEN)
     if not form.is_valid():
         return JsonResponse(
             {"error": "Invalid parameters"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
         )
     staff_username = form.cleaned_data["staff_username"]
     if request.user.is_superuser and User.objects.filter(username=staff_username).exists():
@@ -476,219 +409,6 @@ def profile_update_staff(request):
             return redirect("users:user_profile")
 
     return redirect("users:user_profile")
-
-
-@api_view(["GET", "POST"])
-def list_my_namespaces(request):
-    """
-    Editable/viewable namespace headless endpoint for requesting a list of namespaces this user can edit and/or view: GET/POST.
-    - POST requires id_token for headless clients like Python apps.
-    """
-    if request.version not in TOPIC_SUPPORTED_API_VERSIONS:
-        return deprecated_token()
-
-    user = request.user
-    if request.method == "POST":
-        gid_token = request.POST.get("id_token", None)
-        if gid_token:
-            try:
-                user = get_user_from_id_token(gid_token)
-            except (ValueError, SocialAccount.DoesNotExist) as err:
-                return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
-
-    edit_namespaces = get_my_edit_namespaces(user, request.version)
-    # also show namespaces listed as "viewer"
-    view_namespaces = get_my_view_namespaces(user)
-    merged_list = edit_namespaces + view_namespaces
-    merged_dict = {}
-    for entry in merged_list:
-        if entry.get("name"):
-            merged_dict[entry["name"]] = {"name": entry["name"]}
-
-    output_list = sorted(list(merged_dict.values()), key=itemgetter("name"))
-    return JsonResponse(output_list, safe=False)
-
-
-@api_view(["GET", "POST"])
-def list_my_scenes(request):
-    """
-    Editable/viewable scenes headless endpoint for requesting a list of scenes this user can edit and/or view: GET/POST.
-    - POST requires id_token for headless clients like Python apps.
-    """
-    if request.version not in TOPIC_SUPPORTED_API_VERSIONS:
-        return deprecated_token()
-
-    user = request.user
-    if request.method == "POST":
-        gid_token = request.POST.get("id_token", None)
-        if gid_token:
-            try:
-                user = get_user_from_id_token(gid_token)
-            except (ValueError, SocialAccount.DoesNotExist) as err:
-                return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
-
-    edit_scenes = get_my_edit_scenes(user, request.version)
-    # also show scenes listed as "viewer"
-    view_scenes = get_my_view_scenes(user, request.version)
-    merged_list = edit_scenes + view_scenes
-    merged_dict = {}
-    for entry in merged_list:
-        if entry.get("name"):
-            merged_dict[entry["name"]] = {"name": entry["name"]}
-
-    output_list = sorted(list(merged_dict.values()), key=itemgetter("name"))
-    return JsonResponse(output_list, safe=False)
-
-
-def get_my_edit_namespaces(user, version):
-    """
-    Internal method to update namespace permissions table:
-    Requests and returns list of user's editable namespaces from namespace permissions table.
-    """
-    # load list of namespaces this user can edit
-    my_namespaces = Namespace.objects.none()
-    editor_namespaces = Namespace.objects.none()
-    if user.is_authenticated:
-        if user.is_staff:  # admin/staff
-            my_namespaces = Namespace.objects.all()
-        else:  # standard user
-            my_namespaces = Namespace.objects.filter(name=user.username)
-            editor_namespaces = Namespace.objects.filter(editors=user)
-    # merge 'my' namespaced namespaces and extras namespaces granted
-    merged_namespaces = (my_namespaces | editor_namespaces).distinct()
-    serializer = NamespaceSerializer(merged_namespaces, many=True)
-    ns_out = serializer.data
-    if user.is_authenticated:
-        # always add current user's namespace
-        existing_names = {d.get("name") for d in ns_out}
-        if user.username not in existing_names:
-            ns_out.append(vars(NamespaceDefault(name=user.username)))
-            existing_names.add(user.username)
-        # for staff, add any non-user namespaces in persist db
-        if user.is_staff:  # admin/staff
-            p_nss = read_persist_ns_all()
-            for p_ns in p_nss:
-                if p_ns not in existing_names:
-                    if not User.objects.filter(username=p_ns).exists():
-                        ns_out.append(vars(NamespaceDefault(name=p_ns)))
-                        existing_names.add(p_ns)
-
-    # count persisted
-    all_names = [ns["name"] for ns in ns_out]
-    existing_users = set(User.objects.filter(username__in=all_names).values_list("username", flat=True))
-    for ns in ns_out:
-        ns["account"] = ns["name"] in existing_users
-
-    ns_out = [ns for ns in ns_out if ns.get("name")]
-    return sorted(ns_out, key=itemgetter("name"))
-
-
-def get_my_view_namespaces(user):
-    """
-    Internal method to update namespace permissions table:
-    Requests and returns list of user's viewable namespaces from namespace permissions table.
-    """
-    # load list of namespaces this user can view
-    viewer_namespaces = Namespace.objects.none()
-    if user.is_authenticated:
-        if not user.is_staff:  # admin/staff
-            viewer_namespaces = Namespace.objects.filter(viewers=user)
-    serializer = NamespaceSerializer(viewer_namespaces, many=True)
-    ns_out = serializer.data
-
-    ns_out = [ns for ns in ns_out if ns.get("name")]
-    return sorted(ns_out, key=itemgetter("name"))
-
-
-def get_my_edit_scenes(user, version):
-    """
-    Internal method to request edit scenes from persist and permissions:
-    1. Requests list of any scenes with objects saved from /persist/!allscenes.
-    2. Requests and returns list of user's editable scenes from scene permissions table.
-    """
-    # load list of scenes this user can edit
-    my_scenes = Scene.objects.none()
-    editor_scenes = Scene.objects.none()
-    editor_namespaces = Namespace.objects.none()
-    if user.is_authenticated:
-        if user.is_staff:  # admin/staff
-            my_scenes = Scene.objects.all()
-        else:  # standard user
-            my_scenes = Scene.objects.filter(name__startswith=f"{user.username}/")
-            editor_scenes = Scene.objects.filter(editors=user)
-            editor_namespaces = Namespace.objects.filter(editors=user)
-            for editor_namespace in editor_namespaces:
-                editor_ns_scenes = Scene.objects.filter(name__startswith=f"{editor_namespace}/")
-                editor_scenes = editor_scenes | editor_ns_scenes
-    # merge 'my' scenes and extras scenes granted
-    merged_scenes = (my_scenes | editor_scenes).distinct()
-    serializer = SceneSerializer(merged_scenes, many=True)
-    sc_out = serializer.data
-    if user.is_authenticated:
-        # update scene list from object persistence db
-        p_scenes = []
-        if user.is_staff:  # admin/staff
-            p_scenes = read_persist_scenes_all()
-        else:  # standard user
-            # batch query for all namespaces
-            req_namespaces = [user.username]
-            for editor_namespace in editor_namespaces:
-                req_namespaces.append(editor_namespace.name)
-            p_scenes = read_persist_scenes_by_namespace(req_namespaces)
-
-        existing_names = {d.get("name") for d in sc_out}
-        for p_scene in p_scenes:
-            # always add queried persisted scenes
-            if p_scene not in existing_names:
-                sc_out.append(vars(SceneDefault(name=p_scene)))
-                existing_names.add(p_scene)
-        if user.is_staff:  # admin/staff
-            # count persisted
-            p_scenes_set = set(p_scenes)
-            for sc in sc_out:
-                sc["persisted"] = sc["name"] in p_scenes_set
-
-    sc_out = [sc for sc in sc_out if sc.get("name")]
-    return sorted(sc_out, key=itemgetter("name"))
-
-
-def get_my_view_scenes(user, version):
-    """
-    Internal method to request view scenes from persist and permissions:
-    1. Requests and returns list of user's viewable scenes from scene permissions table.
-    """
-    # load list of scenes this user can view
-    viewer_scenes = Scene.objects.none()
-    viewer_namespaces = Namespace.objects.none()
-    if user.is_authenticated:
-        if not user.is_staff:  # admin/staff
-            viewer_scenes = Scene.objects.filter(viewers=user)
-            viewer_namespaces = Namespace.objects.filter(viewers=user)
-            for viewer_namespace in viewer_namespaces:
-                viewer_ns_scenes = Scene.objects.filter(name__startswith=f"{viewer_namespace}/")
-                viewer_scenes = viewer_scenes | viewer_ns_scenes
-    # merge 'my' scenes and extras scenes granted
-    merged_scenes = (viewer_scenes).distinct()
-    serializer = SceneSerializer(merged_scenes, many=True)
-    sc_out = serializer.data
-    if user.is_authenticated:
-        # update scene list from object persistence db
-        p_scenes = []
-        if not user.is_staff:  # admin/staff
-            req_namespaces = []
-            for viewer_namespace in viewer_namespaces:
-                req_namespaces.append(viewer_namespace.name)
-            p_scenes = read_persist_scenes_by_namespace(req_namespaces)
-
-        existing_names = {d.get("name") for d in sc_out}
-        for p_scene in p_scenes:
-            # always add queried persisted scenes
-            if p_scene not in existing_names:
-                sc_out.append(vars(SceneDefault(name=p_scene)))
-                existing_names.add(p_scene)
-
-    sc_out = [sc for sc in sc_out if sc.get("name")]
-    return sorted(sc_out, key=itemgetter("name"))
 
 
 def get_my_devices(user):
@@ -707,48 +427,6 @@ def get_my_devices(user):
     # merge 'my' namespaced devices and extras devices granted
     merged_devices = (devices | public_devices).distinct().order_by("name")
     return merged_devices
-
-
-def namespace_edit_permission(user, namespace):
-    """
-    Internal method to check if 'user' can edit 'namespace'.
-    """
-    if not user.is_authenticated:  # anon
-        return False
-    elif user.is_staff:  # admin/staff
-        return True
-    elif namespace == user.username:  # ns owner
-        return True
-    else:
-        editor_namespace = None
-        try:
-            editor_namespace = Namespace.objects.get(name=namespace, editors=user)  # ns editor
-        except Namespace.ObjectDoesNotExist:
-            pass
-        finally:
-            return bool(editor_namespace)
-
-
-def scene_edit_permission(user, scene):
-    """
-    Internal method to check if 'user' can edit 'scene'.
-    """
-    if not user.is_authenticated:  # anon
-        return False
-    elif user.is_staff:  # admin/staff
-        return True
-    elif scene.startswith(f"{user.username}/"):  # s owner
-        return True
-    else:
-        editor_scene = None
-        editor_namespace = None
-        try:
-            editor_scene = Scene.objects.get(name=scene, editors=user)  # s editor
-            editor_namespace = Namespace.objects.get(name=scene.split("/")[0], editors=user)  # ns editor
-        except (Scene.ObjectDoesNotExist, Namespace.ObjectDoesNotExist):
-            pass
-        finally:
-            return bool(editor_scene or editor_namespace)
 
 
 def device_edit_permission(user, device):
@@ -858,228 +536,3 @@ class SocialSignupView(SocialSignupViewDefault):
             "users/social_signup.html",
             {"form": social_form, "account": self.sociallogin.account},
         )
-
-
-@api_view(["GET", "POST"])
-def user_state(request):
-    """
-    Endpoint request for the user's authenticated status, username, name, email: GET/POST.
-    - POST requires id_token for headless clients like Python apps.
-    """
-    user = request.user
-    if request.method == "POST":
-        gid_token = request.POST.get("id_token", None)
-        if gid_token:
-            try:
-                user = get_user_from_id_token(gid_token)
-            except (ValueError, SocialAccount.DoesNotExist) as err:
-                return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
-
-    if user.is_authenticated:
-        if user.username.startswith("admin"):
-            authType = "arena"
-        else:
-            authType = "google"
-
-        return JsonResponse(
-            {
-                "authenticated": user.is_authenticated,
-                "username": user.username,
-                "fullname": user.get_full_name(),
-                "email": user.email,
-                "type": authType,
-                "is_staff": user.is_staff,
-            },
-            status=status.HTTP_200_OK,
-        )
-    else:  # AnonymousUser
-        return JsonResponse(
-            {"authenticated": user.is_authenticated, }, status=status.HTTP_200_OK
-        )
-
-
-@api_view(["GET", "POST"])
-def storelogin(request):
-    """
-    Endpoint request for the user's file store token: GET/POST.
-    - POST requires id_token for headless clients like Python apps.
-    """
-    user = request.user
-    if request.method == "POST":
-        gid_token = request.POST.get("id_token", None)
-        if gid_token:
-            try:
-                user = get_user_from_id_token(gid_token)
-            except (ValueError, SocialAccount.DoesNotExist) as err:
-                return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
-
-    fs_user_token = login_filestore_user(user)
-
-    response = HttpResponse()
-    if fs_user_token:
-        response.set_cookie("auth", fs_user_token)
-    else:
-        response.delete_cookie("auth")  # revoke fs auth
-    return response
-
-
-def get_user_from_id_token(gid_token):
-    """
-    Internal method to validate id_tokens from remote authentication.
-    """
-    if not gid_token:
-        raise ValueError("Missing token.")
-    gclient_ids = [os.environ["GAUTH_CLIENTID"],
-                   os.environ["GAUTH_INSTALLED_CLIENTID"],
-                   os.environ["GAUTH_DEVICE_CLIENTID"]]
-    idinfo = id_token.verify_oauth2_token(gid_token, grequests.Request())
-    if idinfo["aud"] not in gclient_ids:
-        raise ValueError("Could not verify audience.")
-    # ID token is valid. Get the user's Google Account ID from the decoded token.
-    userid = idinfo["sub"]
-    g_user = SocialAccount.objects.get(uid=userid)
-    if not g_user:
-        raise ValueError("Database error.")
-
-    return User.objects.get(username=g_user.user)
-
-
-def _field_requested(request, field):
-    """
-    Internal handler to accommodate backward compatible token requests.
-    - Field value could vary: true/false, or another string.
-    - Only missing field should evaluate to False.
-    """
-    value = request.POST.get(field, False)
-    if value:
-        return True
-    return False
-
-
-def deprecated_token():
-    return JsonResponse(
-        {"error": f"ARENA User API {TOPIC_SUPPORTED_API_VERSIONS[0]} token required. You may need to update your client's ARENA library, see https://docs.arenaxr.org/content/migration."},
-        status=status.HTTP_426_UPGRADE_REQUIRED
-    )
-
-
-@api_view(["POST"])
-def arena_token(request):
-    """
-    Endpoint to request an ARENA token with permissions for an anonymous or authenticated user for
-    MQTT and Jitsi resources given incoming parameters.
-    - POST requires id_token for headless clients like Python apps.
-
-    Payload form data:
-        username(string): ARENA account username, only used for anonymous.
-        id_auth(string): Authentication type: "google" or "anonymous".
-        realm(string): ARENA realm.
-        scene(string): ARENA namespaced scene.
-        client(string): Client type for reference, e.g. "webScene", "py1.2.3", "unity".
-        userid(boolean): true to request user context. (deprecated: always true in v2)
-        camid(boolean): true to request permission for camera.
-        handleftid(boolean): true to request permission for left controller.
-        handrightid(boolean): true to request permission for right controller.
-    """
-    if request.version not in TOPIC_SUPPORTED_API_VERSIONS:
-        return deprecated_token()
-
-    user = request.user
-    gid_token = request.POST.get("id_token", None)
-    if gid_token:
-        try:
-            user = get_user_from_id_token(gid_token)
-        except (ValueError, SocialAccount.DoesNotExist) as err:
-            return JsonResponse({"error": err}, status=status.HTTP_403_FORBIDDEN)
-
-    if user.is_authenticated:
-        username = user.username
-        if not username:
-            return JsonResponse(
-                {"error": "Invalid parameters"}, status=status.HTTP_401_UNAUTHORIZED
-            )
-    else:  # AnonymousUser
-        username = request.POST.get("username", None)
-        if not username or not re.match(ANON_REGEX, username):
-            return JsonResponse(
-                {"error": "Invalid form parameter: 'username'"}, status=status.HTTP_400_BAD_REQUEST
-            )
-
-    client = request.POST.get("client", None)
-    if not client or not re.match(CLIENT_REGEX, client):
-        return JsonResponse(
-            {"error": "Invalid form parameter: 'client'"}, status=status.HTTP_400_BAD_REQUEST
-        )
-
-    # produce nonce with 32-bits secure randomness
-    nonce = f"{secrets.randbits(32):010d}"
-    # define user object_ids server-side to prevent spoofing
-    ids = None
-    # always include userid in responses for user_client origin checking
-    if request.version == API_V2:
-        userid = f"{username}_{nonce}"  # v2
-    else:
-        userid = f"{nonce}_{username}"  # v1
-    ids = {}
-    ids["userid"] = userid
-    ids["userclient"] = f"{userid}_{client}"
-    # add avatar object if requested
-    if _field_requested(request, "camid"):
-        if request.version == API_V2:
-            ids["camid"] = userid  # v2
-        else:
-            ids["camid"] = f"camera_{userid}"  # v1
-    if _field_requested(request, "handleftid"):
-        ids["handleftid"] = f"handLeft_{userid}"
-    if _field_requested(request, "handrightid"):
-        ids["handrightid"] = f"handRight_{userid}"
-    if _field_requested(request, "renderfusionid"):
-        ids["renderfusionid"] = "-"
-    if _field_requested(request, "environmentid"):
-        ids["environmentid"] = "-"
-
-    if user.is_authenticated:
-        duration = datetime.timedelta(days=1)
-    else:
-        duration = datetime.timedelta(hours=6)
-    token = generate_arena_token(
-        user=user,
-        username=username,
-        realm=request.POST.get("realm", None),
-        ns_scene=request.POST.get("scene", None),
-        ids=ids,
-        duration=duration,
-        version=request.version
-    )
-    if not token:
-        return JsonResponse(
-            {"error": "Authentication required for this scene."}, status=status.HTTP_403_FORBIDDEN
-        )
-    data = {
-        "username": username,
-        "token": token,
-        "ids": ids,
-    }
-    response = JsonResponse(data)
-    # Careful of token size in cookie:
-    # RFC 6265 states that user agents should support cookies of at least 4096 bytes. For many browsers this is also the maximum size. Django will not raise an exception if there’s an attempt to store a cookie of more than 4096 bytes, but many browsers will not set the cookie correctly.
-    if len(token) < 4096:
-        response.set_cookie(
-            "mqtt_token",
-            token,
-            max_age=86400000,
-            httponly=True,
-            secure=True,
-        )
-    return response
-
-
-@api_view(["GET"])
-def health_state(request):
-    """
-    Endpoint request for the arena-account system health: GET.
-    """
-
-    return JsonResponse(
-        {"result": "success"}, status=status.HTTP_200_OK
-    )

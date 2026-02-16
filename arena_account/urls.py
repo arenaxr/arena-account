@@ -17,8 +17,12 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
+from users.api import api
+
 urlpatterns = [
     # configure user api version based endpoints
+    path("user/", api.urls),
+    path("user/v2/", api.urls),
     path("user/", include("users.urls", namespace="v1")),
     path("user/v2/", include("users.urls", namespace="v2")),
 
