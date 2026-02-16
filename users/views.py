@@ -60,12 +60,7 @@ from .persistence import (
     read_persist_scenes_all,
     read_persist_scenes_by_namespace,
 )
-from .serializers import (
-    NamespaceNameSerializer,
-    NamespaceSerializer,
-    SceneNameSerializer,
-    SceneSerializer,
-)
+
 from .utils import (
     get_my_edit_namespaces,
     get_my_view_namespaces,
@@ -217,7 +212,7 @@ def namespace_perm_detail(request, pk):
     Handle Namespace Permissions Edit page, get page load and post submit requests.
     - Handles namespace permissions changes and deletes.
     """
-    version = TOPIC_SUPPORTED_API_VERSIONS[0]  # TODO (mwfarb): resolve missing request.version
+    version = request.version
 
     if not namespace_edit_permission(user=request.user, namespace=pk):
         messages.error(request, f"User does not have edit permission for namespace: {pk}.")
@@ -262,7 +257,7 @@ def scene_perm_detail(request, pk):
     Handle Scene Permissions Edit page, get page load and post submit requests.
     - Handles scene permissions changes and deletes.
     """
-    version = TOPIC_SUPPORTED_API_VERSIONS[0]  # TODO (mwfarb): resolve missing request.version
+    version = request.version
 
     if not scene_edit_permission(user=request.user, scene=pk):
         messages.error(request, f"User does not have edit permission for scene: {pk}.")
@@ -326,7 +321,7 @@ def device_perm_detail(request, pk):
     Handle Device Permissions Edit page, get page load and post submit requests.
     - Handles device permissions changes and deletes.
     """
-    version = TOPIC_SUPPORTED_API_VERSIONS[0]  # TODO (mwfarb): resolve missing request.version
+    version = request.version
 
     if not device_edit_permission(user=request.user, device=pk):
         messages.error(request, f"User does not have edit permission for device: {pk}.")
@@ -448,7 +443,7 @@ def user_profile(request):
     - Shows scenes that the user has permissions to edit and a button to edit them.
     - Handles account deletes.
     """
-    version = TOPIC_SUPPORTED_API_VERSIONS[0]  # TODO (mwfarb): resolve missing request.version
+    version = request.version
 
     if request.method == 'POST':
         # account delete request

@@ -12,14 +12,7 @@ from google.oauth2 import id_token
 from ninja.errors import HttpError
 
 from allauth.socialaccount.models import SocialAccount
-from users.models import (
-    Device,
-    Namespace,
-    NamespaceDefault,
-    Scene,
-    SceneDefault,
-    PUBLIC_NAMESPACE,
-)
+
 from users.persistence import (
     read_persist_ns_all,
     read_persist_scenes_all,
@@ -28,11 +21,19 @@ from users.persistence import (
     delete_persist_scene_objects,
     delete_persist_namespace_objects,
 )
+from users.models import (
+    Device,
+    Namespace,
+    NamespaceDefault,
+    Scene,
+    SceneDefault,
+)
 from users.mqtt import (
     ANON_REGEX,
     API_V2,
     CLIENT_REGEX,
     TOPIC_SUPPORTED_API_VERSIONS,
+    PUBLIC_NAMESPACE,
     generate_arena_token,
 )
 

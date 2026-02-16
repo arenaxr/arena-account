@@ -20,7 +20,6 @@ from users.utils import (
     get_my_view_scenes,
     get_user_from_id_token,
     scene_edit_permission,
-    login_filestore_user,
     generate_arena_token,
     serialize_scene,
     ANON_REGEX,
@@ -28,11 +27,12 @@ from users.utils import (
     API_V2,
     TOPIC_SUPPORTED_API_VERSIONS,
 )
+from users.filestore import login_filestore_user
 
 
 api = NinjaAPI(
     title="ARENA Users API",
-    version="v1",
+    version=TOPIC_SUPPORTED_API_VERSIONS[0],
     description="ARENA Users Django site endpoints.",
 )
 

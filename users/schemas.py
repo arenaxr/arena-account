@@ -24,7 +24,7 @@ class SceneSchema(Schema):
     public_write: bool = False
     anonymous_users: bool = False
     video_conference: bool = False
-    users: List[str] = []
+    users: bool = False
 
 
 class SceneNameSchema(Schema):
