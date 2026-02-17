@@ -78,6 +78,10 @@ def serialize_scene(scene):
 
 
 def get_my_edit_namespaces(user, version):
+    """
+    Internal method to update namespace permissions table:
+    Requests and returns list of user's editable namespaces from namespace permissions table.
+    """
     # load list of namespaces this user can edit
     my_namespaces = Namespace.objects.none()
     editor_namespaces = Namespace.objects.none()
@@ -118,6 +122,10 @@ def get_my_edit_namespaces(user, version):
 
 
 def get_my_view_namespaces(user):
+    """
+    Internal method to update namespace permissions table:
+    Requests and returns list of user's viewable namespaces from namespace permissions table.
+    """
     # load list of namespaces this user can view
     viewer_namespaces = Namespace.objects.none()
     if user.is_authenticated:
@@ -131,6 +139,11 @@ def get_my_view_namespaces(user):
 
 
 def get_my_edit_scenes(user, version):
+    """
+    Internal method to request edit scenes from persist and permissions:
+    1. Requests list of any scenes with objects saved from /persist/!allscenes.
+    2. Requests and returns list of user's editable scenes from scene permissions table.
+    """
     # load list of scenes this user can edit
     my_scenes = Scene.objects.none()
     editor_scenes = Scene.objects.none()
@@ -179,6 +192,10 @@ def get_my_edit_scenes(user, version):
 
 
 def get_my_view_scenes(user, version):
+    """
+    Internal method to request view scenes from persist and permissions:
+    1. Requests and returns list of user's viewable scenes from scene permissions table.
+    """
     # load list of scenes this user can view
     viewer_scenes = Scene.objects.none()
     viewer_namespaces = Namespace.objects.none()
@@ -215,6 +232,9 @@ def get_my_view_scenes(user, version):
 
 
 def namespace_edit_permission(user, namespace):
+    """
+    Internal method to check if 'user' can edit 'namespace'.
+    """
     if not user.is_authenticated:  # anon
         return False
     elif user.is_staff:  # admin/staff
@@ -232,6 +252,9 @@ def namespace_edit_permission(user, namespace):
 
 
 def scene_edit_permission(user, scene):
+    """
+    Internal method to check if 'user' can edit 'scene'.
+    """
     if not user.is_authenticated:  # anon
         return False
     elif user.is_staff:  # admin/staff
@@ -251,6 +274,9 @@ def scene_edit_permission(user, scene):
 
 
 def get_user_from_id_token(gid_token):
+    """
+    Internal method to validate id_tokens from remote authentication.
+    """
     if not gid_token:
         raise ValueError("Missing token.")
     gclient_ids = [os.environ["GAUTH_CLIENTID"],

@@ -12,7 +12,7 @@ from ninja.security import django_auth
 
 from allauth.socialaccount.models import SocialAccount
 from users.models import Namespace, Scene, SceneDefault, NamespaceDefault, Device
-from users.schemas import NamespaceSchema, SceneSchema, SceneNameSchema
+from users.schemas import NamespaceSchema, SceneSchema, SceneNameSchema, MQTTAuthRequestSchema
 from users.utils import (
     get_my_edit_namespaces,
     get_my_view_namespaces,
@@ -70,6 +70,10 @@ class MessageSchema(Schema):
 
 @api.api_operation(["GET", "POST"], "/user_state", response={200: UserStateSchema, 403: ErrorSchema})
 def user_state(request, id_token: str = Form(None)):
+    """
+    Endpoint request for the user's authenticated status, username, name, email: GET/POST.
+    - POST requires id_token for headless clients like Python apps.
+    """
     user = request.user
     if request.method == "POST" and id_token:
         try:
@@ -93,6 +97,10 @@ def user_state(request, id_token: str = Form(None)):
 
 @api.api_operation(["GET", "POST"], "/storelogin", response={200: StoreLoginSchema, 403: ErrorSchema})
 def storelogin(request, id_token: str = Form(None)):
+    """
+    Endpoint request for the user's file store token: GET/POST.
+    - POST requires id_token for headless clients like Python apps.
+    """
     user = request.user
     if request.method == "POST" and id_token:
         try:
@@ -112,29 +120,24 @@ def storelogin(request, id_token: str = Form(None)):
 @api.post("/mqtt_auth", response={200: MQTTAuthSchema, 400: ErrorSchema, 401: ErrorSchema, 403: ErrorSchema, 426: ErrorSchema})
 def mqtt_auth(
     request,
-    id_token: str = Form(None),
-    username: str = Form(None),
-    id_auth: str = Form(None),
-    realm: str = Form(None),
-    scene: str = Form(None),
-    client: str = Form(None),
-    camid: bool = Form(False),
-    handleftid: bool = Form(False),
-    handrightid: bool = Form(False),
-    renderfusionid: bool = Form(False),
-    environmentid: bool = Form(False),
+    payload: MQTTAuthRequestSchema = Form(...),
 ):
+    """
+    Endpoint to request an ARENA token with permissions for an anonymous or authenticated user for
+    MQTT and Jitsi resources given incoming parameters.
+    """
     version = getattr(request, "version", TOPIC_SUPPORTED_API_VERSIONS[0])
     if version not in TOPIC_SUPPORTED_API_VERSIONS:
          return 426, {"error": f"ARENA User API {TOPIC_SUPPORTED_API_VERSIONS[0]} token required."}
 
     user = request.user
-    if id_token:
+    if payload.id_token:
         try:
-            user = get_user_from_id_token(id_token)
+            user = get_user_from_id_token(payload.id_token)
         except (ValueError, SocialAccount.DoesNotExist) as err:
             return 403, {"error": str(err)}
 
+    username = payload.username
     if user.is_authenticated:
         username = user.username
         if not username:
@@ -143,28 +146,34 @@ def mqtt_auth(
         if not username or not re.match(ANON_REGEX, username):
             return 400, {"error": "Invalid form parameter: 'username'"}
 
-    if not client or not re.match(CLIENT_REGEX, client):
+    if not payload.client or not re.match(CLIENT_REGEX, payload.client):
          return 400, {"error": "Invalid form parameter: 'client'"}
 
+    # produce nonce with 32-bits secure randomness
     nonce = f"{secrets.randbits(32):010d}"
+    # define user object_ids server-side to prevent spoofing
     if version == API_V2:
         userid = f"{username}_{nonce}"
     else:
         userid = f"{nonce}_{username}"
 
+    # always include userid in responses for user_client origin checking
     ids = {}
     ids["userid"] = userid
-    ids["userclient"] = f"{userid}_{client}"
+    ids["userclient"] = f"{userid}_{payload.client}"
 
-    if camid:
+    # add avatar objects if requested
+    if payload.camid:
         ids["camid"] = userid if version == API_V2 else f"camera_{userid}"
-    if handleftid:
+    if payload.handleftid:
         ids["handleftid"] = f"handLeft_{userid}"
-    if handrightid:
+    if payload.handrightid:
         ids["handrightid"] = f"handRight_{userid}"
-    if renderfusionid:
+
+    # add host requests, permission checked later
+    if payload.renderfusionid:
         ids["renderfusionid"] = "-"
-    if environmentid:
+    if payload.environmentid:
         ids["environmentid"] = "-"
 
     if user.is_authenticated:
@@ -175,8 +184,8 @@ def mqtt_auth(
     token = generate_arena_token(
         user=user,
         username=username,
-        realm=realm,
-        ns_scene=scene,
+        realm=payload.realm,
+        ns_scene=payload.scene,
         ids=ids,
         duration=duration,
         version=version,
@@ -191,6 +200,8 @@ def mqtt_auth(
         "ids": ids,
     }
 
+    # Careful of token size in cookie:
+    # RFC 6265 states that user agents should support cookies of at least 4096 bytes. For many browsers this is also the maximum size. Django will not raise an exception if there’s an attempt to store a cookie of more than 4096 bytes, but many browsers will not set the cookie correctly.
     response = JsonResponse(data)
     if len(token) < 4096:
         response.set_cookie(
@@ -205,11 +216,18 @@ def mqtt_auth(
 
 @api.get("/health", response=HealthSchema)
 def health_state(request):
+    """
+    Endpoint request for the arena-account system health: GET.
+    """
     return {"result": "success"}
 
 
 @api.api_operation(["GET", "POST"], "/my_namespaces", response={200: List[NamespaceSchema], 403: ErrorSchema, 426: ErrorSchema})
 def list_my_namespaces(request, id_token: str = Form(None)):
+    """
+    Editable/viewable namespace headless endpoint for requesting a list of namespaces this user can edit and/or view: GET/POST.
+    - POST requires id_token for headless clients like Python apps.
+    """
     version = getattr(request, "version", TOPIC_SUPPORTED_API_VERSIONS[0])
     if version not in TOPIC_SUPPORTED_API_VERSIONS:
          return 426, {"error": f"ARENA User API {TOPIC_SUPPORTED_API_VERSIONS[0]} token required."}
@@ -230,6 +248,10 @@ def list_my_namespaces(request, id_token: str = Form(None)):
 
 @api.api_operation(["GET", "POST"], "/my_scenes", response={200: List[SceneSchema], 403: ErrorSchema, 426: ErrorSchema})
 def list_my_scenes(request, id_token: str = Form(None)):
+    """
+    Editable/viewable scenes headless endpoint for requesting a list of scenes this user can edit and/or view: GET/POST.
+    - POST requires id_token for headless clients like Python apps.
+    """
     version = getattr(request, "version", TOPIC_SUPPORTED_API_VERSIONS[0])
     if version not in TOPIC_SUPPORTED_API_VERSIONS:
          return 426, {"error": f"ARENA User API {TOPIC_SUPPORTED_API_VERSIONS[0]} token required."}
