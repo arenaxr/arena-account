@@ -1,6 +1,7 @@
 import secrets
 import re
 import datetime
+import os
 from typing import List, Optional
 
 from django.conf import settings
@@ -30,10 +31,26 @@ from users.utils import (
 from users.filestore import login_filestore_user
 
 
+api_extra = {
+    "info": {
+        "license": {
+            "name": "BSD 3-Clause License",
+            "url": "https://opensource.org/licenses/BSD-3-Clause",
+        },
+    }
+}
+if os.environ.get("HOSTNAME"):
+    api_extra["info"]["termsOfService"] = f"https://{os.environ['HOSTNAME']}/terms.html"
+if os.environ.get("EMAIL"):
+    api_extra["info"]["contact"] = {
+        "email": os.environ["EMAIL"],
+    }
+
 api = NinjaAPI(
     title="ARENA Users API",
     version=TOPIC_SUPPORTED_API_VERSIONS[0],
     description="ARENA Users Django site endpoints.",
+    openapi_extra=api_extra,
 )
 
 
