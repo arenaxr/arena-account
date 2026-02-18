@@ -1,34 +1,27 @@
-import secrets
-import re
 import datetime
 import os
+import re
+import secrets
 from typing import List, Optional
 
-from django.conf import settings
-from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login, logout
-from django.http import HttpResponse, JsonResponse
-from ninja import NinjaAPI, Form, Schema, Router
-from ninja.security import django_auth
-
 from allauth.socialaccount.models import SocialAccount
-from users.models import Namespace, Scene, SceneDefault, NamespaceDefault, Device
-from users.schemas import NamespaceSchema, SceneSchema, SceneNameSchema, MQTTAuthRequestSchema
+from django.contrib.auth.models import User
+from django.http import HttpResponse, JsonResponse
+from ninja import Form, NinjaAPI, Schema
+from users.filestore import login_filestore_user
+from users.models import Scene
+from users.mqtt import ANON_REGEX, CLIENT_REGEX, generate_arena_token
+from users.schemas import MQTTAuthRequestSchema, NamespaceSchema, SceneSchema
 from users.utils import (
     get_my_edit_namespaces,
-    get_my_view_namespaces,
     get_my_edit_scenes,
+    get_my_view_namespaces,
     get_my_view_scenes,
     get_user_from_id_token,
     scene_edit_permission,
-    generate_arena_token,
     serialize_scene,
-    ANON_REGEX,
-    CLIENT_REGEX,
 )
-from users.filestore import login_filestore_user
-from users.versioning import VersionedRouter, API_V1, API_V2, SUPPORTED_API_VERSIONS
-
+from users.versioning import API_V1, API_V2, SUPPORTED_API_VERSIONS, VersionedRouter
 
 # Dynamic API generation
 apis = {}

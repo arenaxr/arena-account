@@ -1,31 +1,17 @@
 import datetime
-import os
-import re
-import secrets
+from http import HTTPStatus
 from operator import itemgetter
 
-from allauth.socialaccount import helpers
-from allauth.socialaccount.models import SocialAccount
 from allauth.socialaccount.views import SignupView as SocialSignupViewDefault
 from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
-from django.db import transaction
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
-from google.auth.transport import requests as grequests
-from google.oauth2 import id_token
-from http import HTTPStatus
 
-
-from .filestore import (
-    delete_filestore_user,
-    get_filestore_health,
-    login_filestore_user,
-    set_filestore_scope,
-)
+from .filestore import delete_filestore_user, get_filestore_health, set_filestore_scope
 from .forms import (
     DeviceForm,
     NamespaceForm,
@@ -36,46 +22,20 @@ from .forms import (
     UpdateSceneForm,
     UpdateStaffForm,
 )
-from .models import (
-    RE_NS_SLASH_ID,
-    Device,
-    Namespace,
-    NamespaceDefault,
-    Scene,
-    SceneDefault,
-)
-from .mqtt import (
-    ANON_REGEX,
-    API_V1,
-    API_V2,
-    CLIENT_REGEX,
-    PUBLIC_NAMESPACE,
-    clean_topics,
-    generate_arena_token,
-)
-from .versioning import SUPPORTED_API_VERSIONS
+from .models import Device, Namespace, Scene
+from .mqtt import PUBLIC_NAMESPACE, generate_arena_token
 from .persistence import (
     delete_persist_namespace_objects,
     delete_persist_scene_objects,
-    read_persist_ns_all,
     read_persist_scene_objects,
-    read_persist_scenes_all,
-    read_persist_scenes_by_namespace,
 )
-
 from .utils import (
     get_my_edit_namespaces,
-    get_my_view_namespaces,
     get_my_edit_scenes,
-    get_my_view_scenes,
-    get_user_from_id_token,
     namespace_edit_permission,
     scene_edit_permission,
 )
-from users.versioning import SUPPORTED_API_VERSIONS
-
-# namespaced scene regular expression
-RE_PATTERN_NS_SLASH_ID = re.compile(RE_NS_SLASH_ID)
+from .versioning import API_V1, API_V2, SUPPORTED_API_VERSIONS
 
 
 def index(request):

@@ -1,40 +1,17 @@
-import datetime
 import os
-import re
-import secrets
 import socket
 from operator import itemgetter
 
-from django.conf import settings
+from allauth.socialaccount.models import SocialAccount
 from django.contrib.auth.models import User
 from google.auth.transport import requests as grequests
 from google.oauth2 import id_token
-from ninja.errors import HttpError
-
-from allauth.socialaccount.models import SocialAccount
-
+from users.models import Namespace, NamespaceDefault, Scene, SceneDefault
 from users.persistence import (
     read_persist_ns_all,
     read_persist_scenes_all,
     read_persist_scenes_by_namespace,
-    read_persist_scene_objects,
-    delete_persist_scene_objects,
-    delete_persist_namespace_objects,
 )
-from users.models import (
-    Device,
-    Namespace,
-    NamespaceDefault,
-    Scene,
-    SceneDefault,
-)
-from users.mqtt import (
-    ANON_REGEX,
-    CLIENT_REGEX,
-    PUBLIC_NAMESPACE,
-    generate_arena_token,
-)
-from .versioning import API_V1, API_V2, SUPPORTED_API_VERSIONS
 
 
 def get_rest_host():

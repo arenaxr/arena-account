@@ -6,7 +6,6 @@ import re
 import jwt
 from django.conf import settings
 
-from .versioning import API_V1, API_V2, SUPPORTED_API_VERSIONS
 from .models import (
     SCENE_ANON_USERS_DEF,
     SCENE_PUBLIC_READ_DEF,
@@ -17,7 +16,7 @@ from .models import (
     Scene,
 )
 from .mqtt_match import topic_matches_sub
-from .topics import ADMIN_TOPICS, PUBLISH_TOPICS, SUBSCRIBE_TOPICS
+from .versioning import API_V2
 
 PUBLIC_NAMESPACE = "public"
 ANON_REGEX = "anonymous-(?=.*?[a-zA-Z].*?[a-zA-Z])"

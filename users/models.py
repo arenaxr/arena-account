@@ -1,3 +1,5 @@
+import re
+
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
@@ -11,8 +13,10 @@ SCENE_ANON_USERS_DEF = True
 SCENE_VIDEO_CONF_DEF = True
 SCENE_USERS_DEF = True
 
+# namespaced scene regular expression
 RE_NS = r"^[a-zA-Z0-9_\-\.]*$"
 RE_NS_SLASH_ID = r"^[a-zA-Z0-9_\-\.]+\/[a-zA-Z0-9_\-\.]+$"
+RE_PATTERN_NS_SLASH_ID = re.compile(RE_NS_SLASH_ID)
 
 ns_regex = RegexValidator(RE_NS, "Only alphanumeric, underscore, hyphen allowed.")
 ns_slash_id_regex = RegexValidator(

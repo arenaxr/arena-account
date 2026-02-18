@@ -275,3 +275,5 @@ PUBSUB = {
     "mqtt_realm": "realm",
     "mqtt_username": "arena_account",
 }
+
+SILENCED_SYSTEM_CHECKS = ["staticfiles.W004"]

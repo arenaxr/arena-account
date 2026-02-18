@@ -1,10 +1,12 @@
-from typing import List, Dict, Any, Callable
+from typing import Callable, Dict, List
+
 from ninja import Router
 
 # version constants
 API_V1 = "v1"  # url /user/, first version
 API_V2 = "v2"  # url /user/v2/, full topic structure refactor
 SUPPORTED_API_VERSIONS = [API_V1, API_V2]
+
 
 class VersionedRouter:
     def __init__(self, versions: List[str]):
