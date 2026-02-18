@@ -16,17 +16,12 @@ from .models import (
     Scene,
 )
 from .mqtt_match import topic_matches_sub
-from .topics import ADMIN_TOPICS, PUBLISH_TOPICS, SUBSCRIBE_TOPICS
+from .versioning import API_V2
 
 PUBLIC_NAMESPACE = "public"
 ANON_REGEX = "anonymous-(?=.*?[a-zA-Z].*?[a-zA-Z])"
 CLIENT_REGEX = r"^[a-zA-Z]+[\w\-\:\.]*$"
 DEF_JWT_DURATION = datetime.timedelta(minutes=1)
-
-# version constants
-API_V1 = "v1"  # url /user/, first version
-API_V2 = "v2"  # url /user/v2/, full topic structure refactor
-TOPIC_SUPPORTED_API_VERSIONS = [API_V2]
 
 
 def generate_arena_token(

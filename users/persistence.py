@@ -1,12 +1,13 @@
+'''
+Mongo DB PyMongo queries for Persist:
+https://pymongo.readthedocs.io/en/stable/index.html
+'''
 import json
 from datetime import datetime
 
 from bson import ObjectId
 
 from .models import get_arenaobjects_collection
-
-# Mongo DB PyMongo queries for Persist:
-# https://pymongo.readthedocs.io/en/stable/index.html
 
 
 class MongoJSONEncoder(json.JSONEncoder):
