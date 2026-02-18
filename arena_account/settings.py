@@ -262,6 +262,7 @@ if DEBUG:
     STATICFILES_DIRS = [
         os.path.join(BASE_DIR, "static"),
     ]
+    SILENCED_SYSTEM_CHECKS = ["staticfiles.W004"]
 else:
     # Static root
     STATIC_ROOT = "./static"
@@ -275,5 +276,3 @@ PUBSUB = {
     "mqtt_realm": "realm",
     "mqtt_username": "arena_account",
 }
-
-SILENCED_SYSTEM_CHECKS = ["staticfiles.W004"]

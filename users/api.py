@@ -32,19 +32,22 @@ for version in SUPPORTED_API_VERSIONS:
                 "name": "BSD 3-Clause License",
                 "url": "https://opensource.org/licenses/BSD-3-Clause",
             },
+            "contact": {
+                "name": "ARENA Account GitHub",
+                "url": "https://github.com/arenaxr/arena-account",
+            },
         }
     }
     if os.environ.get("HOSTNAME"):
         api_extra["info"]["termsOfService"] = f"https://{os.environ['HOSTNAME']}/terms.html"
     if os.environ.get("EMAIL"):
-        api_extra["info"]["contact"] = {
-            "email": os.environ["EMAIL"],
-        }
+        api_extra["info"]["contact"]["email"] = os.environ["EMAIL"]
+
 
     apis[version] = NinjaAPI(
-        title=f"ARENA Users API ({version})",
+        title=f"ARENA Account Users API ({version})",
         version=version,
-        description=f"ARENA Users Django site endpoints ({version}).",
+        description=f"ARENA Account Users Django site endpoints ({version}).",
         openapi_extra=api_extra,
         urls_namespace=f"api_{version}",
     )
