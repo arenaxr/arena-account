@@ -6,6 +6,7 @@ import re
 import jwt
 from django.conf import settings
 
+from .versioning import API_V1, API_V2, SUPPORTED_API_VERSIONS
 from .models import (
     SCENE_ANON_USERS_DEF,
     SCENE_PUBLIC_READ_DEF,
@@ -22,11 +23,6 @@ PUBLIC_NAMESPACE = "public"
 ANON_REGEX = "anonymous-(?=.*?[a-zA-Z].*?[a-zA-Z])"
 CLIENT_REGEX = r"^[a-zA-Z]+[\w\-\:\.]*$"
 DEF_JWT_DURATION = datetime.timedelta(minutes=1)
-
-# version constants
-API_V1 = "v1"  # url /user/, first version
-API_V2 = "v2"  # url /user/v2/, full topic structure refactor
-TOPIC_SUPPORTED_API_VERSIONS = [API_V2]
 
 
 def generate_arena_token(

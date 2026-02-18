@@ -46,12 +46,14 @@ from .models import (
 )
 from .mqtt import (
     ANON_REGEX,
+    API_V1,
     API_V2,
     CLIENT_REGEX,
     PUBLIC_NAMESPACE,
-    TOPIC_SUPPORTED_API_VERSIONS,
+    clean_topics,
     generate_arena_token,
 )
+from .versioning import SUPPORTED_API_VERSIONS
 from .persistence import (
     delete_persist_namespace_objects,
     delete_persist_scene_objects,
@@ -66,9 +68,11 @@ from .utils import (
     get_my_view_namespaces,
     get_my_edit_scenes,
     get_my_view_scenes,
+    get_user_from_id_token,
     namespace_edit_permission,
     scene_edit_permission,
 )
+from users.versioning import SUPPORTED_API_VERSIONS
 
 # namespaced scene regular expression
 RE_PATTERN_NS_SLASH_ID = re.compile(RE_NS_SLASH_ID)
@@ -443,8 +447,9 @@ def user_profile(request):
     - Shows scenes that the user has permissions to edit and a button to edit them.
     - Handles account deletes.
     """
-    version = request.version
-
+    version = getattr(request, "version", SUPPORTED_API_VERSIONS[0])
+    if version == API_V1:
+        return redirect(f"{API_V2}:user_profile")
     if request.method == 'POST':
         # account delete request
         confirm_text = f'delete {request.user.username} account and scenes'

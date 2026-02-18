@@ -30,12 +30,11 @@ from users.models import (
 )
 from users.mqtt import (
     ANON_REGEX,
-    API_V2,
     CLIENT_REGEX,
-    TOPIC_SUPPORTED_API_VERSIONS,
     PUBLIC_NAMESPACE,
     generate_arena_token,
 )
+from .versioning import API_V1, API_V2, SUPPORTED_API_VERSIONS
 
 
 def get_rest_host():

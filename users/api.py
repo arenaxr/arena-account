@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, JsonResponse
-from ninja import NinjaAPI, Form, Schema
+from ninja import NinjaAPI, Form, Schema, Router
 from ninja.security import django_auth
 
 from allauth.socialaccount.models import SocialAccount
@@ -25,33 +25,38 @@ from users.utils import (
     serialize_scene,
     ANON_REGEX,
     CLIENT_REGEX,
-    API_V2,
-    TOPIC_SUPPORTED_API_VERSIONS,
 )
 from users.filestore import login_filestore_user
+from users.versioning import VersionedRouter, API_V1, API_V2, SUPPORTED_API_VERSIONS
 
 
-api_extra = {
-    "info": {
-        "license": {
-            "name": "BSD 3-Clause License",
-            "url": "https://opensource.org/licenses/BSD-3-Clause",
-        },
+# Dynamic API generation
+apis = {}
+for version in SUPPORTED_API_VERSIONS:
+    api_extra = {
+        "info": {
+            "license": {
+                "name": "BSD 3-Clause License",
+                "url": "https://opensource.org/licenses/BSD-3-Clause",
+            },
+        }
     }
-}
-if os.environ.get("HOSTNAME"):
-    api_extra["info"]["termsOfService"] = f"https://{os.environ['HOSTNAME']}/terms.html"
-if os.environ.get("EMAIL"):
-    api_extra["info"]["contact"] = {
-        "email": os.environ["EMAIL"],
-    }
+    if os.environ.get("HOSTNAME"):
+        api_extra["info"]["termsOfService"] = f"https://{os.environ['HOSTNAME']}/terms.html"
+    if os.environ.get("EMAIL"):
+        api_extra["info"]["contact"] = {
+            "email": os.environ["EMAIL"],
+        }
 
-api = NinjaAPI(
-    title="ARENA Users API",
-    version=TOPIC_SUPPORTED_API_VERSIONS[0],
-    description="ARENA Users Django site endpoints.",
-    openapi_extra=api_extra,
-)
+    apis[version] = NinjaAPI(
+        title=f"ARENA Users API ({version})",
+        version=version,
+        description=f"ARENA Users Django site endpoints ({version}).",
+        openapi_extra=api_extra,
+        urls_namespace=f"api_{version}",
+    )
+
+router = VersionedRouter(SUPPORTED_API_VERSIONS)
 
 
 class UserStateSchema(Schema):
@@ -85,7 +90,7 @@ class MessageSchema(Schema):
     message: str
 
 
-@api.api_operation(["GET", "POST"], "/user_state", response={200: UserStateSchema, 403: ErrorSchema})
+@router.api_operation(["GET", "POST"], "/user_state", response={200: UserStateSchema, 403: ErrorSchema})
 def user_state(request, id_token: str = Form(None)):
     """
     Endpoint request for the user's authenticated status, username, name, email: GET/POST.
@@ -112,7 +117,7 @@ def user_state(request, id_token: str = Form(None)):
         return 200, {"authenticated": False}
 
 
-@api.api_operation(["GET", "POST"], "/storelogin", response={200: StoreLoginSchema, 403: ErrorSchema})
+@router.api_operation(["GET", "POST"], "/storelogin", response={200: StoreLoginSchema, 403: ErrorSchema})
 def storelogin(request, id_token: str = Form(None)):
     """
     Endpoint request for the user's file store token: GET/POST.
@@ -134,7 +139,7 @@ def storelogin(request, id_token: str = Form(None)):
     return response
 
 
-@api.post("/mqtt_auth", response={200: MQTTAuthSchema, 400: ErrorSchema, 401: ErrorSchema, 403: ErrorSchema, 426: ErrorSchema})
+@router.post("/mqtt_auth", response={200: MQTTAuthSchema, 400: ErrorSchema, 401: ErrorSchema, 403: ErrorSchema, 426: ErrorSchema})
 def mqtt_auth(
     request,
     payload: MQTTAuthRequestSchema = Form(...),
@@ -143,9 +148,9 @@ def mqtt_auth(
     Endpoint to request an ARENA token with permissions for an anonymous or authenticated user for
     MQTT and Jitsi resources given incoming parameters.
     """
-    version = getattr(request, "version", TOPIC_SUPPORTED_API_VERSIONS[0])
-    if version not in TOPIC_SUPPORTED_API_VERSIONS:
-         return 426, {"error": f"ARENA User API {TOPIC_SUPPORTED_API_VERSIONS[0]} token required."}
+    version = getattr(request, "version", SUPPORTED_API_VERSIONS[0])
+    if version == API_V1:
+        return 426, {"error": f"ARENA User API {API_V2} token required."}
 
     user = request.user
     if payload.id_token:
@@ -231,7 +236,7 @@ def mqtt_auth(
     return response
 
 
-@api.get("/health", response=HealthSchema)
+@router.get("/health", response=HealthSchema)
 def health_state(request):
     """
     Endpoint request for the arena-account system health: GET.
@@ -239,15 +244,15 @@ def health_state(request):
     return {"result": "success"}
 
 
-@api.api_operation(["GET", "POST"], "/my_namespaces", response={200: List[NamespaceSchema], 403: ErrorSchema, 426: ErrorSchema})
+@router.api_operation(["GET", "POST"], "/my_namespaces", response={200: List[NamespaceSchema], 403: ErrorSchema, 426: ErrorSchema})
 def list_my_namespaces(request, id_token: str = Form(None)):
     """
     Editable/viewable namespace headless endpoint for requesting a list of namespaces this user can edit and/or view: GET/POST.
     - POST requires id_token for headless clients like Python apps.
     """
-    version = getattr(request, "version", TOPIC_SUPPORTED_API_VERSIONS[0])
-    if version not in TOPIC_SUPPORTED_API_VERSIONS:
-         return 426, {"error": f"ARENA User API {TOPIC_SUPPORTED_API_VERSIONS[0]} token required."}
+    version = getattr(request, "version", SUPPORTED_API_VERSIONS[0])
+    if version == API_V1:
+        return 426, {"error": f"ARENA User API {API_V2} token required."}
 
     user = request.user
     if request.method == "POST" and id_token:
@@ -263,15 +268,15 @@ def list_my_namespaces(request, id_token: str = Form(None)):
     return 200, sorted(list(merged_map.values()), key=lambda x: x["name"])
 
 
-@api.api_operation(["GET", "POST"], "/my_scenes", response={200: List[SceneSchema], 403: ErrorSchema, 426: ErrorSchema})
+@router.api_operation(["GET", "POST"], "/my_scenes", response={200: List[SceneSchema], 403: ErrorSchema, 426: ErrorSchema})
 def list_my_scenes(request, id_token: str = Form(None)):
     """
     Editable/viewable scenes headless endpoint for requesting a list of scenes this user can edit and/or view: GET/POST.
     - POST requires id_token for headless clients like Python apps.
     """
-    version = getattr(request, "version", TOPIC_SUPPORTED_API_VERSIONS[0])
-    if version not in TOPIC_SUPPORTED_API_VERSIONS:
-         return 426, {"error": f"ARENA User API {TOPIC_SUPPORTED_API_VERSIONS[0]} token required."}
+    version = getattr(request, "version", SUPPORTED_API_VERSIONS[0])
+    if version == API_V1:
+        return 426, {"error": f"ARENA User API {API_V2} token required."}
 
     user = request.user
     if request.method == "POST" and id_token:
@@ -286,7 +291,7 @@ def list_my_scenes(request, id_token: str = Form(None)):
     return 200, sorted(list(merged_map.values()), key=lambda x: x["name"])
 
 
-@api.api_operation(["GET", "POST", "PUT", "DELETE"], "/scenes/{path:scene_name}", response={200: SceneSchema, 201: SceneSchema, 200: MessageSchema, 400: ErrorSchema, 404: ErrorSchema})
+@router.api_operation(["GET", "POST", "PUT", "DELETE"], "/scenes/{path:scene_name}", response={200: SceneSchema, 201: SceneSchema, 200: MessageSchema, 400: ErrorSchema, 404: ErrorSchema})
 def scene_detail(request, scene_name: str, payload: SceneSchema = None):
     # check permissions model for namespace
     try:
@@ -357,3 +362,7 @@ def scene_detail(request, scene_name: str, payload: SceneSchema = None):
         return 200, {"message": "Scene was deleted successfully!"}
 
     return 400, {"error": "Method not allowed"}
+
+# Add the router to all APIs
+for version, api in apis.items():
+    api.add_router("", router.routers[version])
