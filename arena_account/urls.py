@@ -20,8 +20,8 @@ from users.api import api
 
 urlpatterns = [
     # configure user api version based endpoints
-    # path("user/", api.urls),
-    path("user/v2/", api.urls),
+    path("user/", include((api.urls, "users_api"), namespace="v1")),
+    path("user/v2/", include((api.urls, "users_api"), namespace="v2")),
     path("user/", include("users.urls", namespace="v1")),
     path("user/v2/", include("users.urls", namespace="v2")),
 
