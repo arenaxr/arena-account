@@ -33,7 +33,6 @@ for version in SUPPORTED_API_VERSIONS:
                 "url": "https://opensource.org/licenses/BSD-3-Clause",
             },
             "contact": {
-                "name": "ARENA Account GitHub",
                 "url": "https://github.com/arenaxr/arena-account",
             },
         }
@@ -45,7 +44,7 @@ for version in SUPPORTED_API_VERSIONS:
 
 
     apis[version] = NinjaAPI(
-        title=f"ARENA Account Users API ({version})",
+        title="ARENA Account Users API",
         version=version,
         description=f"ARENA Account Users Django site endpoints ({version}).",
         openapi_extra=api_extra,
