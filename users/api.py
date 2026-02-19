@@ -6,11 +6,13 @@ from typing import List, Optional
 
 from allauth.socialaccount.models import SocialAccount
 from django.contrib.auth.models import User
+from django.db import connection
 from django.http import HttpResponse, JsonResponse
 from ninja import Form, NinjaAPI, Schema
 from users.filestore import login_filestore_user
 from users.models import Scene
 from users.mqtt import ANON_REGEX, CLIENT_REGEX, generate_arena_token
+from users.persist_db import get_persist_db
 from users.schemas import MQTTAuthRequestSchema, NamespaceSchema, SceneSchema
 from users.utils import (
     get_my_edit_namespaces,
@@ -65,6 +67,8 @@ class UserStateSchema(Schema):
 
 class HealthSchema(Schema):
     result: str
+    sqlite_status: str
+    mongo_status: str
 
 
 class StoreLoginSchema(Schema):
@@ -231,12 +235,30 @@ def mqtt_auth(
     return response
 
 
-@router.get("/health", response=HealthSchema)
+@router.get("/health", response={200: HealthSchema, 503: HealthSchema})
 def health_state(request):
     """
     Endpoint request for the arena-account system health: GET.
     """
-    return {"result": "success"}
+    # SQLite Check
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+        sqlite_status = "healthy"
+    except Exception:
+        sqlite_status = "unhealthy"
+
+    # Mongo Check
+    try:
+        get_persist_db().command("ping")
+        mongo_status = "healthy"
+    except Exception:
+        mongo_status = "unhealthy"
+
+    if sqlite_status == "healthy" and mongo_status == "healthy":
+        return 200, {"result": "success", "sqlite_status": sqlite_status, "mongo_status": mongo_status}
+    else:
+        return 503, {"result": "failure", "sqlite_status": sqlite_status, "mongo_status": mongo_status}
 
 
 @router.api_operation(["GET", "POST"], "/my_namespaces", response={200: List[NamespaceSchema], 403: ErrorSchema, 426: ErrorSchema})
