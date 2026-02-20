@@ -233,37 +233,34 @@ def add_filestore_auth(user: User, host, verify, admin_token):
     Returns:
         fs_user_token (string): Updated filebrowser api jwt for user.username.
     """
-    safe_scope = get_user_scope(user)
-
-    # Construct pristine payload to avoid settings['defaults'] issues (e.g. hidden IDs, current password reqs)
-    fs_user_data = {
-        "username": user.username,
-        "password": get_fs_password(user),
-        "lockPassword": True,
-        "scope": safe_scope,
-        "locale": "en",
-        "viewMode": "mosaic",
-        "perm": {
-            "admin": user.is_superuser,
-            "execute": True,
-            "create": True,
-            "rename": True,
-            "modify": True,
-            "delete": True,
-            "share": True,
-            "download": True
-        }
-    }
-
     admin_password = os.environ.get("STORE_ADMIN_PASSWORD", "")
+    try:
+        r_settings = requests.get(f"https://{host}/storemng/api/settings", headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
+        r_settings.raise_for_status()
+        settings = r_settings.json()
+    except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
+        print(f"Error fetching filebrowser settings: {err}")
+        return None
 
-    # Must use wrapped format for POST
     fs_user = {
         "what": "user",
         "which": [],
-        "data": fs_user_data,
+        "data": settings.get("defaults", {}),
         "current_password": admin_password  # Add admin password to authorize creation
     }
+
+    fs_user["data"]["username"] = user.username
+    fs_user["data"]["password"] = get_fs_password(user)
+    fs_user["data"]["lockPassword"] = True
+
+    # perm dictionary might not exist if defaults is totally empty, ensure it's there
+    if "perm" not in fs_user["data"]:
+        fs_user["data"]["perm"] = {}
+
+    fs_user["data"]["perm"]["admin"] = user.is_superuser
+
+    # setting scope in users POST will generate user dir
+    fs_user["data"]["scope"] = get_user_scope(user)
 
     # add new user to filestore db
     try:
