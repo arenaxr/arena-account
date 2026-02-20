@@ -230,8 +230,7 @@ def set_filestore_pass(user: User, host, verify, admin_token, fs_user_json):
         r_userupd.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print(f"Error updating filebrowser password: {err}")
-        if hasattr(r_userupd, 'text'):
-            print(f"Response: {r_userupd.text}")
+        # Avoid printing r_userupd.text to prevent leaking passwords in logs
         return None
 
     fs_user_token, status = get_filestore_token(get_user_login(user), host, verify)
@@ -284,8 +283,7 @@ def add_filestore_auth(user: User, host, verify, admin_token):
         print(f"Created FileStore user: {user.username}")
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print(f"FileStore user creation failed for {user.username}: {err}")
-        if hasattr(r_useradd, 'text'):
-            print(f"Response: {r_useradd.text}")
+        # Avoid printing r_useradd.text to prevent leaking passwords in logs
         return None
 
     if user.is_staff:  # admin and staff get root scope
@@ -339,8 +337,7 @@ def set_filestore_scope(user: User):
         r_userupd.raise_for_status()
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print(f"Error updating filebrowser scope: {err}")
-        if hasattr(r_userupd, 'text'):
-             print(f"Response: {r_userupd.text}")
+        # Avoid printing r_userupd.text to prevent leaking passwords in logs
         return False
 
     return True
@@ -385,8 +382,6 @@ def delete_filestore_user(user: User):
             print(f"Deleted files for user: {user.username}")
         except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
             print(f"Delete files failed: {err}")
-            if 'r_filesdel' in locals() and hasattr(r_filesdel, 'text'):
-                print(f"Response: {r_filesdel.text}")
             # Proceed with deleting the account even if folder deletion fails or was already deleted
 
     # Admin password required for user delete
@@ -401,8 +396,7 @@ def delete_filestore_user(user: User):
         return True
     except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
         print(f"Delete failed: {err}")
-        if r_userdel is not None and hasattr(r_userdel, 'text'):
-            print(f"Response: {r_userdel.text}")
+        # Avoid printing r_userdel.text to prevent leaking passwords in logs
         return False
 
     return True
