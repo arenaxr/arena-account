@@ -21,8 +21,9 @@ from .utils import get_rest_host
 # FILESTORE DELETE FLOW:
 # 1. Authenticate as Admin (`get_admin_login`).
 # 2. Find user ID in Filebrowser (`get_filestore_user_json`).
-# 3. If user ID is found: Delete user using Admin token and Admin password.
-# 4. If user ID is not found: Assume user is already deleted, return True.
+# 3. If user ID is found: Delete user's files/directory using Admin token (`/api/resources/...`).
+# 4. If user ID is found: Delete user account using Admin token and Admin password.
+# 5. If user ID is not found: Assume user is already deleted, return True.
 
 FS_API_TIMEOUT = 15  # 15 seconds
 
@@ -361,7 +362,7 @@ def delete_filestore_user(user: User):
     verify, host = get_rest_host()
     # get auth for removing user
     admin_login = get_admin_login()
-    admin_token, status = get_filestore_token(admin_login, host, verify)
+    admin_token, _ = get_filestore_token(admin_login, host, verify)
     if not admin_token:
         return False
     # find the user's filebrowser ID
@@ -372,6 +373,21 @@ def delete_filestore_user(user: User):
         return True
 
     user_id_to_delete = fs_user_json['id']
+
+    # Delete the user's files and directory
+    if fs_user_json['scope'] == get_user_scope(user):
+        try:  # only user scope files can be removed, not root
+            # Filebrowser resource path expects the path without the leading './'
+            resource_path = get_user_scope(user).lstrip('./')
+            r_filesdel = requests.delete(f"https://{host}/storemng/api/resources/{resource_path}",
+                                        headers={"X-Auth": admin_token}, verify=verify, timeout=FS_API_TIMEOUT)
+            r_filesdel.raise_for_status()
+            print(f"Deleted files for user: {user.username}")
+        except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
+            print(f"Delete files failed: {err}")
+            if 'r_filesdel' in locals() and hasattr(r_filesdel, 'text'):
+                print(f"Response: {r_filesdel.text}")
+            # Proceed with deleting the account even if folder deletion fails or was already deleted
 
     # Admin password required for user delete
     admin_pass = os.environ.get("STORE_ADMIN_PASSWORD", "")
