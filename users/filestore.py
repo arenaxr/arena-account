@@ -5,11 +5,24 @@ import json
 import os
 import re
 
-import jwt
 import requests
 from django.contrib.auth.models import User
 
 from .utils import get_rest_host
+
+# FILESTORE LOGIN FLOW:
+# 1. Attempt standard user login (`use_filestore_auth`) -> returns token on success.
+# 2. If login fails (403):
+#    a. Authenticate as Admin (`get_admin_login`).
+#    b. Check if the user exists in Filebrowser (`get_filestore_user_json`).
+#    c. If user exists: Password is out of sync. Force update password (`set_filestore_pass`).
+#    d. If user does not exist: Create new user (`add_filestore_auth`).
+#
+# FILESTORE DELETE FLOW:
+# 1. Authenticate as Admin (`get_admin_login`).
+# 2. Find user ID in Filebrowser (`get_filestore_user_json`).
+# 3. If user ID is found: Delete user using Admin token and Admin password.
+# 4. If user ID is not found: Assume user is already deleted, return True.
 
 FS_API_TIMEOUT = 15  # 15 seconds
 
@@ -220,7 +233,7 @@ def set_filestore_pass(user: User, host, verify, admin_token, fs_user_json):
             print(f"Response: {r_userupd.text}")
         return None
 
-    fs_user_token, status = use_filestore_auth(user)
+    fs_user_token, status = get_filestore_token(get_user_login(user), host, verify)
     return fs_user_token
 
 
@@ -277,7 +290,7 @@ def add_filestore_auth(user: User, host, verify, admin_token):
     if user.is_staff:  # admin and staff get root scope
         set_filestore_scope(user)
 
-    fs_user_token, status = use_filestore_auth(user)
+    fs_user_token, status = get_filestore_token(get_user_login(user), host, verify)
     return fs_user_token
 
 
@@ -351,26 +364,14 @@ def delete_filestore_user(user: User):
     admin_token, status = get_filestore_token(admin_login, host, verify)
     if not admin_token:
         return False
-    # find user
-    fs_user_token, status = use_filestore_auth(user)
+    # find the user's filebrowser ID
+    fs_user_json = get_filestore_user_json(user, host, verify, admin_token)
 
-    # Even if they can't login, we might still find them as admin to delete them
-    user_id_to_delete = None
-    if fs_user_token:
-         try:
-            payload = jwt.decode(fs_user_token, options={"verify_signature": False})
-            user_id_to_delete = payload['user']['id']
-         except Exception:
-             pass
+    if not fs_user_json:
+        print(f"delete_filestore_user: User '{user.username}' does not exist in filestore (checked admin list), returning true.")
+        return True
 
-    if not user_id_to_delete:
-         # Fallback to lookup by admin if user token invalid/missing
-         fs_user_json = get_filestore_user_json(user, host, verify, admin_token)
-         if fs_user_json:
-             user_id_to_delete = fs_user_json['id']
-         else:
-             print(f"delete_filestore_user: User '{user.username}' does not exist in filestore (checked admin list), returning true.")
-             return True
+    user_id_to_delete = fs_user_json['id']
 
     # Admin password required for user delete
     admin_pass = os.environ.get("STORE_ADMIN_PASSWORD", "")
