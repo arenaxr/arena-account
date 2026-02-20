@@ -11,9 +11,8 @@ from users.models import (
     SCENE_VIDEO_CONF_DEF,
     Scene,
 )
-
-
 from users.persist_db import get_persist_db
+
 
 def setup_databases():
     # Force db connection
