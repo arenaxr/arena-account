@@ -1,6 +1,17 @@
 # Changelog
 
 
+## [2.3.0](https://github.com/arenaxr/arena-account/compare/v2.2.0...v2.3.0) (2026-02-21)
+
+
+### Features
+
+* **api:** upgrade endpoints from DRF to Ninja apis ([41e3f11](https://github.com/arenaxr/arena-account/commit/41e3f11e64585d86d33b3105cad20ad80a3a32ba))
+* **api:** upgrade endpoints from DRF to Ninja apis ([41e3f11](https://github.com/arenaxr/arena-account/commit/41e3f11e64585d86d33b3105cad20ad80a3a32ba))
+* **api:** upgrade endpoints from DRF to Ninja apis ([d140eb8](https://github.com/arenaxr/arena-account/commit/d140eb8fb873c4bf3c8ce74f1a5420ffb85fb6d1))
+* **fs:** add filestore check to /health api check ([9aa92c7](https://github.com/arenaxr/arena-account/commit/9aa92c7a5902e4ad34b04ce6ccda9ca562a42cd4))
+* **health:** add health tests for SQLite and Mongo ([4314496](https://github.com/arenaxr/arena-account/commit/4314496bd4688a9866d87e74d7f3af4b724b3544))
+
 ## [2.2.0](https://github.com/arenaxr/arena-account/compare/v2.1.2...v2.2.0) (2026-02-05)
 
 
