@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django.db import connection
 from django.http import HttpResponse, JsonResponse
 from ninja import Form, NinjaAPI, Schema
-from users.filestore import login_filestore_user
+from users.filestore import get_filestore_health, login_filestore_user
 from users.models import Scene
 from users.mqtt import ANON_REGEX, CLIENT_REGEX, generate_arena_token
 from users.persist_db import get_persist_db
@@ -69,6 +69,7 @@ class HealthSchema(Schema):
     result: str
     sqlite_status: str
     mongo_status: str
+    filestore_status: str
 
 
 class StoreLoginSchema(Schema):
@@ -255,10 +256,16 @@ def health_state(request):
     except Exception:
         mongo_status = "unhealthy"
 
-    if sqlite_status == "healthy" and mongo_status == "healthy":
-        return 200, {"result": "success", "sqlite_status": sqlite_status, "mongo_status": mongo_status}
+    # Filestore Check
+    if get_filestore_health():
+        filestore_status = "healthy"
     else:
-        return 503, {"result": "failure", "sqlite_status": sqlite_status, "mongo_status": mongo_status}
+        filestore_status = "unhealthy"
+
+    if sqlite_status == "healthy" and mongo_status == "healthy" and filestore_status == "healthy":
+        return 200, {"result": "success", "sqlite_status": sqlite_status, "mongo_status": mongo_status, "filestore_status": filestore_status}
+    else:
+        return 503, {"result": "failure", "sqlite_status": sqlite_status, "mongo_status": mongo_status, "filestore_status": filestore_status}
 
 
 @router.api_operation(["GET", "POST"], "/my_namespaces", response={200: List[NamespaceSchema], 403: ErrorSchema, 426: ErrorSchema})
