@@ -57,7 +57,9 @@ def get_fs_password(user: User):
     Returns:
         password (string): The generated password.
     """
-    secret = os.environ.get("SECRET_KEY", "django-insecure-secret")
+    secret = os.environ.get("SECRET_KEY")
+    if not secret:
+        raise ValueError("SECRET_KEY environment variable is required but not set.")
 
     # Create HMAC using the secret key and username
     signature = hmac.new(
