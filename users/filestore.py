@@ -3,7 +3,6 @@ import hashlib
 import hmac
 import json
 import os
-import re
 
 import requests
 from django.contrib.auth.models import User
@@ -213,16 +212,14 @@ def set_filestore_pass(user: User, host, verify, admin_token, fs_user_json):
 
     admin_password = os.environ.get("STORE_ADMIN_PASSWORD", "")
 
-    # Minimal payload for password update
-    update_data = {
-         "password": get_fs_password(user),
-         "lockPassword": True,
-    }
+    # Filebrowser >= 2.14 requires the full user object for PUT requests
+    fs_user_json["password"] = get_fs_password(user)
+    fs_user_json["lockPassword"] = True
 
     fs_user = {
         "what": "user",
         "which": ["password", "lockPassword"],
-        "data": update_data,
+        "data": fs_user_json,
         "current_password": admin_password  # Add admin password to authorize the change
     }
 
