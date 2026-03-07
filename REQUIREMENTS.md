@@ -7,19 +7,19 @@
 ```mermaid
 graph TD
     subgraph account["arena-account (Django)"]
-        api["REST API\n(django-ninja)"]
-        views["Web Views\n(Django Templates)"]
-        mqttGen["JWT Generator\n(mqtt.py)"]
-        models["Models\n(Scene, Namespace, Device)"]
-        fileProxy["File Store Proxy\n(filestore.py)"]
+        api["REST API<br/>(django-ninja)"]
+        views["Web Views<br/>(Django Templates)"]
+        mqttGen["JWT Generator<br/>(mqtt.py)"]
+        models["Models<br/>(Scene, Namespace, Device)"]
+        fileProxy["File Store Proxy<br/>(filestore.py)"]
     end
 
     subgraph external["External Services"]
-        google["Google OAuth\n(Web / Desktop / Device)"]
-        sqlite[("SQLite\n(User DB)")]
-        mongo[("MongoDB\n(Scene Queries)")]
-        mqttBroker["Mosquitto\n(MQTT Broker)"]
-        filestore["File Store\n(filebrowser)"]
+        google["Google OAuth<br/>(Web / Desktop / Device)"]
+        sqlite[("SQLite<br/>(User DB)")]
+        mongo[("MongoDB<br/>(Scene Queries)")]
+        mqttBroker["Mosquitto<br/>(MQTT Broker)"]
+        filestore["File Store<br/>(filebrowser)"]
     end
 
     subgraph clients["Clients"]
