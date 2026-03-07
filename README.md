@@ -3,6 +3,11 @@ Django project user account management for the ARENA.
 
 **Dependencies**: `python3`, `pip3`, `virtualenv` (and `requirements.txt`; check if path in `Makefile` is correct)
 
+## Documentation
+- [Requirements & Architecture](REQUIREMENTS.md)
+- [Contributing](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md)
+
 ## Production Setup
 1. Setup a [Google Cloud App](https://developers.google.com/identity/protocols/oauth2) for your instance of the ARENA.
 2. Make sure to set up [Google Web OAuth](https://developers.google.com/identity/protocols/oauth2/web-server) for the ARENA web client as well as [Google Limited-Input OAuth](https://developers.google.com/identity/protocols/oauth2/limited-input-device) for the ARENA Python client.
