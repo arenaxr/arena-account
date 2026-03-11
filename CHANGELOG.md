@@ -1,6 +1,18 @@
 # Changelog
 
 
+## [2.3.1](https://github.com/arenaxr/arena-account/compare/v2.3.0...v2.3.1) (2026-03-11)
+
+
+### Bug Fixes
+
+* sync dependancies ([8c1d4ca](https://github.com/arenaxr/arena-account/commit/8c1d4ca928c48be5f8919f96810b02004e5d5a49))
+
+
+### Documentation
+
+* added requirements.md for maintainers ([09f5a6d](https://github.com/arenaxr/arena-account/commit/09f5a6de01d8d77d3637046c3cd8b3003d171540))
+
 ## [2.3.0](https://github.com/arenaxr/arena-account/compare/v2.2.0...v2.3.0) (2026-02-27)
 
 
