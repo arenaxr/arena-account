@@ -29,6 +29,6 @@ urlpatterns = [
 # configure user api version-based ninja api endpoints
 for version, api in apis.items():
     if version == "v1":
-        urlpatterns.insert(0, path("user/", api.urls))  # v1 default
+        urlpatterns.append(path("user/", api.urls))  # v1 default
     else:
-        urlpatterns.insert(1, path(f"user/{version}/", api.urls))
+        urlpatterns.append(path(f"user/{version}/", api.urls))
