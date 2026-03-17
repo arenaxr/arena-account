@@ -1,6 +1,13 @@
 # Changelog
 
 
+## [2.3.2](https://github.com/arenaxr/arena-account/compare/v2.3.1...v2.3.2) (2026-03-17)
+
+
+### Bug Fixes
+
+* **auth:** repair api fallthrough at /user ([91b820a](https://github.com/arenaxr/arena-account/commit/91b820a2b2be1768bbf3c666236a480a80db5c6a))
+
 ## [2.3.1](https://github.com/arenaxr/arena-account/compare/v2.3.0...v2.3.1) (2026-03-11)
 
 
