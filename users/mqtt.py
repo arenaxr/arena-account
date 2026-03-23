@@ -52,7 +52,7 @@ def generate_arena_token(
         private_key = privatefile.read()
     payload = {}
     payload["sub"] = username
-    payload["exp"] = datetime.datetime.utcnow() + duration
+    payload["exp"] = datetime.datetime.now(datetime.timezone.utc) + duration
     headers = None
 
     perm = {
