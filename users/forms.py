@@ -4,7 +4,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth.models import User
 
-from .models import Device, Namespace, Scene
+from .models import RE_NS, Device, Namespace, Scene
 from .persistence import read_persist_scenes_by_namespace
 
 
@@ -12,7 +12,7 @@ class SocialSignupForm(_SocialSignupForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if self.sociallogin and self.sociallogin.account.provider in ("google"):
+        if self.sociallogin and self.sociallogin.account.provider in ("google",):
             name = self.sociallogin.account.extra_data["email"].split("@")[0]
             self.fields["username"].widget.attrs.update({"value": name})
 
@@ -42,6 +42,40 @@ class UpdateStaffForm(forms.Form):
 class UpdateNamespaceForm(forms.Form):
     add = forms.CharField(label="add", required=False)
     edit = forms.CharField(label="edit", required=False)
+    namespacename = forms.CharField(label="namespacename", required=False)
+
+    def clean_namespacename(self):
+        import re
+
+        name = self.cleaned_data.get("namespacename", "").strip()
+        if not name:
+            return name
+        # validate namespace regex
+        if not re.match(RE_NS, name):
+            raise forms.ValidationError(
+                "Only alphanumeric, underscore, hyphen allowed."
+            )
+        # reject reserved words
+        if name in settings.USERNAME_RESERVED:
+            raise forms.ValidationError(
+                f"Sorry, '{name}' is a reserved word."
+            )
+        # reject if an existing user
+        if User.objects.filter(username=name).exists():
+            raise forms.ValidationError(
+                f"Sorry, '{name}' is already a user account."
+            )
+        # reject if namespace exists in permissions
+        if Namespace.objects.filter(name=name).exists():
+            raise forms.ValidationError(
+                f"Sorry, '{name}' is an existing permissions namespace."
+            )
+        # reject if namespace used in persist db
+        if len(read_persist_scenes_by_namespace([name])) > 0:
+            raise forms.ValidationError(
+                f"Sorry, '{name}' is a persistence namespace."
+            )
+        return name
 
 
 class UpdateSceneForm(forms.Form):
