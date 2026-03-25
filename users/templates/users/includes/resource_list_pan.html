@@ -7,8 +7,26 @@
         <thead class="thead-light">
             <tr>
                 <th scope="col" style="width: 1%;"><input type="checkbox" class="select-all" data-target="{{ list_type }}-checkbox" title="Select All" /></th>
-                <th scope="col">Name</th>
-                <th scope="col">{% if list_type == 'scene' %}Updated{% else %}Created{% endif %}</th>
+                <th scope="col">
+                    {% if allow_sort %}
+                    <a href="?{% if q %}q={{ q|urlencode }}&{% endif %}sort={% if sort_by == 'name_asc' %}name_desc{% else %}name_asc{% endif %}" class="text-dark text-decoration-none">
+                        Name
+                        {% if sort_by == 'name_asc' %}<i class="fas fa-sort-up"></i>{% elif sort_by == 'name_desc' %}<i class="fas fa-sort-down"></i>{% else %}<i class="fas fa-sort text-muted" style="opacity: 0.3;"></i>{% endif %}
+                    </a>
+                    {% else %}
+                    Name
+                    {% endif %}
+                </th>
+                <th scope="col">
+                    {% if allow_sort %}
+                    <a href="?{% if q %}q={{ q|urlencode }}&{% endif %}sort={% if sort_by == 'updated_desc' %}updated_asc{% else %}updated_desc{% endif %}" class="text-dark text-decoration-none">
+                        {% if list_type == 'scene' %}Updated{% else %}Created{% endif %}
+                        {% if sort_by == 'updated_asc' %}<i class="fas fa-sort-up"></i>{% elif sort_by == 'updated_desc' %}<i class="fas fa-sort-down"></i>{% else %}<i class="fas fa-sort text-muted" style="opacity: 0.3;"></i>{% endif %}
+                    </a>
+                    {% else %}
+                    {% if list_type == 'scene' %}Updated{% else %}Created{% endif %}
+                    {% endif %}
+                </th>
 
                 {% if list_type == 'device' %}
                 <th scope="col" style="width: 50%;">Description</th>
@@ -17,7 +35,16 @@
                 {% if list_type == 'scene' %}
                 {% if user.is_staff %}
                 <!--persisted in db-->
-                <th scope="col" title="Persisted Objects" class="text-end"><i class="fas fa-database"></i></th>
+                <th scope="col" title="Sort by Persisted Objects" class="text-end">
+                    {% if allow_sort %}
+                    <a href="?{% if q %}q={{ q|urlencode }}&{% endif %}sort={% if sort_by == 'persist_desc' %}persist_asc{% else %}persist_desc{% endif %}" class="text-dark text-decoration-none">
+                        <i class="fas fa-database"></i>
+                        {% if sort_by == 'persist_asc' %}<i class="fas fa-sort-up"></i>{% elif sort_by == 'persist_desc' %}<i class="fas fa-sort-down"></i>{% else %}<i class="fas fa-sort text-muted" style="opacity: 0.3;"></i>{% endif %}
+                    </a>
+                    {% else %}
+                    <i class="fas fa-database"></i>
+                    {% endif %}
+                </th>
                 {% endif %}
                 <th scope="col" title="Public Read" class="text-center"><i class="fas fa-eye"></i></th>
                 <th scope="col" title="Public Write" class="text-center"><i class="fas fa-pencil-alt"></i></th>

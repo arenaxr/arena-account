@@ -25,7 +25,7 @@
 
             <form id="bulk-form-namespace" action="{% url 'users:profile_bulk_namespace' %}" method="POST">
                 {% csrf_token %}
-                {% include 'users/includes/resource_list_pan.html' with items=page_obj list_type='namespace' user=user %}
+                {% include 'users/includes/resource_list_pan.html' with items=page_obj list_type='namespace' user=user allow_sort=True %}
             </form>
 
             <!-- Pagination -->

@@ -25,7 +25,7 @@
 
             <form id="bulk-form-scene" action="{% url 'users:profile_bulk_scene' %}" method="POST">
                 {% csrf_token %}
-                {% include 'users/includes/resource_list_pan.html' with items=page_obj list_type='scene' user=user %}
+                {% include 'users/includes/resource_list_pan.html' with items=page_obj list_type='scene' user=user allow_sort=True %}
             </form>
 
             <!-- Pagination -->

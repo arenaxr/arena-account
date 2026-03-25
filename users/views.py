@@ -527,6 +527,22 @@ def profile_scenes(request):
     if q:
         all_scenes = [sc for sc in all_scenes if q.lower() in sc.get('name', '').lower()]
 
+    sort_by = request.GET.get('sort', 'updated_desc')
+    if sort_by == 'name_asc':
+        all_scenes = sorted(all_scenes, key=lambda x: x.get('name', '').lower())
+    elif sort_by == 'name_desc':
+        all_scenes = sorted(all_scenes, key=lambda x: x.get('name', '').lower(), reverse=True)
+    elif sort_by == 'updated_asc':
+        min_dt = timezone.make_aware(datetime.datetime.min)
+        all_scenes = sorted(all_scenes, key=lambda x: x.get("updated_at") or min_dt)
+    elif sort_by == 'persist_desc':
+        all_scenes = sorted(all_scenes, key=lambda x: x.get("persist_count", 0), reverse=True)
+    elif sort_by == 'persist_asc':
+        all_scenes = sorted(all_scenes, key=lambda x: x.get("persist_count", 0))
+    elif sort_by == 'updated_desc':
+        min_dt = timezone.make_aware(datetime.datetime.min)
+        all_scenes = sorted(all_scenes, key=lambda x: x.get("updated_at") or min_dt, reverse=True)
+
     paginator = Paginator(all_scenes, 25)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -534,7 +550,7 @@ def profile_scenes(request):
     return render(
         request,
         "users/profile_scenes.html",
-        {"page_obj": page_obj, "q": q}
+        {"page_obj": page_obj, "q": q, "sort_by": sort_by}
     )
 
 def profile_devices(request):
@@ -544,6 +560,18 @@ def profile_devices(request):
     if q:
         all_devices = [d for d in all_devices if q.lower() in d.name.lower()]
 
+    sort_by = request.GET.get('sort', 'updated_desc')
+    if sort_by == 'name_asc':
+        all_devices = sorted(all_devices, key=lambda d: d.name.lower() if d.name else '')
+    elif sort_by == 'name_desc':
+        all_devices = sorted(all_devices, key=lambda d: d.name.lower() if d.name else '', reverse=True)
+    elif sort_by == 'updated_asc':
+        min_dt = timezone.make_aware(datetime.datetime.min)
+        all_devices = sorted(all_devices, key=lambda d: d.creation_date or min_dt)
+    elif sort_by == 'updated_desc':
+        min_dt = timezone.make_aware(datetime.datetime.min)
+        all_devices = sorted(all_devices, key=lambda d: d.creation_date or min_dt, reverse=True)
+
     paginator = Paginator(all_devices, 25)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -551,7 +579,7 @@ def profile_devices(request):
     return render(
         request,
         "users/profile_devices.html",
-        {"page_obj": page_obj, "q": q}
+        {"page_obj": page_obj, "q": q, "sort_by": sort_by}
     )
 
 def profile_namespaces(request):
@@ -562,6 +590,18 @@ def profile_namespaces(request):
     if q:
         all_namespaces = [ns for ns in all_namespaces if q.lower() in ns.get('name', '').lower()]
 
+    sort_by = request.GET.get('sort', 'updated_desc')
+    if sort_by == 'name_asc':
+        all_namespaces = sorted(all_namespaces, key=lambda x: x.get('name', '').lower())
+    elif sort_by == 'name_desc':
+        all_namespaces = sorted(all_namespaces, key=lambda x: x.get('name', '').lower(), reverse=True)
+    elif sort_by == 'updated_asc':
+        min_dt = timezone.make_aware(datetime.datetime.min)
+        all_namespaces = sorted(all_namespaces, key=lambda x: x.get("updated_at") or min_dt)
+    elif sort_by == 'updated_desc':
+        min_dt = timezone.make_aware(datetime.datetime.min)
+        all_namespaces = sorted(all_namespaces, key=lambda x: x.get("updated_at") or min_dt, reverse=True)
+
     paginator = Paginator(all_namespaces, 25)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -569,7 +609,7 @@ def profile_namespaces(request):
     return render(
         request,
         "users/profile_namespaces.html",
-        {"page_obj": page_obj, "q": q}
+        {"page_obj": page_obj, "q": q, "sort_by": sort_by}
     )
 
 
