@@ -315,7 +315,7 @@ def list_my_scenes(request, id_token: str = Form(None)):
     return 200, sorted(list(merged_map.values()), key=lambda x: x["name"])
 
 
-@router.api_operation(["GET", "POST", "PUT", "DELETE"], "/scenes/{path:scene_name}", response={200: SceneSchema, 201: SceneSchema, 200: MessageSchema, 400: ErrorSchema, 404: ErrorSchema})
+@router.api_operation(["GET", "POST", "PUT", "DELETE"], "/scenes/{path:scene_name}", response={200: SceneSchema, 201: SceneSchema, 400: ErrorSchema, 404: ErrorSchema})
 def scene_detail(request, scene_name: str, payload: SceneSchema = None):
     # check permissions model for namespace
     try:
@@ -382,8 +382,9 @@ def scene_detail(request, scene_name: str, payload: SceneSchema = None):
         return 400, {"error": "Invalid parameters"}
 
     if request.method == "DELETE":
+        name = scene.name
         scene.delete()
-        return 200, {"message": "Scene was deleted successfully!"}
+        return 200, serialize_scene(Scene(name=name))
 
     return 400, {"error": "Method not allowed"}
 

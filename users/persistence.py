@@ -43,10 +43,11 @@ def read_persist_ns_all():
             "_id": {
                 "namespace": "$namespace",
             },
-            "last_updated": {"$max": "$updatedAt"}
+            "last_updated": {"$max": "$updatedAt"},
+            "count": {"$sum": 1}
         }
     }])
-    return {doc['_id']['namespace']: doc.get('last_updated') for doc in arenaobjects}
+    return {doc['_id']['namespace']: {'last_updated': doc.get('last_updated'), 'count': doc.get('count', 0)} for doc in arenaobjects}
 
 
 def read_persist_scenes_all():
