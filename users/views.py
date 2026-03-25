@@ -10,6 +10,9 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
+from django.core.paginator import Paginator
+import datetime
+from django.utils import timezone
 
 from .filestore import delete_filestore_user, get_filestore_health, set_filestore_scope
 from .forms import (
@@ -384,7 +387,7 @@ def get_my_devices(user):
             devices = Device.objects.filter(name__startswith=f"{user.username}/")
     public_devices = Device.objects.filter(name__startswith=f"{PUBLIC_NAMESPACE}/")
     # merge 'my' namespaced devices and extras devices granted
-    merged_devices = (devices | public_devices).distinct().order_by("name")
+    merged_devices = (devices | public_devices).distinct().order_by("-creation_date")
     return merged_devices
 
 
@@ -402,10 +405,7 @@ def device_edit_permission(user, device):
 
 def user_profile(request):
     """
-    User Profile listing page GET handler.
-    - Shows Admin functions, based on superuser status.
-    - Shows scenes that the user has permissions to edit and a button to edit them.
-    - Handles account deletes.
+    User Profile Dashboard GET handler.
     """
     version = getattr(request, "version", SUPPORTED_API_VERSIONS[0])
     if version == API_V1:
@@ -440,9 +440,6 @@ def user_profile(request):
                 else:
                     messages.success(request, f"Removed filestore directory: users/{request.user.username}")
 
-            # Be careful of foreign keys, in that case this is suggested:
-            # user.is_active = False
-            # user.save()
             try:
                 # delete user account
                 user = request.user
@@ -452,19 +449,36 @@ def user_profile(request):
             except User.DoesNotExist:
                 messages.error(request, "Unable to complete account delete.")
 
-    namespaces = get_my_edit_namespaces(request.user, version)
-    scenes = get_my_edit_scenes(request.user, version)
-    devices = get_my_devices(request.user)
+    all_namespaces = get_my_edit_namespaces(request.user, version)
+    all_scenes = get_my_edit_scenes(request.user, version)
+    all_devices = get_my_devices(request.user)
+
+    # Dashboard slices -> "Recent 10" or just standard 10
+    recent_namespaces = all_namespaces[:10]
+    recent_scenes = all_scenes[:10]
+
+    # Sort devices query set
+    all_devices_list = list(all_devices)
+    recent_devices = all_devices_list[:10]
+
     staff = None
     if request.user.is_staff:  # admin/staff
         staff = User.objects.filter(is_staff=True)
+
     return render(
         request=request,
         template_name="users/user_profile.html",
-        context={"user": request.user, "namespaces": namespaces, "scenes": scenes,
-                 "devices": devices, "staff": staff},
+        context={
+            "user": request.user,
+            "namespaces": recent_namespaces,
+            "scenes": recent_scenes,
+            "devices": recent_devices,
+            "staff": staff,
+            "ns_count": len(all_namespaces),
+            "sc_count": len(all_scenes),
+            "dev_count": len(all_devices_list)
+        },
     )
-
 
 def login_callback(request):
     """
@@ -496,3 +510,170 @@ class SocialSignupView(SocialSignupViewDefault):
             "users/social_signup.html",
             {"form": social_form, "account": self.sociallogin.account},
         )
+
+
+def profile_scenes(request):
+    version = getattr(request, "version", SUPPORTED_API_VERSIONS[0])
+    all_scenes = get_my_edit_scenes(request.user, version)
+
+    q = request.GET.get('q', '')
+    if q:
+        all_scenes = [sc for sc in all_scenes if q.lower() in sc.get('name', '').lower()]
+
+    paginator = Paginator(all_scenes, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(
+        request,
+        "users/profile_scenes.html",
+        {"page_obj": page_obj, "q": q}
+    )
+
+def profile_devices(request):
+    all_devices = list(get_my_devices(request.user))
+
+    q = request.GET.get('q', '')
+    if q:
+        all_devices = [d for d in all_devices if q.lower() in d.name.lower()]
+
+    paginator = Paginator(all_devices, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(
+        request,
+        "users/profile_devices.html",
+        {"page_obj": page_obj, "q": q}
+    )
+
+def profile_namespaces(request):
+    version = getattr(request, "version", SUPPORTED_API_VERSIONS[0])
+    all_namespaces = get_my_edit_namespaces(request.user, version)
+
+    q = request.GET.get('q', '')
+    if q:
+        all_namespaces = [ns for ns in all_namespaces if q.lower() in ns.get('name', '').lower()]
+
+    paginator = Paginator(all_namespaces, 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(
+        request,
+        "users/profile_namespaces.html",
+        {"page_obj": page_obj, "q": q}
+    )
+
+
+from users.persistence import delete_persist_scene_objects
+from users.models import SCENE_PUBLIC_READ_DEF, SCENE_PUBLIC_WRITE_DEF, SCENE_ANON_USERS_DEF, SCENE_VIDEO_CONF_DEF, SCENE_USERS_DEF
+
+def profile_bulk_scene(request):
+    if request.method != "POST" or not request.user.is_authenticated:
+        return JsonResponse({"error": "Forbidden"}, status=HTTPStatus.FORBIDDEN)
+    action = request.POST.get("action")
+    items = request.POST.getlist("selected_items")
+    if not items:
+        # single inline delete case passes single item same way
+        item = request.POST.get("selected_item")
+        if item:
+            items = [item]
+
+    deleted_count = 0
+    cleared_count = 0
+    reset_count = 0
+
+    for pk in items:
+        if not scene_edit_permission(user=request.user, scene=pk):
+            continue
+
+        namespace, sceneId = pk.split("/")
+
+        if action in ("bulk_delete", "delete_single"):
+            # delete scene perms
+            try:
+                scene = Scene.objects.get(name=pk)
+                scene.delete()
+                deleted_count += 1
+            except Scene.DoesNotExist:
+                pass
+            # delete persist objects
+            delete_persist_scene_objects(namespace, sceneId)
+            cleared_count += 1
+
+        elif action == "bulk_clear_objects":
+            if delete_persist_scene_objects(namespace, sceneId):
+                cleared_count += 1
+
+        elif action == "bulk_reset_perms":
+            try:
+                scene = Scene.objects.get(name=pk)
+                scene.public_read = SCENE_PUBLIC_READ_DEF
+                scene.public_write = SCENE_PUBLIC_WRITE_DEF
+                scene.anonymous_users = SCENE_ANON_USERS_DEF
+                scene.video_conference = SCENE_VIDEO_CONF_DEF
+                scene.users = SCENE_USERS_DEF
+                scene.editors.clear()
+                scene.viewers.clear()
+                scene.save()
+                reset_count += 1
+            except Scene.DoesNotExist:
+                pass
+
+    if deleted_count: messages.success(request, f"Deleted {deleted_count} scene(s).")
+    if cleared_count and action == "bulk_clear_objects": messages.success(request, f"Cleared persisted objects for {cleared_count} scene(s).")
+    if reset_count: messages.success(request, f"Reset permissions for {reset_count} scene(s).")
+
+    # Return to originally requested page if referer exists, else profile
+    referer = request.headers.get('referer')
+    return redirect(referer if referer else "users:user_profile")
+
+
+def profile_bulk_device(request):
+    if request.method != "POST" or not request.user.is_authenticated:
+        return JsonResponse({"error": "Forbidden"}, status=HTTPStatus.FORBIDDEN)
+    action = request.POST.get("action")
+    items = request.POST.getlist("selected_items")
+
+    deleted_count = 0
+    for pk in items:
+        if not device_edit_permission(user=request.user, device=pk):
+            continue
+        if action in ("bulk_delete", "delete_single"):
+            try:
+                device = Device.objects.get(name=pk)
+                device.delete()
+                deleted_count += 1
+            except Device.DoesNotExist:
+                pass
+
+    if deleted_count: messages.success(request, f"Deleted {deleted_count} device(s).")
+
+    referer = request.headers.get('referer')
+    return redirect(referer if referer else "users:user_profile")
+
+
+def profile_bulk_namespace(request):
+    if request.method != "POST" or not request.user.is_authenticated:
+        return JsonResponse({"error": "Forbidden"}, status=HTTPStatus.FORBIDDEN)
+    action = request.POST.get("action")
+    items = request.POST.getlist("selected_items")
+
+    deleted_count = 0
+    for pk in items:
+        if not namespace_edit_permission(user=request.user, namespace=pk):
+            continue
+        if action in ("bulk_delete", "delete_single"):
+            try:
+                ns = Namespace.objects.get(name=pk)
+                ns.delete()
+                deleted_count += 1
+            except Namespace.DoesNotExist:
+                pass
+            delete_persist_namespace_objects(pk)
+
+    if deleted_count: messages.success(request, f"Deleted {deleted_count} namespace(s).")
+
+    referer = request.headers.get('referer')
+    return redirect(referer if referer else "users:user_profile")

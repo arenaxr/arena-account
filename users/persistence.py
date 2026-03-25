@@ -7,7 +7,24 @@ from datetime import datetime
 
 from bson import ObjectId
 
-from .models import get_arenaobjects_collection
+# assign accessible model for persist collection
+def get_arenaobjects_collection():
+    from .persist_db import get_persist_db
+    return get_persist_db()['arenaobjects']
+
+# arenaobjects schema reference:
+# https://github.com/arenaxr/arena-persist/blob/master/server.js#L30-L43
+# object_id: {type: String, required: true, index: true},
+# type: {type: String, required: true, index: true},
+# attributes: {type: Object, required: true, default: {}},
+# expireAt: {type: Date, expires: 0},
+# realm: {type: String, required: true, index: true},
+# namespace: {type: String, required: true, index: true, default: 'public'},
+# sceneId: {type: String, required: true, index: true},
+# private: {type: Boolean},
+# program_id: {type: String},
+# createdAt: {type: Date}, // via timestamps: true
+# updatedAt: {type: Date}, // via timestamps: true
 
 
 class MongoJSONEncoder(json.JSONEncoder):
@@ -24,11 +41,11 @@ def read_persist_ns_all():
         "$group": {
             "_id": {
                 "namespace": "$namespace",
-                }
-            }
+            },
+            "last_updated": {"$max": "$updatedAt"}
         }
-    ])
-    return [doc['_id']['namespace'] for doc in arenaobjects]
+    }])
+    return {doc['_id']['namespace']: doc.get('last_updated') for doc in arenaobjects}
 
 
 def read_persist_scenes_all():
@@ -38,18 +55,20 @@ def read_persist_scenes_all():
                 "_id": {
                     "namespace": "$namespace",
                     "sceneId": "$sceneId",
-                }
+                },
+                "last_updated": {"$max": "$updatedAt"}
             }
         },
         {
             "$project": {
                 "name": {
                     "$concat": ["$_id.namespace", "/", "$_id.sceneId"]
-                }
+                },
+                "last_updated": 1
             }
         }
     ])
-    return [doc['name'] for doc in arenaobjects]
+    return {doc['name']: doc.get('last_updated') for doc in arenaobjects}
 
 
 def read_persist_scenes_by_namespace(namespaces):
@@ -64,18 +83,20 @@ def read_persist_scenes_by_namespace(namespaces):
                 "_id": {
                     "namespace": "$namespace",
                     "sceneId": "$sceneId",
-                }
+                },
+                "last_updated": {"$max": "$updatedAt"}
             }
         },
         {
             "$project": {
                 "name": {
                     "$concat": ["$_id.namespace", "/", "$_id.sceneId"]
-                }
+                },
+                "last_updated": 1
             }
         }
     ])
-    return [doc['name'] for doc in arenaobjects]
+    return {doc['name']: doc.get('last_updated') for doc in arenaobjects}
 
 
 def read_persist_scene_objects(namespace, scene):

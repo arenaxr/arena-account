@@ -4,85 +4,91 @@
 
 {% include 'users/includes/messages.html' %}
 
-<!--Profile-->
+<!--Profile Dashboard-->
 <div class="container-fluid">
     <div class="row d-flex justify-content-center align-items-center min-vh-75">
         <div class="col-md-10 bg-white p-5">
 
             {% if user.is_authenticated %}
-            <h1>User Profile</h1>
-            <table>
-                <tr>
-                    <td><b>Username: </b></td>
-                    <td>{{ user.get_username }}</td>
-                </tr>
-                <tr>
-                    <td><b>Name: </b></td>
-                    <td>{{ user.first_name }} {{ user.last_name }}</td>
-                </tr>
-                <tr>
-                    <td><b>Email: </b></td>
-                    <td>{{ user.email }}</td>
-                </tr>
-                <tr>
-                    <td><b>Role: </b></td>
-                    <td>
-                        {% if user.is_superuser %} Admin
-                        {% elif user.is_staff %} Staff
-                        {% elif user.is_authenticated %} User
-                        {% else %} Anonymous
-                        {% endif %}
-                    </td>
-                </tr>
-            </table>
-            <br>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>User Profile Dashboard</h1>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-sm-3"><b>Username: </b><br/>{{ user.get_username }}</div>
+                        <div class="col-sm-3"><b>Name: </b><br/>{{ user.first_name }} {{ user.last_name }}</div>
+                        <div class="col-sm-3"><b>Email: </b><br/>{{ user.email }}</div>
+                        <div class="col-sm-3"><b>Role(s): </b><br/>
+                            <div class="mt-1">
+                                {% if user.is_superuser %}<span class="badge bg-danger text-white mr-1">Admin</span>{% endif %}
+                                {% if user.is_staff %}<span class="badge bg-warning text-dark mr-1">Staff</span>{% endif %}
+                                {% if user.is_authenticated %}<span class="badge bg-primary text-white mr-1">User</span>{% endif %}
+                                {% for group in user.groups.all %}
+                                <span class="badge bg-info text-dark mr-1">{{ group.name }}</span>
+                                {% endfor %}
+                                {% if not user.is_authenticated %}<span class="text-muted">Anonymous</span>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {% if user.is_superuser %}
             <!-- Admins can set or remove user as Staff -->
-            <h5>Admin Functions:</h5>
-            <p>
-                <label for="username">Django:</label>
-                <a id="adminlink" href="{{request.scheme}}://{{request.get_host}}/user/admin"
-                    class="btn btn-secondary btn-sm">Admin Page</a>
-            </p>
-            <form action="" id="form_admin" method="POST">
-                <p>
-                    <label for="username">Search:</label>
-                    <input type="text" id="username" placeholder="username"
-                        pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){1,38}$">
-                    <a id="searchlink" href="{{request.scheme}}://{{request.get_host}}/user/admin/auth/user"
-                        class="btn btn-secondary btn-sm">Search Users</a>
-                </p>
-            </form>
-            <form action="profile_update_staff" method="POST">
-                {% csrf_token %}
-                <p>
-                    <label for="username">Staff:</label>
-                    <input type="text" name="staff_username" placeholder="username"
-                        pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){1,38}$">
-                    <button type="submit" class="btn btn-secondary btn-sm" name="is_staff" value="true">Add
-                        Staff</button>
-                    <button type="submit" class="btn btn-secondary btn-sm" name="is_staff" value="false">Remove
-                        Staff</button><br>
-                <ul>
-                    <li><small><cite>Add Staff/Remove Staff</cite> will allow/disallow write access to public Scenes
-                            and public File Store.</small></li>
-                    <li><small>Using Admin Page to set <cite>Staff status</cite> may not allow write access to
-                            public File Store correctly.</small></li>
-                </ul>
-                </p>
-            </form>
-            <script type="text/javascript">
-                var aSearch = document.getElementById('searchlink');
-                var inputSearch = document.getElementById('username');
-                inputSearch.onchange = inputSearch.onkeyup = function() {
-                    aSearch.search = '?q=' + encodeURIComponent(inputSearch.value);
-                    document.getElementById("form_admin").action = aSearch.href;
-                };
-            </script>
+            <div class="card mb-4 border-info">
+                <div class="card-header bg-info text-white">Admin Functions</div>
+                <div class="card-body">
+                    <p>
+                        <label for="username">Django:</label>
+                        <a id="adminlink" href="{{request.scheme}}://{{request.get_host}}/user/admin"
+                            class="btn btn-secondary btn-sm">Admin Page</a>
+                    </p>
+                    <form action="" id="form_admin" method="POST">
+                        <p>
+                            <label for="username">Search:</label>
+                            <input type="text" id="username" placeholder="username"
+                                pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){1,38}$">
+                            <a id="searchlink" href="{{request.scheme}}://{{request.get_host}}/user/admin/auth/user"
+                                class="btn btn-secondary btn-sm">Search Users</a>
+                        </p>
+                    </form>
+                    <form action="profile_update_staff" method="POST">
+                        {% csrf_token %}
+                        <p>
+                            <label for="username">Staff:</label>
+                            <input type="text" name="staff_username" placeholder="username"
+                                pattern="^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){1,38}$">
+                            <button type="submit" class="btn btn-secondary btn-sm" name="is_staff" value="true">Add
+                                Staff</button>
+                            <button type="submit" class="btn btn-secondary btn-sm" name="is_staff" value="false">Remove
+                                Staff</button><br>
+                        <ul>
+                            <li><small><cite>Add Staff/Remove Staff</cite> will allow/disallow write access to public Scenes
+                                    and public File Store.</small></li>
+                            <li><small>Using Admin Page to set <cite>Staff status</cite> may not allow write access to
+                                    public File Store correctly.</small></li>
+                        </ul>
+                        </p>
+                    </form>
+                    <script type="text/javascript">
+                        var aSearch = document.getElementById('searchlink');
+                        var inputSearch = document.getElementById('username');
+                        if (inputSearch) {
+                            inputSearch.onchange = inputSearch.onkeyup = function() {
+                                aSearch.search = '?q=' + encodeURIComponent(inputSearch.value);
+                                document.getElementById("form_admin").action = aSearch.href;
+                            };
+                        }
+                    </script>
+                </div>
+            </div>
             {% endif %}
+
             <!-- Staff users can see list of other staff users -->
             {% if user.is_staff and staff %}
-            <h5>Staff Users:</h5>
+            <h5 class="mt-4">Staff Users:</h5>
             <table class="table table-sm table-hover">
                 <thead class="thead-light">
                     <th>Username</th>
@@ -98,16 +104,49 @@
                     </tr>
                     {% endfor %}
             </table>
-            <br>
             {% endif %}
+
+            <h3 class="mb-3 mt-4">Overview</h3>
+            <!-- Dashboard Cards for Total Counts -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card text-center shadow-sm">
+                        <div class="card-body">
+                            <h2 class="card-title text-primary"><i class="fas fa-cube"></i> {{ sc_count }}</h2>
+                            <h5 class="card-text text-muted">Scenes</h5>
+                            <a href="{% url 'users:profile_scenes' %}" class="btn btn-outline-primary btn-sm mt-2">Manage All</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center shadow-sm">
+                        <div class="card-body">
+                            <h2 class="card-title text-success"><i class="fas fa-microchip"></i> {{ dev_count }}</h2>
+                            <h5 class="card-text text-muted">Devices</h5>
+                            <a href="{% url 'users:profile_devices' %}" class="btn btn-outline-success btn-sm mt-2">Manage All</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center shadow-sm">
+                        <div class="card-body">
+                            <h2 class="card-title text-info"><i class="fas fa-folder"></i> {{ ns_count }}</h2>
+                            <h5 class="card-text text-muted">Namespaces</h5>
+                            <a href="{% url 'users:profile_namespaces' %}" class="btn btn-outline-info btn-sm mt-2">Manage All</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-5">
+
             <!-- List namespaces user can edit, and links -->
-            <h5>Namespace Permissions
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5>Last Updated Namespaces</h5>
                 <button id="button_expand_add_namespace" type="button" title="Open: Add Namespace"
-                    class="btn btn-sm btn-primary" data-bs-toggle="button" aria-pressed="false" autocomplete="off"
-                    {% if not user.is_staff %} disabled {% endif %}>
-                    +
-                </button>
-            </h5>
+                    class="btn btn-sm btn-outline-info" data-bs-toggle="button" aria-pressed="false" autocomplete="off"
+                    {% if not user.is_staff %} disabled {% endif %}><i class="fas fa-plus"></i> Add</button>
+            </div>
             <form action="profile_update_namespace" method="POST">
                 {% csrf_token %}
                 <div id="div_add_namespace" style="display: none;" class="input-group mb-3">
@@ -119,61 +158,22 @@
                     </div>
                 </div>
             </form>
-            {% if namespaces %}
-            <table class="table table-sm table-hover">
-                <thead class="thead-light">
-                    <th>Namespace Name</th>
-                    <th>User Account</th>
-                    <th>Editors</th>
-                    <th>Viewers</th>
-                    <th></th>
-                </thead>
-                <tbody>
-                    {% for namespace in namespaces %}
-                    <form action="profile_update_namespace" method="POST">
-                        {% csrf_token %}
-                        <tr>
-                            <!--name-->
-                            <td><b>{{ namespace.name }}</b>
-                            </td>
-                            <!--user account-->
-                            <td>
-                                {% if namespace.account %}
-                                <i class="fas fa-check"></i>
-                                {% else %}
-                                <i class="fas fa-times"></i>
-                                {% endif %}
-                            </td>
-                            <!--editors-->
-                            <td>
-                                {{ namespace.editors|join:", " }}
-                            </td>
-                            <!--viewers-->
-                            <td>
-                                {{ namespace.viewers|join:", " }}
-                            </td>
-                            <td><button type="submit" class="btn btn-secondary btn-sm" name="edit"
-                                    value="{{ namespace.name }}">Edit</button></td>
-                            </td>
-                        </tr>
-                    </form>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <table class="table table-sm table-hover">
-                <tr>
-                    <td>No namespaces</td>
-                </tr>
-            </table>
+            <form id="bulk-form-namespace" action="{% url 'users:profile_bulk_namespace' %}" method="POST">
+                {% csrf_token %}
+                {% include 'users/includes/resource_list_pan.html' with items=namespaces list_type='namespace' user=user %}
+            </form>
+            {% if ns_count > 10 %}
+            <div class="text-right d-flex justify-content-end mb-4"><a href="{% url 'users:profile_namespaces' %}">View all {{ ns_count }} namespaces &raquo;</a></div>
             {% endif %}
-            <br>
+
+            <hr class="my-5">
+
             <!-- List scenes user can edit, and links -->
-            <h5>Scene Permissions <button id="button_expand_add_scene" type="button" title="Open: Add Scene"
-                    class="btn btn-sm btn-primary" data-bs-toggle="button" aria-pressed="false" autocomplete="off">
-                    +
-                </button>
-            </h5>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5>Last Updated Scenes</h5>
+                <button id="button_expand_add_scene" type="button" title="Open: Add Scene"
+                    class="btn btn-sm btn-outline-primary" data-bs-toggle="button" aria-pressed="false" autocomplete="off"><i class="fas fa-plus"></i> Add</button>
+            </div>
             <form action="profile_update_scene" method="POST">
                 {% csrf_token %}
                 <div id="div_add_scene" style="display: none;" class="input-group mb-3">
@@ -188,115 +188,22 @@
                     </div>
                 </div>
             </form>
-            {% if scenes %}
-            <table class="table table-sm table-hover">
-                <thead class="thead-light">
-                    <th>Scene Name (view)</th>
-                    {% if user.is_staff %}
-                    <th>Persisted Objects</th>
-                    {% endif %}
-                    <th>Public Read</th>
-                    <th>Public Write</th>
-                    <th>User Interaction</th>
-                    <th>Anonymous Users</th>
-                    <th>Video Conference</th>
-                    <th>Editors</th>
-                    <th>Viewers</th>
-                    <th></th>
-                </thead>
-                <tbody>
-                    {% for scene in scenes %}
-                    <form action="profile_update_scene" method="POST">
-                        {% csrf_token %}
-                        <tr>
-                            <!--name-->
-                            <td><a
-                                    href="{{ request.scheme }}://{{ request.META.HTTP_HOST }}/{{ scene.name }}"><b>{{ scene.name }}</b></a>
-                            </td>
-                            {% if user.is_staff %}
-                            <!--persisted in db-->
-                            <td>
-                                {% if scene.persisted %}
-                                <i class="fas fa-check"></i>
-                                {% else %}
-                                <i class="fas fa-times"></i>
-                                {% endif %}
-                            </td>
-                            {% endif %}
-                            <!--public subscribe ok-->
-                            <td>
-                                {% if scene.public_read %}
-                                <i class="fas fa-check"></i>
-                                {% else %}
-                                <i class="fas fa-times"></i>
-                                {% endif %}
-                            </td>
-                            <!--public publish objects ok-->
-                            <td>
-                                {% if scene.public_write %}
-                                <i class="fas fa-check"></i>
-                                {% else %}
-                                <i class="fas fa-times"></i>
-                                {% endif %}
-                            </td>
-                            <!--user interaction ok-->
-                            <td>
-                                {% if scene.users %}
-                                <i class="fas fa-check"></i>
-                                {% else %}
-                                <i class="fas fa-times"></i>
-                                {% endif %}
-                            </td>
-                            <!--anonymous users ok-->
-                            <td>
-                                {% if scene.anonymous_users %}
-                                <i class="fas fa-check"></i>
-                                {% else %}
-                                <i class="fas fa-times"></i>
-                                {% endif %}
-                            </td>
-                            <!--video conferencing ok-->
-                            <td>
-                                {% if scene.video_conference %}
-                                <i class="fas fa-check"></i>
-                                {% else %}
-                                <i class="fas fa-times"></i>
-                                {% endif %}
-                            </td>
-                            <!--editors-->
-                            <td>
-                                {% if scene.public_write %}
-                                <span style="color:darkorange;font-weight:bolder;font-style:italic;">ALL USERS</span>
-                                {% else %}
-                                {{ scene.editors|join:", " }}
-                                {% endif %}
-                            </td>
-                            <!--viewers-->
-                            <td>
-                                {{ scene.viewers|join:", " }}
-                            </td>
-                            <td><button type="submit" class="btn btn-secondary btn-sm" name="edit"
-                                    value="{{ scene.name }}">Edit</button></td>
-                            </td>
-                        </tr>
-                    </form>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <table class="table table-sm table-hover">
-                <tr>
-                    <td>No scenes</td>
-                </tr>
-            </table>
+            <form id="bulk-form-scene" action="{% url 'users:profile_bulk_scene' %}" method="POST">
+                {% csrf_token %}
+                {% include 'users/includes/resource_list_pan.html' with items=scenes list_type='scene' user=user %}
+            </form>
+            {% if sc_count > 10 %}
+            <div class="text-right d-flex justify-content-end mb-4"><a href="{% url 'users:profile_scenes' %}">View all {{ sc_count }} scenes &raquo;</a></div>
             {% endif %}
-            <br>
+
+            <hr class="my-5">
+
             <!-- List devices user can edit, and links -->
-            <h5>Device Permissions <button id="button_expand_add_device" type="button" title="Open: Add Device"
-                    class="btn btn-sm btn-primary" data-bs-toggle="button" aria-pressed="false" autocomplete="off">
-                    +
-                </button>
-            </h5>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5>Last Updated Devices</h5>
+                <button id="button_expand_add_device" type="button" title="Open: Add Device"
+                    class="btn btn-sm btn-outline-success" data-bs-toggle="button" aria-pressed="false" autocomplete="off"><i class="fas fa-plus"></i> Add</button>
+            </div>
             <form action="profile_update_device" method="POST">
                 {% csrf_token %}
                 <div id="div_add_device" style="display: none;" class="input-group mb-3">
@@ -311,49 +218,45 @@
                     </div>
                 </div>
             </form>
-            {% if devices %}
-            <table class="table table-sm table-hover">
-                <thead class="thead-light">
-                    <th>Device Name</th>
-                    <th style="width: 50%">Description</th>
-                    <th></th>
-                </thead>
-                <tbody>
-                    {% for device in devices %}
-                    <form action="profile_update_device" method="POST">
-                        {% csrf_token %}
-                        <tr>
-                            <!--name-->
-                            <td><b>{{ device.name }}</b></td>
-                            <!--summary-->
-                            <td><b>{{ device.summary }}</b></td>
-                            <td><button type="submit" class="btn btn-secondary btn-sm" name="edit"
-                                    value="{{ device.name }}">Edit</button></td>
-                            </td>
-                        </tr>
-                    </form>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <table class="table table-sm table-hover">
-                <tr>
-                    <td>No devices</td>
-                </tr>
-            </table>
-            {% endif %}
-            <br>
-            <form action="" id="form_user_account" method="POST">
+            <form id="bulk-form-device" action="{% url 'users:profile_bulk_device' %}" method="POST">
                 {% csrf_token %}
-                <input type="button" class="btn btn-danger btn-sm" onclick="clickDelete(this);"
-                    value="Delete Account and Scenes" />
+                {% include 'users/includes/resource_list_pan.html' with items=devices list_type='device' user=user %}
             </form>
+            {% if dev_count > 10 %}
+            <div class="text-right d-flex justify-content-end mb-4"><a href="{% url 'users:profile_devices' %}">View all {{ dev_count }} devices &raquo;</a></div>
+            {% endif %}
+
+            <hr class="my-5">
+
+            <!-- Advanced Settings -->
+            <div class="card border-danger mb-4">
+                <div class="card-header bg-white border-bottom-0" id="headingAdvanced">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link text-danger text-decoration-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdvanced" aria-expanded="false" aria-controls="collapseAdvanced">
+                            <i class="fas fa-exclamation-triangle"></i> Advanced Settings
+                        </button>
+                    </h5>
+                </div>
+                <div id="collapseAdvanced" class="collapse" aria-labelledby="headingAdvanced">
+                    <div class="card-body border-top border-danger">
+                        <p class="card-text">Permanently delete your ARENA account and all scenes and files associated with it. <strong>This action cannot be reversed.</strong></p>
+                        <form action="" id="form_user_account" method="POST">
+                            {% csrf_token %}
+                            <input type="button" class="btn btn-danger" onclick="clickDeleteAccount(this);" value="Delete Account and Scenes" />
+                        </form>
+                    </div>
+                </div>
+            </div>
+
             {% else %}
             <h5>Anonymous users have no profile.</h5>
             {% endif %}
 
         </div>
     </div>
+
+    {% include 'users/includes/profile_scripts.html' %}
+
     <script>
         window.onload = onPageLoad();
 
@@ -366,6 +269,7 @@
         function createExpandHandler(button_expand_id, div_add_id) {
             // create show/hide handler for "new" buttons
             let bExpAddScene = document.getElementById(button_expand_id);
+            if (!bExpAddScene) return;
             bExpAddScene.addEventListener('click', function() {
                 let div = document.getElementById(div_add_id);
                 if (bExpAddScene.getAttribute('aria-pressed') == "true") {
@@ -376,7 +280,7 @@
             });
         }
 
-        async function clickDelete() {
+        async function clickDeleteAccount() {
             const confirm_text = 'delete {{ user.get_username }} account and scenes'
             const {
                 value: text
@@ -407,10 +311,6 @@
             }
         }
     </script>
-
-
 </div>
-
-
 
 {% endblock content %}

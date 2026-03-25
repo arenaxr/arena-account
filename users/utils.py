@@ -26,6 +26,42 @@ def get_rest_host():
     return verify, host
 
 
+import datetime
+from django.utils import timezone
+
+def parse_persist_date(date_val):
+    if not date_val:
+        return None
+    dt = None
+    if isinstance(date_val, str):
+        try:
+            dt = datetime.datetime.fromisoformat(date_val.replace("Z", "+00:00"))
+        except Exception:
+            return None
+    elif isinstance(date_val, datetime.datetime):
+        dt = date_val
+    else:
+        return None
+
+    if dt and timezone.is_naive(dt):
+        dt = timezone.make_aware(dt, timezone.utc)
+    return dt
+
+def apply_updated_at(items, persist_dict):
+    for item in items:
+        cd = item.get("creation_date")
+        pu = parse_persist_date(persist_dict.get(item["name"]))
+        if cd and pu:
+            item["updated_at"] = max(cd, pu)
+        elif pu:
+            item["updated_at"] = pu
+        elif cd:
+            item["updated_at"] = cd
+        else:
+            item["updated_at"] = None
+    min_dt = timezone.make_aware(datetime.datetime.min)
+    return sorted(items, key=lambda x: x.get("updated_at") or min_dt, reverse=True)
+
 def serialize_user_list(users):
     return [user.username for user in users.all()]
 
@@ -79,13 +115,15 @@ def get_my_edit_namespaces(user, version):
             ns_out.append(vars(NamespaceDefault(name=user.username)))
             existing_names.add(user.username)
         # for staff, add any non-user namespaces in persist db
+        p_nss = read_persist_ns_all()
         if user.is_staff:  # admin/staff
-            p_nss = read_persist_ns_all()
             for p_ns in p_nss:
                 if p_ns not in existing_names:
                     if not User.objects.filter(username=p_ns).exists():
                         ns_out.append(vars(NamespaceDefault(name=p_ns)))
                         existing_names.add(p_ns)
+    else:
+        p_nss = read_persist_ns_all()
 
     # count persisted
     all_names = [ns["name"] for ns in ns_out]
@@ -94,7 +132,7 @@ def get_my_edit_namespaces(user, version):
         ns["account"] = ns["name"] in existing_users
 
     ns_out = [ns for ns in ns_out if ns.get("name")]
-    return sorted(ns_out, key=itemgetter("name"))
+    return apply_updated_at(ns_out, p_nss)
 
 
 def get_my_view_namespaces(user):
@@ -111,7 +149,7 @@ def get_my_view_namespaces(user):
     ns_out = [serialize_namespace(ns) for ns in viewer_namespaces]
 
     ns_out = [ns for ns in ns_out if ns.get("name")]
-    return sorted(ns_out, key=itemgetter("name"))
+    return apply_updated_at(ns_out, read_persist_ns_all())
 
 
 def get_my_edit_scenes(user, version):
@@ -141,7 +179,7 @@ def get_my_edit_scenes(user, version):
 
     if user.is_authenticated:
         # update scene list from object persistence db
-        p_scenes = []
+        p_scenes = {}
         if user.is_staff:  # admin/staff
             p_scenes = read_persist_scenes_all()
         else:  # standard user
@@ -150,6 +188,7 @@ def get_my_edit_scenes(user, version):
             for editor_namespace in editor_namespaces:
                 req_namespaces.append(editor_namespace.name)
             p_scenes = read_persist_scenes_by_namespace(req_namespaces)
+
 
         existing_names = {d.get("name") for d in sc_out}
         for p_scene in p_scenes:
@@ -164,7 +203,7 @@ def get_my_edit_scenes(user, version):
                 sc["persisted"] = sc["name"] in p_scenes_set
 
     sc_out = [sc for sc in sc_out if sc.get("name")]
-    return sorted(sc_out, key=itemgetter("name"))
+    return apply_updated_at(sc_out, p_scenes if 'p_scenes' in locals() else {})
 
 
 def get_my_view_scenes(user, version):
@@ -189,7 +228,7 @@ def get_my_view_scenes(user, version):
 
     if user.is_authenticated:
         # update scene list from object persistence db
-        p_scenes = []
+        p_scenes = {}
         if not user.is_staff:  # admin/staff
             req_namespaces = []
             for viewer_namespace in viewer_namespaces:
@@ -204,7 +243,7 @@ def get_my_view_scenes(user, version):
                 existing_names.add(p_scene)
 
     sc_out = [sc for sc in sc_out if sc.get("name")]
-    return sorted(sc_out, key=itemgetter("name"))
+    return apply_updated_at(sc_out, p_scenes if 'p_scenes' in locals() else {})
 
 
 def namespace_edit_permission(user, namespace):

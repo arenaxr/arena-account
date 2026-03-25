@@ -1,0 +1,191 @@
+{% load static %}
+{% load users_tags %}
+
+{% if items %}
+<div class="table-responsive">
+    <table class="table table-sm table-hover align-middle border mb-1">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col" style="width: 1%;"><input type="checkbox" class="select-all" data-target="{{ list_type }}-checkbox" title="Select All" /></th>
+                <th scope="col">Name</th>
+                <th scope="col">Updated</th>
+
+                {% if list_type == 'device' %}
+                <th scope="col" style="width: 50%;">Description</th>
+                {% endif %}
+
+                {% if list_type == 'scene' %}
+                {% if user.is_staff %}
+                <!--persisted in db-->
+                <th scope="col" title="Persisted Objects" class="text-center"><i class="fas fa-database"></i></th>
+                {% endif %}
+                <th scope="col" title="Public Read" class="text-center"><i class="fas fa-eye"></i></th>
+                <th scope="col" title="Public Write" class="text-center"><i class="fas fa-pencil-alt"></i></th>
+                <th scope="col" title="User Interaction" class="text-center"><i class="fas fa-hand-pointer"></i></th>
+                <th scope="col" title="Anonymous Users" class="text-center"><i class="fas fa-user-secret"></i></th>
+                <th scope="col" title="Video Conference" class="text-center"><i class="fas fa-video"></i></th>
+                {% endif %}
+
+                {% if list_type == 'scene' or list_type == 'namespace' %}
+                <th scope="col">Editors</th>
+                <th scope="col">Viewers</th>
+                {% endif %}
+
+                <th scope="col" class="text-end" style="min-width: 110px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td><input type="checkbox" class="{{ list_type }}-checkbox" name="selected_items" value="{{ item.name }}" /></td>
+
+                <!-- Name Column -->
+                <td>
+                    {% if list_type == 'scene' %}
+                        <a href="profile/scenes/{{ item.name }}" class="text-decoration-none text-dark"><b>{{ item.name }}</b></a>
+                    {% elif list_type == 'device' %}
+                        <a href="profile/devices/{{ item.name }}" class="text-decoration-none text-dark"><b>{{ item.name }}</b></a>
+                    {% else %}
+                        <a href="profile/namespaces/{{ item.name }}" class="text-decoration-none text-dark"><b>{{ item.name }}</b></a>
+                    {% endif %}
+                </td>
+
+                <!-- Updated Column -->
+                <td>
+                    {% if item.updated_at %}
+                    <small class="text-muted" title="{{ item.updated_at }}">{{ item.updated_at|short_timesince }} ago</small>
+                    {% elif item.creation_date %}
+                    <small class="text-muted" title="{{ item.creation_date }}">{{ item.creation_date|short_timesince }} ago</small>
+                    {% else %}
+                    <small class="text-muted">Unknown</small>
+                    {% endif %}
+                </td>
+
+                {% if list_type == 'device' %}
+                <td>{{ item.summary }}</td>
+                {% endif %}
+
+                {% if list_type == 'scene' %}
+                {% if user.is_staff %}
+                <!--persisted in db-->
+                <td class="text-center">
+                    {% if item.persisted %}
+                    <i class="fas fa-database text-primary fw-bold" title="Objects Persisted"></i>
+                    {% else %}
+                    <i class="fas fa-database text-muted" style="opacity: 0.3;"></i>
+                    {% endif %}
+                </td>
+                {% endif %}
+
+                <!--public subscribe ok-->
+                <td class="text-center">
+                    {% if not item.public_read %}
+                    <i class="fas fa-eye text-warning fw-bold" title="Public Read Disabled"></i>
+                    {% else %}
+                    <i class="fas fa-eye text-muted" style="opacity: 0.3;" title="Public Read"></i>
+                    {% endif %}
+                </td>
+
+                <!--public publish objects ok-->
+                <td class="text-center">
+                    {% if item.public_write %}
+                    <i class="fas fa-pencil-alt text-warning fw-bold" title="Public Write Enabled"></i>
+                    {% else %}
+                    <i class="fas fa-pencil-alt text-muted" style="opacity: 0.3;" title="No Public Write"></i>
+                    {% endif %}
+                </td>
+
+                <!--user interaction ok-->
+                <td class="text-center">
+                    {% if not item.users %}
+                    <i class="fas fa-hand-pointer text-warning fw-bold" title="User Interaction Disabled"></i>
+                    {% else %}
+                    <i class="fas fa-hand-pointer text-muted" style="opacity: 0.3;" title="User Interaction"></i>
+                    {% endif %}
+                </td>
+
+                <!--anonymous users ok-->
+                <td class="text-center">
+                    {% if not item.anonymous_users %}
+                    <i class="fas fa-user-secret text-warning fw-bold" title="Anonymous Users Disabled"></i>
+                    {% else %}
+                    <i class="fas fa-user-secret text-muted" style="opacity: 0.3;" title="Anonymous Users"></i>
+                    {% endif %}
+                </td>
+
+                <!--video conferencing ok-->
+                <td class="text-center">
+                    {% if not item.video_conference %}
+                    <i class="fas fa-video text-warning fw-bold" title="Video Conference Disabled"></i>
+                    {% else %}
+                    <i class="fas fa-video text-muted" style="opacity: 0.3;" title="Video Conference"></i>
+                    {% endif %}
+                </td>
+                {% endif %}
+
+                <!-- Editors & Viewers -->
+                {% if list_type == 'scene' or list_type == 'namespace' %}
+                <td>
+                    {% if item.public_write and list_type == 'scene' %}
+                    <span class="text-warning font-weight-bold font-italic">ALL USERS</span>
+                    {% else %}
+                    {{ item.editors|join:", " }}
+                    {% endif %}
+                </td>
+                <td>
+                    {{ item.viewers|join:", " }}
+                </td>
+                {% endif %}
+
+                <!-- Actions -->
+                <td class="text-end">
+                    <div class="btn-group btn-group-sm">
+                        <button type="submit" form="form-edit-{{ list_type }}-{{ forloop.counter }}" class="btn btn-outline-secondary" name="edit" value="{{ item.name }}" title="Edit"><i class="fas fa-cog"></i></button>
+                        {% if list_type == 'scene' %}
+                        <a href="{{ request.scheme }}://{{ request.META.HTTP_HOST }}/{{ item.name }}" class="btn btn-outline-primary" target="_blank" title="Open 3D View"><i class="fas fa-external-link-alt"></i></a>
+                        {% endif %}
+                        <button type="submit" form="form-delete-{{ list_type }}-{{ forloop.counter }}" class="btn btn-outline-danger" name="action" value="delete_single" title="Delete" onclick="return confirmInlineDelete(event, '{{ list_type }}', '{{ item.name }}')"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Bulk Actions Toolbar (Only shows when boxes checked) -->
+<div class="row align-items-center mb-3 mt-1 bulk-toolbar-{{ list_type }}" style="display: none;">
+    <div class="col-auto">
+        <span class="badge bg-secondary text-white" id="selected-count-{{ list_type }}">0</span> items selected
+    </div>
+    <div class="col-auto">
+        <div class="btn-group btn-group-sm">
+            <button type="submit" name="action" value="bulk_delete" class="btn btn-danger" onclick="return confirmBulkAction(event, 'delete', '{{ list_type }}')">Delete Selected</button>
+            {% if list_type == 'scene' %}
+            <button type="submit" name="action" value="bulk_clear_objects" class="btn btn-warning" onclick="return confirmBulkAction(event, 'clear objects from', '{{ list_type }}')">Clear Persisted Objects</button>
+            <button type="submit" name="action" value="bulk_reset_perms" class="btn btn-secondary" onclick="return confirmBulkAction(event, 'reset permissions for', '{{ list_type }}')">Reset Permissions</button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Hidden Forms for individual edit/delete actions -->
+{% for item in items %}
+<form id="form-edit-{{ list_type }}-{{ forloop.counter }}" action="profile_update_{{ list_type }}" method="POST" style="display:none;">
+    {% csrf_token %}
+    <input type="hidden" name="edit" value="{{ item.name }}">
+</form>
+<form id="form-delete-{{ list_type }}-{{ forloop.counter }}" action="profile_bulk_{{ list_type }}" method="POST" style="display:none;">
+    {% csrf_token %}
+    <input type="hidden" name="selected_items" value="{{ item.name }}">
+    <input type="hidden" name="action" value="bulk_delete">
+</form>
+{% endfor %}
+
+{% else %}
+<table class="table table-sm table-hover">
+    <tr>
+        <td class="text-muted">No {{ list_type }}s found.</td>
+    </tr>
+</table>
+{% endif %}
