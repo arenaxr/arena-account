@@ -1,9 +1,11 @@
+import datetime
 import os
 import socket
 from operator import itemgetter
 
 from allauth.socialaccount.models import SocialAccount
 from django.contrib.auth.models import User
+from django.utils import timezone
 from google.auth.transport import requests as grequests
 from google.oauth2 import id_token
 from users.models import Namespace, NamespaceDefault, Scene, SceneDefault
@@ -26,9 +28,6 @@ def get_rest_host():
     return verify, host
 
 
-import datetime
-from django.utils import timezone
-
 def parse_persist_date(date_val):
     if not date_val:
         return None
@@ -44,13 +43,19 @@ def parse_persist_date(date_val):
         return None
 
     if dt and timezone.is_naive(dt):
-        dt = timezone.make_aware(dt, timezone.utc)
+        dt = timezone.make_aware(dt, datetime.timezone.utc)
     return dt
 
 def apply_updated_at(items, persist_dict):
     for item in items:
         cd = item.get("creation_date")
-        pu = parse_persist_date(persist_dict.get(item["name"]))
+        p_val = persist_dict.get(item["name"])
+        if isinstance(p_val, dict):
+            pu = parse_persist_date(p_val.get("last_updated"))
+            item["persist_count"] = p_val.get("count", 0)
+        else:
+            pu = parse_persist_date(p_val)
+
         if cd and pu:
             item["updated_at"] = max(cd, pu)
         elif pu:

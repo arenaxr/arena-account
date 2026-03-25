@@ -8,11 +8,18 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
+from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
-from django.core.paginator import Paginator
-import datetime
 from django.utils import timezone
+from users.models import (
+    SCENE_ANON_USERS_DEF,
+    SCENE_PUBLIC_READ_DEF,
+    SCENE_PUBLIC_WRITE_DEF,
+    SCENE_USERS_DEF,
+    SCENE_VIDEO_CONF_DEF,
+)
+from users.persistence import delete_persist_scene_objects
 
 from .filestore import delete_filestore_user, get_filestore_health, set_filestore_scope
 from .forms import (
@@ -565,9 +572,6 @@ def profile_namespaces(request):
         {"page_obj": page_obj, "q": q}
     )
 
-
-from users.persistence import delete_persist_scene_objects
-from users.models import SCENE_PUBLIC_READ_DEF, SCENE_PUBLIC_WRITE_DEF, SCENE_ANON_USERS_DEF, SCENE_VIDEO_CONF_DEF, SCENE_USERS_DEF
 
 def profile_bulk_scene(request):
     if request.method != "POST" or not request.user.is_authenticated:

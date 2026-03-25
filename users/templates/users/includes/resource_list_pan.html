@@ -8,7 +8,7 @@
             <tr>
                 <th scope="col" style="width: 1%;"><input type="checkbox" class="select-all" data-target="{{ list_type }}-checkbox" title="Select All" /></th>
                 <th scope="col">Name</th>
-                <th scope="col">Updated</th>
+                <th scope="col">{% if list_type == 'scene' %}Updated{% else %}Created{% endif %}</th>
 
                 {% if list_type == 'device' %}
                 <th scope="col" style="width: 50%;">Description</th>
@@ -17,7 +17,7 @@
                 {% if list_type == 'scene' %}
                 {% if user.is_staff %}
                 <!--persisted in db-->
-                <th scope="col" title="Persisted Objects" class="text-center"><i class="fas fa-database"></i></th>
+                <th scope="col" title="Persisted Objects" class="text-end"><i class="fas fa-database"></i></th>
                 {% endif %}
                 <th scope="col" title="Public Read" class="text-center"><i class="fas fa-eye"></i></th>
                 <th scope="col" title="Public Write" class="text-center"><i class="fas fa-pencil-alt"></i></th>
@@ -68,11 +68,11 @@
                 {% if list_type == 'scene' %}
                 {% if user.is_staff %}
                 <!--persisted in db-->
-                <td class="text-center">
+                <td class="text-end">
                     {% if item.persisted %}
-                    <i class="fas fa-database text-primary fw-bold" title="Objects Persisted"></i>
+                    <span class="badge bg-primary text-white" title="{{ item.persist_count }} Objects Persisted">{{ item.persist_count }} <i class="fas fa-database"></i></span>
                     {% else %}
-                    <i class="fas fa-database text-muted" style="opacity: 0.3;"></i>
+                    <i class="fas fa-database text-muted" style="opacity: 0.3;" title="No Persisted Objects"></i>
                     {% endif %}
                 </td>
                 {% endif %}

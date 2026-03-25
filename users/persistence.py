@@ -7,6 +7,7 @@ from datetime import datetime
 
 from bson import ObjectId
 
+
 # assign accessible model for persist collection
 def get_arenaobjects_collection():
     from .persist_db import get_persist_db
@@ -56,7 +57,8 @@ def read_persist_scenes_all():
                     "namespace": "$namespace",
                     "sceneId": "$sceneId",
                 },
-                "last_updated": {"$max": "$updatedAt"}
+                "last_updated": {"$max": "$updatedAt"},
+                "count": {"$sum": 1}
             }
         },
         {
@@ -64,11 +66,12 @@ def read_persist_scenes_all():
                 "name": {
                     "$concat": ["$_id.namespace", "/", "$_id.sceneId"]
                 },
-                "last_updated": 1
+                "last_updated": 1,
+                "count": 1
             }
         }
     ])
-    return {doc['name']: doc.get('last_updated') for doc in arenaobjects}
+    return {doc['name']: {'last_updated': doc.get('last_updated'), 'count': doc.get('count', 0)} for doc in arenaobjects}
 
 
 def read_persist_scenes_by_namespace(namespaces):
@@ -84,7 +87,8 @@ def read_persist_scenes_by_namespace(namespaces):
                     "namespace": "$namespace",
                     "sceneId": "$sceneId",
                 },
-                "last_updated": {"$max": "$updatedAt"}
+                "last_updated": {"$max": "$updatedAt"},
+                "count": {"$sum": 1}
             }
         },
         {
@@ -92,11 +96,12 @@ def read_persist_scenes_by_namespace(namespaces):
                 "name": {
                     "$concat": ["$_id.namespace", "/", "$_id.sceneId"]
                 },
-                "last_updated": 1
+                "last_updated": 1,
+                "count": 1
             }
         }
     ])
-    return {doc['name']: doc.get('last_updated') for doc in arenaobjects}
+    return {doc['name']: {'last_updated': doc.get('last_updated'), 'count': doc.get('count', 0)} for doc in arenaobjects}
 
 
 def read_persist_scene_objects(namespace, scene):
