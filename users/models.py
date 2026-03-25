@@ -23,24 +23,6 @@ ns_slash_id_regex = RegexValidator(
     RE_NS_SLASH_ID, "Only alphanumeric, underscore, hyphen, period, in namespace/idname format allowed."
 )
 
-# assign accessible model for persist collection
-def get_arenaobjects_collection():
-    from .persist_db import get_persist_db
-    return get_persist_db()['arenaobjects']
-
-# arenaobjects schema reference:
-# https://github.com/arenaxr/arena-persist/blob/master/server.js#L28-L42
-# object_id: {type: String, required: true, index: true},
-# type: {type: String, required: true, index: true},
-# attributes: {type: Object, required: true, default: {}},
-# expireAt: {type: Date, expires: 0},
-# realm: {type: String, required: true, index: true},
-# namespace: {type: String, required: true, index: true, default: 'public'},
-# sceneId: {type: String, required: true, index: true},
-# private: {type: Boolean},
-# program_id: {type: String},
-
-
 class NamespaceDefault:
     def __init__(self, name=""):
         self.name = name
@@ -58,7 +40,7 @@ class Namespace(models.Model):
 
     def save(self, *args, **kwargs):
         self.full_clean()  # performs regular validation then clean()
-        super(Namespace, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def clean(self):
         if self.name == "":
@@ -103,7 +85,7 @@ class Scene(models.Model):
 
     def save(self, *args, **kwargs):
         self.full_clean()  # performs regular validation then clean()
-        super(Scene, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def clean(self):
         if self.name == "":
@@ -129,11 +111,11 @@ class Scene(models.Model):
     @property
     def is_default(self):
         return (
-            self.public_read is SCENE_PUBLIC_READ_DEF
-            and self.public_write is SCENE_PUBLIC_WRITE_DEF
-            and self.anonymous_users is SCENE_ANON_USERS_DEF
-            and self.video_conference is SCENE_VIDEO_CONF_DEF
-            and self.users is SCENE_USERS_DEF
+            self.public_read == SCENE_PUBLIC_READ_DEF
+            and self.public_write == SCENE_PUBLIC_WRITE_DEF
+            and self.anonymous_users == SCENE_ANON_USERS_DEF
+            and self.video_conference == SCENE_VIDEO_CONF_DEF
+            and self.users == SCENE_USERS_DEF
             and self.editors.count() == 0
             and self.viewers.count() == 0
         )
@@ -148,7 +130,7 @@ class Device(models.Model):
 
     def save(self, *args, **kwargs):
         self.full_clean()  # performs regular validation then clean()
-        super(Device, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def clean(self):
         if self.name == "":

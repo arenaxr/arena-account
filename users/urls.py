@@ -14,6 +14,9 @@ urlpatterns = [
         name="socialaccount_signup",
     ),
     path("profile", views.user_profile, name="user_profile"),
+    path("profile/namespaces/", views.profile_namespaces, name="profile_namespaces"),
+    path("profile/scenes/", views.profile_scenes, name="profile_scenes"),
+    path("profile/devices/", views.profile_devices, name="profile_devices"),
     path("login_callback", views.login_callback, name="login_callback"),
     re_path(r"^profile/namespaces/(?P<pk>[^\/]+)$", views.namespace_perm_detail),
     re_path(r"^profile/scenes/(?P<pk>[^\/]+\/[^\/]+)$", views.scene_perm_detail),
@@ -23,6 +26,10 @@ urlpatterns = [
     path("profile_update_namespace", views.profile_update_namespace, name="profile_update_namespace"),
     path("profile_update_scene", views.profile_update_scene, name="profile_update_scene"),
     path("profile_update_device", views.profile_update_device, name="profile_update_device"),
+    path("profile_bulk_namespace", views.profile_bulk_namespace, name="profile_bulk_namespace"),
+    path("profile_bulk_scene", views.profile_bulk_scene, name="profile_bulk_scene"),
+    path("profile_bulk_device", views.profile_bulk_device, name="profile_bulk_device"),
+
     # autocomplete
     path(
         "user-autocomplete/",

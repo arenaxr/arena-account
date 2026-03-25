@@ -8,6 +8,13 @@
 <div class="container-fluid">
     <div class="row d-flex justify-content-center align-items-center min-vh-75">
         <div class="col-md-10 bg-white p-5">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'users:user_profile' %}">Profile Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'users:profile_scenes' %}">All Scenes</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit Scene</li>
+                </ol>
+            </nav>
 
             <h1>Edit Scene Permissions</h1>
 

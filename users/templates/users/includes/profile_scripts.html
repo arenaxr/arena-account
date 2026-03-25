@@ -1,0 +1,97 @@
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    ['scene', 'device', 'namespace'].forEach(type => {
+        const selectAll = document.querySelector(`.select-all[data-target="${type}-checkbox"]`);
+        const itemCheckboxes = document.querySelectorAll(`.${type}-checkbox`);
+        const toolbar = document.querySelector(`.bulk-toolbar-${type}`);
+        const countSpan = document.getElementById(`selected-count-${type}`);
+
+        function updateToolbar() {
+            if (!toolbar) return;
+            const checkedCount = document.querySelectorAll(`.${type}-checkbox:checked`).length;
+            countSpan.textContent = checkedCount;
+            if (checkedCount > 0) {
+                toolbar.style.display = 'flex';
+            } else {
+                toolbar.style.display = 'none';
+                if(selectAll) selectAll.checked = false;
+            }
+        }
+
+        if (selectAll) {
+            selectAll.addEventListener('change', (e) => {
+                itemCheckboxes.forEach(cb => cb.checked = e.target.checked);
+                updateToolbar();
+            });
+        }
+
+        itemCheckboxes.forEach(cb => {
+            cb.addEventListener('change', updateToolbar);
+        });
+    });
+});
+
+async function confirmBulkAction(event, actionTitle, listType) {
+    event.preventDefault();
+    const count = document.getElementById(`selected-count-${listType}`).textContent;
+    const { isConfirmed } = await Swal.fire({
+        title: `Are you sure?`,
+        text: `You are about to ${actionTitle} ${count} selected ${listType}(s). This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, proceed',
+        confirmButtonColor: '#d33'
+    });
+
+    if (isConfirmed) {
+        // Find the form that owns this submit button and append the action
+        const form = event.target.closest('form');
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'action';
+        input.value = event.target.value;
+        form.appendChild(input);
+        form.submit();
+    }
+}
+
+async function confirmInlineDelete(event, listType, itemName, actionUrl) {
+    event.preventDefault();
+    const { isConfirmed } = await Swal.fire({
+        title: 'Confirm Deletion',
+        text: `Are you sure you want to delete ${listType} "${itemName}"?`,
+        icon: 'error',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete it',
+        confirmButtonColor: '#d33'
+    });
+
+    if (isConfirmed) {
+        // Create a dynamic form outside any existing form to avoid nesting
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = actionUrl;
+        form.style.display = 'none';
+        // CSRF token
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        form.appendChild(csrfInput);
+        // Selected item
+        const itemInput = document.createElement('input');
+        itemInput.type = 'hidden';
+        itemInput.name = 'selected_items';
+        itemInput.value = itemName;
+        form.appendChild(itemInput);
+        // Action
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'bulk_delete';
+        form.appendChild(actionInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>

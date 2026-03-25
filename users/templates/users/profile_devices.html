@@ -1,0 +1,66 @@
+{% extends "users/header.html" %}
+
+{% block content %}
+
+{% include 'users/includes/messages.html' %}
+
+<div class="container-fluid">
+    <div class="row d-flex justify-content-center align-items-center min-vh-75">
+        <div class="col-md-10 bg-white p-5">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'users:user_profile' %}">Profile Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">All Devices</li>
+                </ol>
+            </nav>
+
+            <h1>All Device Permissions</h1>
+
+            <!-- Search -->
+            <form method="GET" class="mb-4">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="Search devices by name..."
+                        value="{{ q }}">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="submit">Search</button>
+                    </div>
+                </div>
+            </form>
+
+            <form id="bulk-form-device" action="{% url 'users:profile_bulk_device' %}" method="POST">
+                {% csrf_token %}
+                {% url 'users:profile_bulk_device' as delete_action_url %}
+                {% include 'users/includes/resource_list_pan.html' with items=page_obj list_type='device' user=user allow_sort=True delete_action_url=delete_action_url detail_base_url='' %}
+            </form>
+
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page=1{% if q %}&q={{ q }}{% endif %}">&laquo;
+                            First</a></li>
+                    <li class="page-item"><a class="page-link"
+                            href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">Previous</a>
+                    </li>
+                    {% endif %}
+
+                    <li class="page-item disabled"><a class="page-link" href="#">Page {{ page_obj.number }} of
+                            {{ page_obj.paginator.num_pages }}</a></li>
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link"
+                            href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}">Next</a></li>
+                    <li class="page-item"><a class="page-link"
+                            href="?page={{ page_obj.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}">Last
+                            &raquo;</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% include 'users/includes/profile_scripts.html' %}
+{% endblock content %}

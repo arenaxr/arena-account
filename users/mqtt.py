@@ -48,7 +48,7 @@ def generate_arena_token(
     if not os.path.exists(privkeyfile):
         print("Error: keyfile not found")
         return None
-    with open(privkeyfile) as privatefile:
+    with open(privkeyfile, encoding="utf-8") as privatefile:
         private_key = privatefile.read()
     payload = {}
     payload["sub"] = username

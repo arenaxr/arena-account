@@ -1,9 +1,10 @@
+import datetime
 import os
 import socket
-from operator import itemgetter
 
 from allauth.socialaccount.models import SocialAccount
 from django.contrib.auth.models import User
+from django.utils import timezone
 from google.auth.transport import requests as grequests
 from google.oauth2 import id_token
 from users.models import Namespace, NamespaceDefault, Scene, SceneDefault
@@ -25,6 +26,45 @@ def get_rest_host():
         host = hostname
     return verify, host
 
+
+def parse_persist_date(date_val):
+    if not date_val:
+        return None
+    dt = None
+    if isinstance(date_val, str):
+        try:
+            dt = datetime.datetime.fromisoformat(date_val.replace("Z", "+00:00"))
+        except Exception:
+            return None
+    elif isinstance(date_val, datetime.datetime):
+        dt = date_val
+    else:
+        return None
+
+    if dt and timezone.is_naive(dt):
+        dt = timezone.make_aware(dt, datetime.timezone.utc)
+    return dt
+
+def apply_updated_at(items, persist_dict):
+    for item in items:
+        cd = item.get("creation_date")
+        p_val = persist_dict.get(item["name"])
+        if isinstance(p_val, dict):
+            pu = parse_persist_date(p_val.get("last_updated"))
+            item["persist_count"] = p_val.get("count", 0)
+        else:
+            pu = parse_persist_date(p_val)
+
+        if cd and pu:
+            item["updated_at"] = max(cd, pu)
+        elif pu:
+            item["updated_at"] = pu
+        elif cd:
+            item["updated_at"] = cd
+        else:
+            item["updated_at"] = None
+    min_dt = timezone.make_aware(datetime.datetime.min)
+    return sorted(items, key=lambda x: x.get("updated_at") or min_dt, reverse=True)
 
 def serialize_user_list(users):
     return [user.username for user in users.all()]
@@ -79,13 +119,15 @@ def get_my_edit_namespaces(user, version):
             ns_out.append(vars(NamespaceDefault(name=user.username)))
             existing_names.add(user.username)
         # for staff, add any non-user namespaces in persist db
+        p_nss = read_persist_ns_all()
         if user.is_staff:  # admin/staff
-            p_nss = read_persist_ns_all()
             for p_ns in p_nss:
                 if p_ns not in existing_names:
                     if not User.objects.filter(username=p_ns).exists():
                         ns_out.append(vars(NamespaceDefault(name=p_ns)))
                         existing_names.add(p_ns)
+    else:
+        p_nss = read_persist_ns_all()
 
     # count persisted
     all_names = [ns["name"] for ns in ns_out]
@@ -94,7 +136,7 @@ def get_my_edit_namespaces(user, version):
         ns["account"] = ns["name"] in existing_users
 
     ns_out = [ns for ns in ns_out if ns.get("name")]
-    return sorted(ns_out, key=itemgetter("name"))
+    return apply_updated_at(ns_out, p_nss)
 
 
 def get_my_view_namespaces(user):
@@ -111,7 +153,7 @@ def get_my_view_namespaces(user):
     ns_out = [serialize_namespace(ns) for ns in viewer_namespaces]
 
     ns_out = [ns for ns in ns_out if ns.get("name")]
-    return sorted(ns_out, key=itemgetter("name"))
+    return apply_updated_at(ns_out, read_persist_ns_all())
 
 
 def get_my_edit_scenes(user, version):
@@ -124,6 +166,7 @@ def get_my_edit_scenes(user, version):
     my_scenes = Scene.objects.none()
     editor_scenes = Scene.objects.none()
     editor_namespaces = Namespace.objects.none()
+    p_scenes = {}
     if user.is_authenticated:
         if user.is_staff:  # admin/staff
             my_scenes = Scene.objects.all()
@@ -141,7 +184,6 @@ def get_my_edit_scenes(user, version):
 
     if user.is_authenticated:
         # update scene list from object persistence db
-        p_scenes = []
         if user.is_staff:  # admin/staff
             p_scenes = read_persist_scenes_all()
         else:  # standard user
@@ -150,6 +192,7 @@ def get_my_edit_scenes(user, version):
             for editor_namespace in editor_namespaces:
                 req_namespaces.append(editor_namespace.name)
             p_scenes = read_persist_scenes_by_namespace(req_namespaces)
+
 
         existing_names = {d.get("name") for d in sc_out}
         for p_scene in p_scenes:
@@ -164,7 +207,7 @@ def get_my_edit_scenes(user, version):
                 sc["persisted"] = sc["name"] in p_scenes_set
 
     sc_out = [sc for sc in sc_out if sc.get("name")]
-    return sorted(sc_out, key=itemgetter("name"))
+    return apply_updated_at(sc_out, p_scenes)
 
 
 def get_my_view_scenes(user, version):
@@ -175,6 +218,7 @@ def get_my_view_scenes(user, version):
     # load list of scenes this user can view
     viewer_scenes = Scene.objects.none()
     viewer_namespaces = Namespace.objects.none()
+    p_scenes = {}
     if user.is_authenticated:
         if not user.is_staff:  # admin/staff
             viewer_scenes = Scene.objects.filter(viewers=user)
@@ -189,7 +233,6 @@ def get_my_view_scenes(user, version):
 
     if user.is_authenticated:
         # update scene list from object persistence db
-        p_scenes = []
         if not user.is_staff:  # admin/staff
             req_namespaces = []
             for viewer_namespace in viewer_namespaces:
@@ -204,7 +247,7 @@ def get_my_view_scenes(user, version):
                 existing_names.add(p_scene)
 
     sc_out = [sc for sc in sc_out if sc.get("name")]
-    return sorted(sc_out, key=itemgetter("name"))
+    return apply_updated_at(sc_out, p_scenes)
 
 
 def namespace_edit_permission(user, namespace):
@@ -223,8 +266,7 @@ def namespace_edit_permission(user, namespace):
             editor_namespace = Namespace.objects.get(name=namespace, editors=user)  # ns editor
         except Namespace.DoesNotExist:
             pass
-        finally:
-            return bool(editor_namespace)
+        return bool(editor_namespace)
 
 
 def scene_edit_permission(user, scene):
@@ -245,8 +287,41 @@ def scene_edit_permission(user, scene):
             editor_namespace = Namespace.objects.get(name=scene.split("/")[0], editors=user)  # ns editor
         except (Scene.DoesNotExist, Namespace.DoesNotExist):
             pass
-        finally:
-            return bool(editor_scene or editor_namespace)
+        return bool(editor_scene or editor_namespace)
+
+
+def get_my_devices(user):
+    """
+    Internal method to update device permissions table:
+    Requests and returns list of user's editable devices from device permissions table.
+    """
+    from .models import Device
+    from .mqtt import PUBLIC_NAMESPACE
+
+    # load list of devices this user can edit
+    devices = Device.objects.none()
+    if user.is_authenticated:
+        if user.is_staff:  # admin/staff
+            devices = Device.objects.all()
+        else:  # standard user
+            devices = Device.objects.filter(name__startswith=f"{user.username}/")
+    public_devices = Device.objects.filter(name__startswith=f"{PUBLIC_NAMESPACE}/")
+    # merge 'my' namespaced devices and extras devices granted
+    merged_devices = (devices | public_devices).distinct().order_by("-creation_date")
+    return merged_devices
+
+
+def device_edit_permission(user, device):
+    """
+    Internal method to check if 'user' can edit 'device'.
+    """
+    if not user.is_authenticated:  # anon
+        return False
+    elif user.is_staff:  # admin/staff
+        return True
+    elif device.startswith(f"{user.username}/"):  # d owner
+        return True
+    return False
 
 
 def get_user_from_id_token(gid_token):
@@ -268,10 +343,3 @@ def get_user_from_id_token(gid_token):
         raise ValueError("Database error.")
 
     return User.objects.get(username=g_user.user)
-
-
-def _field_requested(request, field):
-    value = request.POST.get(field, False)
-    if value:
-        return True
-    return False
