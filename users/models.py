@@ -40,7 +40,7 @@ class Namespace(models.Model):
 
     def save(self, *args, **kwargs):
         self.full_clean()  # performs regular validation then clean()
-        super(Namespace, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def clean(self):
         if self.name == "":
@@ -85,7 +85,7 @@ class Scene(models.Model):
 
     def save(self, *args, **kwargs):
         self.full_clean()  # performs regular validation then clean()
-        super(Scene, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def clean(self):
         if self.name == "":
@@ -111,11 +111,11 @@ class Scene(models.Model):
     @property
     def is_default(self):
         return (
-            self.public_read is SCENE_PUBLIC_READ_DEF
-            and self.public_write is SCENE_PUBLIC_WRITE_DEF
-            and self.anonymous_users is SCENE_ANON_USERS_DEF
-            and self.video_conference is SCENE_VIDEO_CONF_DEF
-            and self.users is SCENE_USERS_DEF
+            self.public_read == SCENE_PUBLIC_READ_DEF
+            and self.public_write == SCENE_PUBLIC_WRITE_DEF
+            and self.anonymous_users == SCENE_ANON_USERS_DEF
+            and self.video_conference == SCENE_VIDEO_CONF_DEF
+            and self.users == SCENE_USERS_DEF
             and self.editors.count() == 0
             and self.viewers.count() == 0
         )
@@ -130,7 +130,7 @@ class Device(models.Model):
 
     def save(self, *args, **kwargs):
         self.full_clean()  # performs regular validation then clean()
-        super(Device, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def clean(self):
         if self.name == "":
