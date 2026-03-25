@@ -1,7 +1,6 @@
 import datetime
 import os
 import socket
-from operator import itemgetter
 
 from allauth.socialaccount.models import SocialAccount
 from django.contrib.auth.models import User
@@ -167,6 +166,7 @@ def get_my_edit_scenes(user, version):
     my_scenes = Scene.objects.none()
     editor_scenes = Scene.objects.none()
     editor_namespaces = Namespace.objects.none()
+    p_scenes = {}
     if user.is_authenticated:
         if user.is_staff:  # admin/staff
             my_scenes = Scene.objects.all()
@@ -184,7 +184,6 @@ def get_my_edit_scenes(user, version):
 
     if user.is_authenticated:
         # update scene list from object persistence db
-        p_scenes = {}
         if user.is_staff:  # admin/staff
             p_scenes = read_persist_scenes_all()
         else:  # standard user
@@ -208,7 +207,7 @@ def get_my_edit_scenes(user, version):
                 sc["persisted"] = sc["name"] in p_scenes_set
 
     sc_out = [sc for sc in sc_out if sc.get("name")]
-    return apply_updated_at(sc_out, p_scenes if 'p_scenes' in locals() else {})
+    return apply_updated_at(sc_out, p_scenes)
 
 
 def get_my_view_scenes(user, version):
@@ -219,6 +218,7 @@ def get_my_view_scenes(user, version):
     # load list of scenes this user can view
     viewer_scenes = Scene.objects.none()
     viewer_namespaces = Namespace.objects.none()
+    p_scenes = {}
     if user.is_authenticated:
         if not user.is_staff:  # admin/staff
             viewer_scenes = Scene.objects.filter(viewers=user)
@@ -233,7 +233,6 @@ def get_my_view_scenes(user, version):
 
     if user.is_authenticated:
         # update scene list from object persistence db
-        p_scenes = {}
         if not user.is_staff:  # admin/staff
             req_namespaces = []
             for viewer_namespace in viewer_namespaces:
@@ -248,7 +247,7 @@ def get_my_view_scenes(user, version):
                 existing_names.add(p_scene)
 
     sc_out = [sc for sc in sc_out if sc.get("name")]
-    return apply_updated_at(sc_out, p_scenes if 'p_scenes' in locals() else {})
+    return apply_updated_at(sc_out, p_scenes)
 
 
 def namespace_edit_permission(user, namespace):
@@ -267,8 +266,7 @@ def namespace_edit_permission(user, namespace):
             editor_namespace = Namespace.objects.get(name=namespace, editors=user)  # ns editor
         except Namespace.DoesNotExist:
             pass
-        finally:
-            return bool(editor_namespace)
+        return bool(editor_namespace)
 
 
 def scene_edit_permission(user, scene):
@@ -289,8 +287,41 @@ def scene_edit_permission(user, scene):
             editor_namespace = Namespace.objects.get(name=scene.split("/")[0], editors=user)  # ns editor
         except (Scene.DoesNotExist, Namespace.DoesNotExist):
             pass
-        finally:
-            return bool(editor_scene or editor_namespace)
+        return bool(editor_scene or editor_namespace)
+
+
+def get_my_devices(user):
+    """
+    Internal method to update device permissions table:
+    Requests and returns list of user's editable devices from device permissions table.
+    """
+    from .models import Device
+    from .mqtt import PUBLIC_NAMESPACE
+
+    # load list of devices this user can edit
+    devices = Device.objects.none()
+    if user.is_authenticated:
+        if user.is_staff:  # admin/staff
+            devices = Device.objects.all()
+        else:  # standard user
+            devices = Device.objects.filter(name__startswith=f"{user.username}/")
+    public_devices = Device.objects.filter(name__startswith=f"{PUBLIC_NAMESPACE}/")
+    # merge 'my' namespaced devices and extras devices granted
+    merged_devices = (devices | public_devices).distinct().order_by("-creation_date")
+    return merged_devices
+
+
+def device_edit_permission(user, device):
+    """
+    Internal method to check if 'user' can edit 'device'.
+    """
+    if not user.is_authenticated:  # anon
+        return False
+    elif user.is_staff:  # admin/staff
+        return True
+    elif device.startswith(f"{user.username}/"):  # d owner
+        return True
+    return False
 
 
 def get_user_from_id_token(gid_token):
@@ -312,10 +343,3 @@ def get_user_from_id_token(gid_token):
         raise ValueError("Database error.")
 
     return User.objects.get(username=g_user.user)
-
-
-def _field_requested(request, field):
-    value = request.POST.get(field, False)
-    if value:
-        return True
-    return False
