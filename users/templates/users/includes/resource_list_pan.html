@@ -68,13 +68,7 @@
 
                 <!-- Name Column -->
                 <td>
-                    {% if list_type == 'scene' %}
-                        <a href="profile/scenes/{{ item.name }}" class="text-decoration-none text-dark"><b>{{ item.name }}</b></a>
-                    {% elif list_type == 'device' %}
-                        <a href="profile/devices/{{ item.name }}" class="text-decoration-none text-dark"><b>{{ item.name }}</b></a>
-                    {% else %}
-                        <a href="profile/namespaces/{{ item.name }}" class="text-decoration-none text-dark"><b>{{ item.name }}</b></a>
-                    {% endif %}
+                    <a href="{{ detail_base_url }}{{ item.name }}" class="text-decoration-none text-dark"><b>{{ item.name }}</b></a>
                 </td>
 
                 <!-- Updated Column -->
@@ -167,11 +161,15 @@
                 <!-- Actions -->
                 <td class="text-end">
                     <div class="btn-group btn-group-sm">
-                        <button type="submit" form="form-edit-{{ list_type }}-{{ forloop.counter }}" class="btn btn-outline-secondary" name="edit" value="{{ item.name }}" title="Edit"><i class="fas fa-cog"></i></button>
+                        <a href="{{ detail_base_url }}{{ item.name }}" class="btn btn-outline-secondary" title="Edit">
+                            <i class="fas fa-cog"></i>
+                        </a>
                         {% if list_type == 'scene' %}
                         <a href="{{ request.scheme }}://{{ request.META.HTTP_HOST }}/{{ item.name }}" class="btn btn-outline-primary" target="_blank" title="Open 3D View"><i class="fas fa-external-link-alt"></i></a>
                         {% endif %}
-                        <button type="submit" form="form-delete-{{ list_type }}-{{ forloop.counter }}" class="btn btn-outline-danger" name="action" value="delete_single" title="Delete" onclick="return confirmInlineDelete(event, '{{ list_type }}', '{{ item.name }}')"><i class="fas fa-trash-alt"></i></button>
+                        <button type="button" class="btn btn-outline-danger" title="Delete" onclick="confirmInlineDelete(event, '{{ list_type }}', '{{ item.name }}', '{{ delete_action_url }}')">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -195,19 +193,6 @@
         </div>
     </div>
 </div>
-
-<!-- Hidden Forms for individual edit/delete actions -->
-{% for item in items %}
-<form id="form-edit-{{ list_type }}-{{ forloop.counter }}" action="profile_update_{{ list_type }}" method="POST" style="display:none;">
-    {% csrf_token %}
-    <input type="hidden" name="edit" value="{{ item.name }}">
-</form>
-<form id="form-delete-{{ list_type }}-{{ forloop.counter }}" action="profile_bulk_{{ list_type }}" method="POST" style="display:none;">
-    {% csrf_token %}
-    <input type="hidden" name="selected_items" value="{{ item.name }}">
-    <input type="hidden" name="action" value="bulk_delete">
-</form>
-{% endfor %}
 
 {% else %}
 <table class="table table-sm table-hover">

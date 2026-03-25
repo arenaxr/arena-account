@@ -28,7 +28,8 @@
 
             <form id="bulk-form-scene" action="{% url 'users:profile_bulk_scene' %}" method="POST">
                 {% csrf_token %}
-                {% include 'users/includes/resource_list_pan.html' with items=page_obj list_type='scene' user=user allow_sort=True %}
+                {% url 'users:profile_bulk_scene' as delete_action_url %}
+                {% include 'users/includes/resource_list_pan.html' with items=page_obj list_type='scene' user=user allow_sort=True delete_action_url=delete_action_url detail_base_url='' %}
             </form>
 
             <!-- Pagination -->

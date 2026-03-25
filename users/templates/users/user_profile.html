@@ -154,7 +154,7 @@
                     class="btn btn-sm btn-outline-info" data-bs-toggle="button" aria-pressed="false" autocomplete="off"
                     {% if not user.is_staff %} disabled {% endif %}><i class="fas fa-plus"></i> Add</button>
             </div>
-            <form action="profile_update_namespace" method="POST">
+            <form action="{% url 'users:profile_update_namespace' %}" method="POST">
                 {% csrf_token %}
                 <div id="div_add_namespace" style="display: none;" class="input-group mb-3">
                     <input type="text" class="form-control" name="namespacename" placeholder="namespacename"
@@ -167,7 +167,8 @@
             </form>
             <form id="bulk-form-namespace" action="{% url 'users:profile_bulk_namespace' %}" method="POST">
                 {% csrf_token %}
-                {% include 'users/includes/resource_list_pan.html' with items=namespaces list_type='namespace' user=user %}
+                {% url 'users:profile_bulk_namespace' as delete_action_url %}
+                {% include 'users/includes/resource_list_pan.html' with items=namespaces list_type='namespace' user=user delete_action_url=delete_action_url detail_base_url='profile/namespaces/' %}
             </form>
             {% if ns_count >= 1 %}
             <div class="text-right d-flex justify-content-end mb-4"><a href="{% url 'users:profile_namespaces' %}">View
@@ -183,7 +184,7 @@
                     class="btn btn-sm btn-outline-primary" data-bs-toggle="button" aria-pressed="false"
                     autocomplete="off"><i class="fas fa-plus"></i> Add</button>
             </div>
-            <form action="profile_update_scene" method="POST">
+            <form action="{% url 'users:profile_update_scene' %}" method="POST">
                 {% csrf_token %}
                 <div id="div_add_scene" style="display: none;" class="input-group mb-3">
                     <div class="input-group-prepend">
@@ -199,7 +200,8 @@
             </form>
             <form id="bulk-form-scene" action="{% url 'users:profile_bulk_scene' %}" method="POST">
                 {% csrf_token %}
-                {% include 'users/includes/resource_list_pan.html' with items=scenes list_type='scene' user=user %}
+                {% url 'users:profile_bulk_scene' as delete_action_url %}
+                {% include 'users/includes/resource_list_pan.html' with items=scenes list_type='scene' user=user delete_action_url=delete_action_url detail_base_url='profile/scenes/' %}
             </form>
             {% if sc_count >= 1 %}
             <div class="text-right d-flex justify-content-end mb-4"><a href="{% url 'users:profile_scenes' %}">View all
@@ -215,7 +217,7 @@
                     class="btn btn-sm btn-outline-success" data-bs-toggle="button" aria-pressed="false"
                     autocomplete="off"><i class="fas fa-plus"></i> Add</button>
             </div>
-            <form action="profile_update_device" method="POST">
+            <form action="{% url 'users:profile_update_device' %}" method="POST">
                 {% csrf_token %}
                 <div id="div_add_device" style="display: none;" class="input-group mb-3">
                     <div class="input-group-prepend">
@@ -231,7 +233,8 @@
             </form>
             <form id="bulk-form-device" action="{% url 'users:profile_bulk_device' %}" method="POST">
                 {% csrf_token %}
-                {% include 'users/includes/resource_list_pan.html' with items=devices list_type='device' user=user %}
+                {% url 'users:profile_bulk_device' as delete_action_url %}
+                {% include 'users/includes/resource_list_pan.html' with items=devices list_type='device' user=user delete_action_url=delete_action_url detail_base_url='profile/devices/' %}
             </form>
             {% if dev_count >= 1 %}
             <div class="text-right d-flex justify-content-end mb-4"><a href="{% url 'users:profile_devices' %}">View all

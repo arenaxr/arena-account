@@ -29,7 +29,8 @@
 
             <form id="bulk-form-device" action="{% url 'users:profile_bulk_device' %}" method="POST">
                 {% csrf_token %}
-                {% include 'users/includes/resource_list_pan.html' with items=page_obj list_type='device' user=user allow_sort=True %}
+                {% url 'users:profile_bulk_device' as delete_action_url %}
+                {% include 'users/includes/resource_list_pan.html' with items=page_obj list_type='device' user=user allow_sort=True delete_action_url=delete_action_url detail_base_url='' %}
             </form>
 
             <!-- Pagination -->

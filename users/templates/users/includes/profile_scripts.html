@@ -55,7 +55,7 @@ async function confirmBulkAction(event, actionTitle, listType) {
     }
 }
 
-async function confirmInlineDelete(event, listType, itemName) {
+async function confirmInlineDelete(event, listType, itemName, actionUrl) {
     event.preventDefault();
     const { isConfirmed } = await Swal.fire({
         title: 'Confirm Deletion',
@@ -67,7 +67,31 @@ async function confirmInlineDelete(event, listType, itemName) {
     });
 
     if (isConfirmed) {
-        event.target.closest('form').submit();
+        // Create a dynamic form outside any existing form to avoid nesting
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = actionUrl;
+        form.style.display = 'none';
+        // CSRF token
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        form.appendChild(csrfInput);
+        // Selected item
+        const itemInput = document.createElement('input');
+        itemInput.type = 'hidden';
+        itemInput.name = 'selected_items';
+        itemInput.value = itemName;
+        form.appendChild(itemInput);
+        // Action
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'bulk_delete';
+        form.appendChild(actionInput);
+        document.body.appendChild(form);
+        form.submit();
     }
 }
 </script>
