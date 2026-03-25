@@ -1,11 +1,14 @@
 import datetime
+import logging
 from http import HTTPStatus
 from operator import itemgetter
+from urllib.parse import urlparse
 
 from allauth.socialaccount.views import SignupView as SocialSignupViewDefault
 from dal import autocomplete
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
@@ -19,7 +22,6 @@ from users.models import (
     SCENE_USERS_DEF,
     SCENE_VIDEO_CONF_DEF,
 )
-from users.persistence import delete_persist_scene_objects
 
 from .filestore import delete_filestore_user, get_filestore_health, set_filestore_scope
 from .forms import (
@@ -40,12 +42,16 @@ from .persistence import (
     read_persist_scene_objects,
 )
 from .utils import (
+    device_edit_permission,
+    get_my_devices,
     get_my_edit_namespaces,
     get_my_edit_scenes,
     namespace_edit_permission,
     scene_edit_permission,
 )
 from .versioning import API_V1, API_V2, SUPPORTED_API_VERSIONS
+
+logger = logging.getLogger(__name__)
 
 
 def index(request):
@@ -93,6 +99,7 @@ def logout_request(request):
     return response
 
 
+@login_required(login_url="/user/login")
 def profile_update_namespace(request):
     """
     Handle User Profile page, namespace post submit requests.
@@ -120,6 +127,7 @@ def profile_update_namespace(request):
     return redirect("users:user_profile")
 
 
+@login_required(login_url="/user/login")
 def profile_update_scene(request):
     """
     Handle User Profile page, scene post submit requests.
@@ -151,6 +159,7 @@ def profile_update_scene(request):
     return redirect("users:user_profile")
 
 
+@login_required(login_url="/user/login")
 def profile_update_device(request):
     """
     Handle User Profile page, device post submit requests.
@@ -181,13 +190,12 @@ def profile_update_device(request):
     return redirect("users:user_profile")
 
 
+@login_required(login_url="/user/login")
 def namespace_perm_detail(request, pk):
     """
     Handle Namespace Permissions Edit page, get page load and post submit requests.
     - Handles namespace permissions changes and deletes.
     """
-    version = request.version
-
     if not namespace_edit_permission(user=request.user, namespace=pk):
         messages.error(request, f"User does not have edit permission for namespace: {pk}.")
         return redirect("users:user_profile")
@@ -226,13 +234,12 @@ def namespace_perm_detail(request, pk):
     )
 
 
+@login_required(login_url="/user/login")
 def scene_perm_detail(request, pk):
     """
     Handle Scene Permissions Edit page, get page load and post submit requests.
     - Handles scene permissions changes and deletes.
     """
-    version = request.version
-
     if not scene_edit_permission(user=request.user, scene=pk):
         messages.error(request, f"User does not have edit permission for scene: {pk}.")
         return redirect("users:user_profile")
@@ -290,13 +297,12 @@ def scene_perm_detail(request, pk):
     )
 
 
+@login_required(login_url="/user/login")
 def device_perm_detail(request, pk):
     """
     Handle Device Permissions Edit page, get page load and post submit requests.
     - Handles device permissions changes and deletes.
     """
-    version = request.version
-
     if not device_edit_permission(user=request.user, device=pk):
         messages.error(request, f"User does not have edit permission for device: {pk}.")
         return redirect("users:user_profile")
@@ -350,6 +356,7 @@ class UserAutocomplete(autocomplete.Select2QuerySetView):
         return qs
 
 
+@login_required(login_url="/user/login")
 def profile_update_staff(request):
     """
     Profile page GET/POST handler for editing Staff permissions.
@@ -358,21 +365,17 @@ def profile_update_staff(request):
     if request.method != "POST":
         return JsonResponse({}, status=HTTPStatus.BAD_REQUEST)
     form = UpdateStaffForm(request.POST)
-    if not request.user.is_authenticated:
-        return JsonResponse({"error": "Not authenticated."}, status=HTTPStatus.FORBIDDEN)
     if not form.is_valid():
-        return JsonResponse(
-            {"error": "Invalid parameters"},
-            status=HTTPStatus.INTERNAL_SERVER_ERROR,
-        )
+        messages.error(request, "Invalid parameters.")
+        return redirect("users:user_profile")
     staff_username = form.cleaned_data["staff_username"]
     if request.user.is_superuser and User.objects.filter(username=staff_username).exists():
         is_staff = bool(form.cleaned_data["is_staff"])
-        print(f"Setting Django user {staff_username}, staff={is_staff}")
+        logger.info("Setting Django user %s, staff=%s", staff_username, is_staff)
         user = User.objects.get(username=staff_username)
         user.is_staff = is_staff
         user.save()
-        print(f"Setting Filebrowser user {staff_username}, staff={is_staff}")
+        logger.info("Setting Filebrowser user %s, staff=%s", staff_username, is_staff)
         if not set_filestore_scope(user):
             messages.error(request, "Unable to update user's filestore status.")
             return redirect("users:user_profile")
@@ -380,34 +383,9 @@ def profile_update_staff(request):
     return redirect("users:user_profile")
 
 
-def get_my_devices(user):
-    """
-    Internal method to update device permissions table:
-    Requests and returns list of user's editable devices from device permissions table.
-    """
-    # load list of devices this user can edit
-    devices = Device.objects.none()
-    if user.is_authenticated:
-        if user.is_staff:  # admin/staff
-            devices = Device.objects.all()
-        else:  # standard user
-            devices = Device.objects.filter(name__startswith=f"{user.username}/")
-    public_devices = Device.objects.filter(name__startswith=f"{PUBLIC_NAMESPACE}/")
-    # merge 'my' namespaced devices and extras devices granted
-    merged_devices = (devices | public_devices).distinct().order_by("-creation_date")
-    return merged_devices
 
 
-def device_edit_permission(user, device):
-    """
-    Internal method to check if 'user' can edit 'device'.
-    """
-    if not user.is_authenticated:  # anon
-        return False
-    elif user.is_staff:  # admin/staff
-        return True
-    elif device.startswith(f"{user.username}/"):  # d owner
-        return True
+
 
 
 def user_profile(request):
@@ -613,8 +591,19 @@ def profile_namespaces(request):
     )
 
 
+def _safe_redirect(request):
+    """Redirect to referer if it matches the current host, else fall back to profile."""
+    referer = request.headers.get('referer')
+    if referer:
+        parsed = urlparse(referer)
+        if parsed.netloc == request.get_host():
+            return redirect(referer)
+    return redirect("users:user_profile")
+
+
+@login_required(login_url="/user/login")
 def profile_bulk_scene(request):
-    if request.method != "POST" or not request.user.is_authenticated:
+    if request.method != "POST":
         return JsonResponse({"error": "Forbidden"}, status=HTTPStatus.FORBIDDEN)
     action = request.POST.get("action")
     items = request.POST.getlist("selected_items")
@@ -669,13 +658,12 @@ def profile_bulk_scene(request):
     if cleared_count and action == "bulk_clear_objects": messages.success(request, f"Cleared persisted objects for {cleared_count} scene(s).")
     if reset_count: messages.success(request, f"Reset permissions for {reset_count} scene(s).")
 
-    # Return to originally requested page if referer exists, else profile
-    referer = request.headers.get('referer')
-    return redirect(referer if referer else "users:user_profile")
+    return _safe_redirect(request)
 
 
+@login_required(login_url="/user/login")
 def profile_bulk_device(request):
-    if request.method != "POST" or not request.user.is_authenticated:
+    if request.method != "POST":
         return JsonResponse({"error": "Forbidden"}, status=HTTPStatus.FORBIDDEN)
     action = request.POST.get("action")
     items = request.POST.getlist("selected_items")
@@ -694,12 +682,12 @@ def profile_bulk_device(request):
 
     if deleted_count: messages.success(request, f"Deleted {deleted_count} device(s).")
 
-    referer = request.headers.get('referer')
-    return redirect(referer if referer else "users:user_profile")
+    return _safe_redirect(request)
 
 
+@login_required(login_url="/user/login")
 def profile_bulk_namespace(request):
-    if request.method != "POST" or not request.user.is_authenticated:
+    if request.method != "POST":
         return JsonResponse({"error": "Forbidden"}, status=HTTPStatus.FORBIDDEN)
     action = request.POST.get("action")
     items = request.POST.getlist("selected_items")
@@ -719,5 +707,4 @@ def profile_bulk_namespace(request):
 
     if deleted_count: messages.success(request, f"Deleted {deleted_count} namespace(s).")
 
-    referer = request.headers.get('referer')
-    return redirect(referer if referer else "users:user_profile")
+    return _safe_redirect(request)
