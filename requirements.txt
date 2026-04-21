@@ -4,7 +4,7 @@ django-allauth[socialaccount]==65.14.3
 pyjwt==2.12.1
 cryptography==46.0.7
 google-api-python-client==2.190.0
-python-dotenv==1.2.1
+python-dotenv==1.2.2
 requests==2.33.1
 django-autocomplete-light==3.12.1
 pymongo==4.16.0
