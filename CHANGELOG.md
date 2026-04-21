@@ -1,6 +1,32 @@
 # Changelog
 
 
+## [2.4.0](https://github.com/arenaxr/arena-account/compare/v2.3.2...v2.4.0) (2026-04-21)
+
+
+### Features
+
+* **profile:** add permissions list table merge sorting/filter ([c7c888b](https://github.com/arenaxr/arena-account/commit/c7c888b07c0a0e9e64aaf9a91bdd27b453774f59))
+* **profile:** include persist object counts in lists, add breadcrumbs for all pages ([49ae5ee](https://github.com/arenaxr/arena-account/commit/49ae5ee01bf1be2458eb13acc707ad1aad9da187))
+
+
+### Bug Fixes
+
+* **account:** add namespace validation and fix tuple check in forms.py ([faec37f](https://github.com/arenaxr/arena-account/commit/faec37f1d047c235d6e5f195a07abeb26e086305))
+* **account:** fix API schema and add persist counts ([035bc53](https://github.com/arenaxr/arena-account/commit/035bc534f282cdce0b81700a10a5401016aebb1c))
+* **account:** fix permission check bugs and cleanup in utils.py ([d59e5e0](https://github.com/arenaxr/arena-account/commit/d59e5e029f509030dc174ffdf4b4f9e06274628c))
+* **account:** modernize models.py ([f5c8da9](https://github.com/arenaxr/arena-account/commit/f5c8da975989ed942e88ead180dbcf32f0b4499f))
+* **account:** use absolute {% url %} for form actions in templates ([ba1c196](https://github.com/arenaxr/arena-account/commit/ba1c1960819d9242e3d5b325082a8bcf8c1a102c))
+* **auth:** replace deprecated datetime.utcnow() with timezone-aware variant ([a186f19](https://github.com/arenaxr/arena-account/commit/a186f190bce4a022c1f51e811730a185555b96cf))
+* **profile:** restore missing messages templates to list view pages ([178e19c](https://github.com/arenaxr/arena-account/commit/178e19c5262a0a19c5b69a5873c3528d445092ef))
+* **profile:** shorten perms date sorting, use local libs, fixes ([77bd616](https://github.com/arenaxr/arena-account/commit/77bd616f9abb2823d7e93501b0fd989107045ab7))
+
+
+### Documentation
+
+* include code style/messaging guides ([1a6f5f6](https://github.com/arenaxr/arena-account/commit/1a6f5f64bc5002e1fd5f5fb39bd26c9bdaca9b82))
+* modernize contributing for agents ([2458823](https://github.com/arenaxr/arena-account/commit/2458823646b2491ebf468cf66f2be151a245841c))
+
 ## [2.3.2](https://github.com/arenaxr/arena-account/compare/v2.3.1...v2.3.2) (2026-03-17)
 
 
