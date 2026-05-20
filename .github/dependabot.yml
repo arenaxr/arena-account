@@ -10,6 +10,3 @@ updates:
       interval: "monthly"
     cooldown:
       default-days: 7
-    ignore:
-      - dependency-name: "django"
-        versions: [ ">=5" ]
