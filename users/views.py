@@ -326,6 +326,7 @@ def device_perm_detail(request, pk):
                 messages.success(request, f"Removed device permissions: {pk}")
             return redirect("users:user_profile")
         elif "token" in request.POST:
+            version = getattr(request, "version", SUPPORTED_API_VERSIONS[0])
             token = generate_arena_token(
                 user=request.user,
                 username=request.user.username,
