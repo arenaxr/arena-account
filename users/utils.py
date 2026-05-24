@@ -330,9 +330,24 @@ def get_user_from_id_token(gid_token):
     """
     if not gid_token:
         raise ValueError("Missing token.")
-    gclient_ids = [os.environ["GAUTH_CLIENTID"],
-                   os.environ["GAUTH_INSTALLED_CLIENTID"],
-                   os.environ["GAUTH_DEVICE_CLIENTID"]]
+    gclient_ids = [
+        os.getenv("GAUTH_CLIENTID"),
+        os.getenv("GAUTH_INSTALLED_CLIENTID"),
+        os.getenv("GAUTH_DEVICE_CLIENTID"),
+    ]
+    if not all(gclient_ids):
+        missing = [
+            name
+            for name, value in [
+                ("GAUTH_CLIENTID", gclient_ids[0]),
+                ("GAUTH_INSTALLED_CLIENTID", gclient_ids[1]),
+                ("GAUTH_DEVICE_CLIENTID", gclient_ids[2]),
+            ]
+            if not value
+        ]
+        raise ValueError(
+            "Missing environment variables: " + ", ".join(missing)
+        )
     idinfo = id_token.verify_oauth2_token(gid_token, grequests.Request())
     if idinfo["aud"] not in gclient_ids:
         raise ValueError("Could not verify audience.")
