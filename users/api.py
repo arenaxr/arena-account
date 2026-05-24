@@ -333,11 +333,18 @@ def scene_detail(request, scene_name: str, payload: SceneSchema = None):
             return 400, {"error": f"Unable to claim existing scene: {scene_name}, use PUT."}
 
         if payload:
-            s = Scene(name=scene_name) # Ensure name from URL is used or validated
+            s = Scene(name=scene_name)  # Ensure name from URL is used or validated
+            allowed_fields = {
+                "summary",
+                "public_read",
+                "public_write",
+                "anonymous_users",
+                "video_conference",
+                "users",
+            }
             for key, value in payload.dict().items():
-                if hasattr(s, key) and value is not None:
-                     if key not in ["editors", "viewers", "users", "name"]:
-                         setattr(s, key, value)
+                if key in allowed_fields and value is not None:
+                    setattr(s, key, value)
             s.save()
 
             if payload.editors:
@@ -366,19 +373,26 @@ def scene_detail(request, scene_name: str, payload: SceneSchema = None):
 
     if request.method == "PUT":
         if payload:
-             # Update fields
-             for key, value in payload.dict().items():
-                if hasattr(scene, key) and value is not None:
-                     if key not in ["editors", "viewers", "name"]: # Name should not change via PUT usually?
-                         setattr(scene, key, value)
-             scene.save()
-             if payload.editors:
+            # Update fields
+            allowed_fields = {
+                "summary",
+                "public_read",
+                "public_write",
+                "anonymous_users",
+                "video_conference",
+                "users",
+            }
+            for key, value in payload.dict().items():
+                if key in allowed_fields and value is not None:
+                    setattr(scene, key, value)
+            scene.save()
+            if payload.editors:
                 users = User.objects.filter(username__in=payload.editors)
                 scene.editors.set(users)
-             if payload.viewers:
+            if payload.viewers:
                 users = User.objects.filter(username__in=payload.viewers)
                 scene.viewers.set(users)
-             return 200, serialize_scene(scene)
+            return 200, serialize_scene(scene)
         return 400, {"error": "Invalid parameters"}
 
     if request.method == "DELETE":
