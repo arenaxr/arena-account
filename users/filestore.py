@@ -134,12 +134,18 @@ def get_filestore_token(user_login, host, verify):
         http_status (integer): HTTP status code from filebrowser api login.
     """
     try:
-        r_userlogin = requests.get(f"https://{host}/storemng/api/login",
-                                   data=json.dumps(user_login), verify=verify, timeout=FS_API_TIMEOUT)
+        r_userlogin = requests.post(
+            f"https://{host}/storemng/api/login",
+            json=user_login,
+            verify=verify,
+            timeout=FS_API_TIMEOUT,
+        )
         r_userlogin.raise_for_status()
-    except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as err:
-        # print(err) # Don't print everything, login failure is common
-        return None, r_userlogin.status_code
+    except requests.exceptions.HTTPError:
+        return None, getattr(r_userlogin, "status_code", None)
+    except requests.exceptions.ConnectionError as err:
+        print(err)
+        return None, None
     return r_userlogin.text, r_userlogin.status_code
 
 
