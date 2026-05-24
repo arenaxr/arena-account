@@ -115,10 +115,10 @@ def read_persist_scene_objects(namespace, scene):
 def delete_persist_scene_objects(namespace, scene):
     query = {"namespace": namespace, "sceneId": scene}
     result = get_arenaobjects_collection().delete_many(query)
-    return result
+    return getattr(result, "deleted_count", 0) > 0
 
 
 def delete_persist_namespace_objects(namespace):
     query = {"namespace": namespace}
     result = get_arenaobjects_collection().delete_many(query)
-    return result
+    return getattr(result, "deleted_count", 0) > 0
