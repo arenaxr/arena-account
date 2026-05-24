@@ -22,11 +22,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "tc9z5!qsr59+1@(h9v6oa4zhrwyf54vzk4tma@j$ky$mlj^#de"
+# Note: runtime values are often replaced by Docker/container environment settings.
+# These defaults remain for local development only.
+SECRET_KEY = os.getenv(
+    "SECRET_KEY",
+    "tc9z5!qsr59+1@(h9v6oa4zhrwyf54vzk4tma@j$ky$mlj^#de",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "True").lower() in ("1", "true", "yes")
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "[::1]", "arena-account", "host.docker.internal", "localhost"]
 ALLOWED_SCHEME = "https://"
