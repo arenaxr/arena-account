@@ -6,6 +6,6 @@ cryptography==49.0.0
 google-api-python-client==2.198.0
 python-dotenv==1.2.2
 requests==2.34.2
-django-autocomplete-light==4.0.0
+django-autocomplete-light==5.0.0
 pymongo==4.17.0
 django-ninja==1.6.2
