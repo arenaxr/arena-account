@@ -1,5 +1,9 @@
 # Changelog
 
+### Chores
+- Pin GitHub Actions in CI workflows to exact release tag commit SHAs with inline tag comments for Dependabot SemVer support.
+
+
 
 ## [2.4.0](https://github.com/arenaxr/arena-account/compare/v2.3.2...v2.4.0) (2026-05-09)
 
