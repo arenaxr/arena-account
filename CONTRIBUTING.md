@@ -17,6 +17,36 @@ To develop the `arena-account` locally:
 2. Start the local stack using `docker-compose -f docker-compose.localdev.yaml up -d arena-account`
 3. The Django source folder is mounted via the localdev compose file. For testing or migrations, you can exec into the container and use `manage.py`.
 
+## Testing
+
+The Django test suite runs standalone — it uses a throwaway SQLite database and needs neither the `arena-services-docker` stack nor MongoDB. Run it before committing; CI runs the same command on every PR and push to `main`.
+
+```sh
+python3 -m venv env && . env/bin/activate   # python3 must be 3.12+, required by Django 6.0
+pip install -r requirements.txt
+HOSTNAME=localhost python3 manage.py test
+```
+
+`HOSTNAME` is mandatory: `users/startup.py` stores it as the `django_site` name, and without it the test database migration fails with `IntegrityError: NOT NULL constraint failed: django_site.name`. Putting `HOSTNAME=localhost` in your local `.env` also works, since `manage.py` calls `load_dotenv()` — but `make test` sets neither, so use one or the other.
+
+The 146 tests take about 10s, yet the run takes about 40s. `post_migrate` calls `get_persist_db()`, which waits out a 30s MongoDB server-selection timeout and prints:
+
+```
+arena_persist: connecting...
+arena_persist: error: mongodb:27017: [Errno -2] Name or service not known ... Timeout: 30s
+```
+
+Outside the Docker stack this is expected — `users/persist_db.py` catches it and the suite still reports `OK`. `Error: keyfile not found` and `Service Unavailable: /user/health` in the output are expected too.
+
+To narrow while iterating:
+
+```sh
+HOSTNAME=localhost python3 manage.py test users.tests.test_mqtt_match
+HOSTNAME=localhost python3 manage.py test users.tests.test_health.HealthCheckTests.test_health_check_success
+```
+
+Modules with no database-backed tests (`test_mqtt_match`, `test_mqtt_topics`) skip test-database creation altogether and finish in under a second, avoiding the MongoDB wait.
+
 ## Code Style
 - Follow standard Python formatting guidelines (`black` and `PEP 8`).
 - Ensure all HTTP handlers return standard JSON payloads.
