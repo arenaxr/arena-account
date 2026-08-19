@@ -5,6 +5,32 @@
 
 
 
+## [2.5.0](https://github.com/arenaxr/arena-account/compare/v2.4.0...v2.5.0) (2026-08-19)
+
+
+### Features
+
+* **ci:** align action commit SHAs to exact release tags for Dependabot SemVer support ([c3851b8](https://github.com/arenaxr/arena-account/commit/c3851b8bc44f6c550d88eabc1b0e398a0a2a9a3b))
+* **ci:** configure dependabot, pin workflow actions to SHAs, and add agent/contributing docs ([37e2271](https://github.com/arenaxr/arena-account/commit/37e2271ccaab739961a2aaffb5ecd8633438f397))
+
+
+### Bug Fixes
+
+* Added explicit validation for required Google OAuth env vars ([1902ed6](https://github.com/arenaxr/arena-account/commit/1902ed6110de43fbdb2692d91a43014364d414d5))
+* **device-permissions:** define API version before generating device auth token ([f94dce9](https://github.com/arenaxr/arena-account/commit/f94dce97eceea6d7d5886c21ccf997524ffc6548))
+* django 6.0 migration + bump deps ([93b1ae9](https://github.com/arenaxr/arena-account/commit/93b1ae94a418caca46862273d79a66158ba6c7a6))
+* **filestore:** use POST/json for FileStore login and improve error handling ([6d68995](https://github.com/arenaxr/arena-account/commit/6d689951b4423dff704f02d1550e1d12e5107bf0))
+* **persist:** return bool based on deleted_count for persistence delete helpers ([07fec87](https://github.com/arenaxr/arena-account/commit/07fec878c56a4992124e09c391a4decae6aa86fb))
+* **scene-api:** whitelist allowed scene fields on POST/PUT updates ([d91c251](https://github.com/arenaxr/arena-account/commit/d91c25122652ca25bf2a2b13c96a6111dfe862af))
+* **settings:** use SECRET_KEY env fallback and honor DEBUG env in arena-account ([eced667](https://github.com/arenaxr/arena-account/commit/eced6672c62646cb7abe92c2086b375902063d5f))
+
+
+### Documentation
+
+* add AGENTS.md as documentation index for agents and humans ([6327e3a](https://github.com/arenaxr/arena-account/commit/6327e3a465e63e66581abbf6d90f691bee8692da))
+* add caution against BREAKING CHANGE in commits/PRs ([f73763d](https://github.com/arenaxr/arena-account/commit/f73763da61a629ce3b9a29e2dca2995538ba6aa9))
+* document how to run the Django test suite locally ([#215](https://github.com/arenaxr/arena-account/issues/215)) ([33fc509](https://github.com/arenaxr/arena-account/commit/33fc509441d98c86eefd0949af55104599b1fe52))
+
 ## [2.4.0](https://github.com/arenaxr/arena-account/compare/v2.3.2...v2.4.0) (2026-05-09)
 
 
