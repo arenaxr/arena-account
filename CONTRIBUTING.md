@@ -17,12 +17,14 @@ To develop the `arena-account` locally:
 2. Start the local stack using `docker-compose -f docker-compose.localdev.yaml up -d arena-account`
 3. The Django source folder is mounted via the localdev compose file. For testing or migrations, you can exec into the container and use `manage.py`.
 
+That container route is what you want for migrations against the live stack. For the unit test suite you do not need the stack at all — see [Testing](#testing) below for the standalone route.
+
 ## Testing
 
 The Django test suite runs standalone — it uses a throwaway SQLite database and needs neither the `arena-services-docker` stack nor MongoDB. Run it before committing; CI runs the same command on every PR and push to `main`.
 
 ```sh
-python3 -m venv env && . env/bin/activate   # python3 must be 3.12+, required by Django 6.0
+python3.12 -m venv env && . env/bin/activate   # Django 6.0 needs 3.12 or newer; CI runs 3.14
 pip install -r requirements.txt
 HOSTNAME=localhost python3 manage.py test
 ```
@@ -36,16 +38,16 @@ arena_persist: connecting...
 arena_persist: error: mongodb:27017: [Errno -2] Name or service not known ... Timeout: 30s
 ```
 
-Outside the Docker stack this is expected — `users/persist_db.py` catches it and the suite still reports `OK`. `Error: keyfile not found` and `Service Unavailable: /user/health` in the output are expected too.
+The exact error text varies with your resolver: a host that cannot resolve `mongodb` reports `Name or service not known`, one that resolves it reports a refused connection. Either way, outside the Docker stack this is expected — `users/persist_db.py` catches it and the suite still reports `OK`. `Error: keyfile not found` and `Service Unavailable: /user/health` in the output are expected too.
 
 To narrow while iterating:
 
 ```sh
 HOSTNAME=localhost python3 manage.py test users.tests.test_mqtt_match
-HOSTNAME=localhost python3 manage.py test users.tests.test_health.HealthCheckTests.test_health_check_success
+HOSTNAME=localhost python3 manage.py test users.tests.test_utils.ParsePersistDateTests.test_iso_string_with_zulu_suffix
 ```
 
-Modules with no database-backed tests (`test_mqtt_match`, `test_mqtt_topics`) skip test-database creation altogether and finish in under a second, avoiding the MongoDB wait.
+Only two of the eight modules are database-backed: `test_health` and `test_mqtt_token`, the only two that use Django's `TestCase`. Every other module — `test_middleware`, `test_models`, `test_mqtt_match`, `test_mqtt_topics`, `test_templatetags`, `test_utils` — uses `SimpleTestCase` or plain `unittest.TestCase`, so the runner skips test-database creation altogether: each finishes in under a second and never waits on MongoDB. `test_health` takes about 30s and `test_mqtt_token` about 40s, almost all of it that wait.
 
 ## Code Style
 - Follow standard Python formatting guidelines (`black` and `PEP 8`).

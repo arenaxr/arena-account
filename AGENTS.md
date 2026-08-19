@@ -11,7 +11,7 @@ Orientation for agents (and humans) working in this repo. Detailed docs live in 
 
 ## Tests
 - `HOSTNAME=localhost python3 manage.py test` — the full suite (146 tests, SQLite only; no MongoDB or Docker stack needed). `HOSTNAME` is mandatory, and a swallowed 30s MongoDB timeout at startup is expected.
-- [users/tests/](users/tests/) — one module per area: MQTT tokens, topics, models, middleware, template tags, utils, health.
+- [users/tests/](users/tests/) — one module per area: MQTT tokens, MQTT topic matching, MQTT topic cleanup and building, models, middleware, template tags, utils, health. Only `test_health` and `test_mqtt_token` touch a database; the other six run in under a second each.
 - [CONTRIBUTING.md](CONTRIBUTING.md) — setup, and how to run a single module or single test.
 
 ## MQTT authentication
