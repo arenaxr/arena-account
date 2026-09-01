@@ -8,4 +8,4 @@ python-dotenv==1.2.2
 requests==2.34.2
 django-autocomplete-light==5.0.0
 pymongo==4.17.0
-django-ninja==1.6.2
+django-ninja==1.6.3
