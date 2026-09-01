@@ -1,4 +1,4 @@
-Django==6.0.8
+Django==6.1
 django-crispy-forms==2.7
 django-allauth[socialaccount]==65.19.1
 pyjwt==2.13.0
