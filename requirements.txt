@@ -1,7 +1,7 @@
 Django==6.1
 django-crispy-forms==2.7
 django-allauth[socialaccount]==65.19.1
-pyjwt==2.13.0
+pyjwt==2.15.0
 cryptography==50.0.0
 google-api-python-client==2.199.0
 python-dotenv==1.2.3
