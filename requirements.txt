@@ -3,7 +3,7 @@ django-crispy-forms==2.7
 django-allauth[socialaccount]==65.19.1
 pyjwt==2.15.0
 cryptography==50.0.0
-google-api-python-client==2.199.0
+google-api-python-client==2.200.0
 python-dotenv==1.2.3
 requests==2.34.2
 django-autocomplete-light==5.0.0
