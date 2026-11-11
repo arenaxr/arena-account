@@ -5,6 +5,13 @@
 
 
 
+## [2.4.2](https://github.com/arenaxr/arena-account/compare/v2.4.1...v2.4.2) (2026-11-11)
+
+
+### Documentation
+
+* state the v2 user id format in REQ-AC-014 ([52d9065](https://github.com/arenaxr/arena-account/commit/52d906586a8181c4c28974c519bb8c8d0f789e81))
+
 ## [2.4.0](https://github.com/arenaxr/arena-account/compare/v2.3.2...v2.4.0) (2026-05-09)
 
 
