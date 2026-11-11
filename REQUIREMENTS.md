@@ -78,7 +78,7 @@ graph TD
 | REQ-AC-011 | Scene permissions: `public_read`, `public_write`, `allow_anonymous`, editors list | [users/models.py](users/models.py) |
 | REQ-AC-012 | Namespace ownership (user-scoped scene namespaces) | [users/models.py](users/models.py) |
 | REQ-AC-013 | Staff/admin elevated permissions (all-scene access) | [users/views.py#profile_update_staff](users/views.py) |
-| REQ-AC-014 | Session-based user IDs (`camera_{session-id}_{username}`) to prevent spoofing | [users/api.py#mqtt_auth](users/api.py) |
+| REQ-AC-014 | Session-based user IDs (`{username}_{session-id}`, also the avatar camera id; v1 API: `camera_{session-id}_{username}`) to prevent spoofing | [users/api.py#mqtt_auth](users/api.py) |
 | REQ-AC-015 | Device permissions management | [users/views.py#device_perm_detail](users/views.py) |
 
 ### REST API
